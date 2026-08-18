@@ -88,11 +88,11 @@ export default function AccountPage() {
 
         {isAdmin && (
           <>
-            <div className="mt-2 flex items-center justify-between">
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="font-heading text-lg font-semibold text-foreground">
                 Treasurer tools
               </h2>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <FeeSettingsDialog settings={feeSettings} />
                 <RecordPaymentDialog members={members} />
               </div>
