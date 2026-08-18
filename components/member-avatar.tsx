@@ -24,7 +24,11 @@ export function MemberAvatar({
       )}
       <AvatarFallback
         className={cn("font-semibold text-white", fallbackClassName)}
-        style={{ backgroundColor: member?.avatarColor }}
+        style={{
+          backgroundColor: member?.avatarColor
+            ? `color-mix(in oklch, ${member.avatarColor} 80%, black)`
+            : undefined,
+        }}
       >
         {member?.initials}
       </AvatarFallback>
