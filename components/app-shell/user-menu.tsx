@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuLinkItem,
   DropdownMenuSeparator,
@@ -58,10 +59,12 @@ export function UserMenu({
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align={variant === "expanded" ? "start" : "end"} className="w-56">
-        <DropdownMenuLabel className="font-normal">
-          <p className="font-heading text-sm font-medium">{member.name}</p>
-          <p className="text-xs text-muted-foreground">{member.email}</p>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="font-normal">
+            <p className="font-heading text-sm font-medium">{member.name}</p>
+            <p className="text-xs text-muted-foreground">{member.email}</p>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuLinkItem render={<Link href={`/directory/${member.id}`} />}>
           <User />
