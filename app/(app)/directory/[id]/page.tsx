@@ -1,0 +1,120 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft, Mail, Phone, Calendar } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { StatusBadge } from "@/components/status-badge";
+import { EditProfileDialog } from "@/components/directory/edit-profile-dialog";
+import { MemberAdminMenu } from "@/components/directory/member-admin-menu";
+import { members, currentMember } from "@/lib/mock-data";
+import { formatDate } from "@/lib/format";
+
+export default async function MemberProfilePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const member = members.find((m) => m.id === id);
+  if (!member) notFound();
+
+  const isSelf = member.id === currentMember.id;
+  const isAdmin = currentMember.role === "admin";
+
+  return (
+    <div className="p-4 sm:p-8">
+      <Link
+        href="/directory"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="size-4" />
+        Back to directory
+      </Link>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardContent className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+            <Avatar className="size-20 border border-border">
+              <AvatarFallback
+                className="font-heading text-2xl font-semibold text-white"
+                style={{ backgroundColor: member.avatarColor }}
+              >
+                {member.initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="font-heading text-xl font-semibold text-foreground">
+                  {member.name}
+                </h1>
+                {member.role === "admin" && (
+                  <StatusBadge tone="gold">Board / Admin</StatusBadge>
+                )}
+                {member.status !== "active" && (
+                  <StatusBadge tone={member.status === "honorary" ? "violet" : "neutral"}>
+                    {member.status === "honorary" ? "Honorary" : "Inactive"}
+                  </StatusBadge>
+                )}
+              </div>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {member.classification}
+              </p>
+              {member.committees.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {member.committees.map((c) => (
+                    <StatusBadge key={c} tone="sky">
+                      {c}
+                    </StatusBadge>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {(isSelf || isAdmin) && <EditProfileDialog member={member} />}
+              {isAdmin && !isSelf && <MemberAdminMenu member={member} />}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            <h2 className="font-heading text-sm font-semibold text-foreground">
+              Contact
+            </h2>
+            <a
+              href={`mailto:${member.email}`}
+              className="flex items-center gap-2 text-sm text-foreground hover:text-primary"
+            >
+              <Mail className="size-4 text-muted-foreground" />
+              {member.email}
+            </a>
+            <a
+              href={`tel:${member.phone}`}
+              className="flex items-center gap-2 text-sm text-foreground hover:text-primary"
+            >
+              <Phone className="size-4 text-muted-foreground" />
+              {member.phone}
+            </a>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="size-4" />
+              Member since {formatDate(member.joinDate, { year: "numeric", month: "long", day: undefined })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {member.bio && (
+          <Card className="lg:col-span-3">
+            <CardContent>
+              <h2 className="font-heading text-sm font-semibold text-foreground">
+                About
+              </h2>
+              <p className="font-body mt-2 text-sm leading-relaxed text-foreground">
+                {member.bio}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
