@@ -17,6 +17,7 @@ export type Member = {
   committees: string[];
   bio?: string;
   avatarColor: string;
+  avatarUrl?: string;
 };
 
 export const members: Member[] = [
@@ -33,6 +34,7 @@ export const members: Member[] = [
     committees: ["Board", "Membership"],
     bio: "Club secretary. Builds the tools nobody else wants to.",
     avatarColor: "var(--rotary-blue)",
+    avatarUrl: "https://i.pravatar.cc/150?u=m-hodge",
   },
   {
     id: "m-francis",
@@ -47,6 +49,7 @@ export const members: Member[] = [
     committees: ["Board", "Community Service"],
     bio: "Club president, 2025–2026. Runs the reef cleanup every spring.",
     avatarColor: "var(--rotary-turquoise)",
+    avatarUrl: "https://i.pravatar.cc/150?u=m-francis",
   },
   {
     id: "m-charles",

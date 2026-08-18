@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Mail, Phone, Calendar } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MemberAvatar } from "@/components/member-avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { EditProfileDialog } from "@/components/directory/edit-profile-dialog";
@@ -34,14 +34,11 @@ export default async function MemberProfilePage({
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardContent className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-            <Avatar className="size-20 border border-border">
-              <AvatarFallback
-                className="font-heading text-2xl font-semibold text-white"
-                style={{ backgroundColor: member.avatarColor }}
-              >
-                {member.initials}
-              </AvatarFallback>
-            </Avatar>
+            <MemberAvatar
+              member={member}
+              className="size-20 border border-border"
+              fallbackClassName="font-heading text-2xl"
+            />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-heading text-xl font-semibold text-foreground">

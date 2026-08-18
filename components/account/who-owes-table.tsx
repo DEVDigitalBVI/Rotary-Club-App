@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MemberAvatar } from "@/components/member-avatar";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/format";
 import { balanceForMember, type Member } from "@/lib/mock-data";
@@ -42,14 +42,11 @@ export function WhoOwesTable({ members }: { members: Member[] }) {
                 href={`/directory/${member.id}`}
                 className="flex items-center gap-2 hover:text-primary"
               >
-                <Avatar className="size-7">
-                  <AvatarFallback
-                    className="text-[0.6rem] font-semibold text-white"
-                    style={{ backgroundColor: member.avatarColor }}
-                  >
-                    {member.initials}
-                  </AvatarFallback>
-                </Avatar>
+                <MemberAvatar
+                  member={member}
+                  className="size-7"
+                  fallbackClassName="text-[0.6rem]"
+                />
                 <span className="font-medium">{member.name}</span>
               </Link>
             </TableCell>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, Clock, MapPin, Mic, Video } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MemberAvatar } from "@/components/member-avatar";
 import { RsvpControl } from "@/components/events/rsvp-control";
 import { events, members, currentMember } from "@/lib/mock-data";
 import { formatDate } from "@/lib/format";
@@ -130,14 +130,11 @@ export default async function EventDetailPage({
                 <ul className="mt-3 flex flex-col gap-2.5">
                   {attendees.map((m) => (
                     <li key={m.id} className="flex items-center gap-2">
-                      <Avatar className="size-7">
-                        <AvatarFallback
-                          className="text-[0.6rem] font-semibold text-white"
-                          style={{ backgroundColor: m.avatarColor }}
-                        >
-                          {m.initials}
-                        </AvatarFallback>
-                      </Avatar>
+                      <MemberAvatar
+                        member={m}
+                        className="size-7"
+                        fallbackClassName="text-[0.6rem]"
+                      />
                       <span className="text-sm text-foreground">{m.name}</span>
                     </li>
                   ))}

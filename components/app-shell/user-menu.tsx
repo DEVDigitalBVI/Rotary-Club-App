@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronsUpDown, LogOut, User, Settings } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MemberAvatar } from "@/components/member-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,14 +23,11 @@ export function UserMenu({
   variant?: "compact" | "expanded";
 }) {
   const avatar = (
-    <Avatar className="size-8 shrink-0 border border-border">
-      <AvatarFallback
-        className="font-heading text-xs font-semibold text-white"
-        style={{ backgroundColor: member.avatarColor }}
-      >
-        {member.initials}
-      </AvatarFallback>
-    </Avatar>
+    <MemberAvatar
+      member={member}
+      className="size-8 shrink-0 border border-border"
+      fallbackClassName="font-heading text-xs"
+    />
   );
 
   return (

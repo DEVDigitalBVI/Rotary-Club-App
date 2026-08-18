@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ArrowLeft, Hash, MoreHorizontal, Send, Trash2, UserX } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MemberAvatar } from "@/components/member-avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -150,14 +150,11 @@ export function ChatApp({
                 const sender = memberById.get(message.senderId);
                 return (
                   <div key={message.id} className="group flex items-start gap-2.5">
-                    <Avatar className="size-8 shrink-0">
-                      <AvatarFallback
-                        className="text-xs font-semibold text-white"
-                        style={{ backgroundColor: sender?.avatarColor }}
-                      >
-                        {sender?.initials}
-                      </AvatarFallback>
-                    </Avatar>
+                    <MemberAvatar
+                      member={sender}
+                      className="size-8 shrink-0"
+                      fallbackClassName="text-xs"
+                    />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline gap-2">
                         <p className="font-heading text-sm font-medium text-foreground">
@@ -256,14 +253,7 @@ function ChatListItem({
       )}
     >
       {channel.kind === "dm" ? (
-        <Avatar className="size-9 shrink-0">
-          <AvatarFallback
-            className="text-xs font-semibold text-white"
-            style={{ backgroundColor: other?.avatarColor }}
-          >
-            {other?.initials}
-          </AvatarFallback>
-        </Avatar>
+        <MemberAvatar member={other} className="size-9 shrink-0" fallbackClassName="text-xs" />
       ) : (
         <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
           <Hash className="size-4 text-muted-foreground" />

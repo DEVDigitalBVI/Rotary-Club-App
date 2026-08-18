@@ -6,7 +6,7 @@ import { RsvpStatusBadge } from "@/components/rsvp-badge";
 import { NewsSourceBadge } from "@/components/news-source-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MemberAvatar } from "@/components/member-avatar";
 import {
   currentMember,
   events,
@@ -122,14 +122,12 @@ export default function DashboardPage() {
           <CardContent>
             <div className="flex -space-x-2">
               {members.slice(0, 6).map((m) => (
-                <Avatar key={m.id} className="size-8 border-2 border-card">
-                  <AvatarFallback
-                    className="text-[0.65rem] font-semibold text-white"
-                    style={{ backgroundColor: m.avatarColor }}
-                  >
-                    {m.initials}
-                  </AvatarFallback>
-                </Avatar>
+                <MemberAvatar
+                  key={m.id}
+                  member={m}
+                  className="size-8 border-2 border-card"
+                  fallbackClassName="text-[0.65rem]"
+                />
               ))}
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -156,14 +154,11 @@ export default function DashboardPage() {
               const sender = members.find((mem) => mem.id === m.senderId);
               return (
                 <div key={m.id} className="flex items-start gap-2">
-                  <Avatar className="size-7 shrink-0">
-                    <AvatarFallback
-                      className="text-[0.6rem] font-semibold text-white"
-                      style={{ backgroundColor: sender?.avatarColor }}
-                    >
-                      {sender?.initials}
-                    </AvatarFallback>
-                  </Avatar>
+                  <MemberAvatar
+                    member={sender}
+                    className="size-7 shrink-0"
+                    fallbackClassName="text-[0.6rem]"
+                  />
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-foreground">
                       {sender?.name}{" "}

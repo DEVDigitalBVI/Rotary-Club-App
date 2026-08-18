@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MemberAvatar } from "@/components/member-avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -89,14 +89,11 @@ export function MemberDirectory({
           <Link key={member.id} href={`/directory/${member.id}`}>
             <Card className="h-full p-4 transition-shadow hover:shadow-md">
               <div className="flex items-start gap-3">
-                <Avatar className="size-12 border border-border">
-                  <AvatarFallback
-                    className="font-heading text-sm font-semibold text-white"
-                    style={{ backgroundColor: member.avatarColor }}
-                  >
-                    {member.initials}
-                  </AvatarFallback>
-                </Avatar>
+                <MemberAvatar
+                  member={member}
+                  className="size-12 border border-border"
+                  fallbackClassName="font-heading text-sm"
+                />
                 <div className="min-w-0 flex-1">
                   <p className="font-heading truncate text-sm font-semibold text-foreground">
                     {member.name}
