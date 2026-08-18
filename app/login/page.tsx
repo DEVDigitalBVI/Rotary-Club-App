@@ -71,6 +71,7 @@ export default function LoginPage() {
             <Button
               size="lg"
               className="mt-2 font-heading w-full"
+              nativeButton={false}
               render={<Link href="/dashboard" />}
             >
               Sign in
@@ -87,6 +88,7 @@ export default function LoginPage() {
             variant="outline"
             size="lg"
             className="font-heading w-full"
+            nativeButton={false}
             render={<Link href="/dashboard" />}
           >
             <GoogleIcon className="size-4" />
@@ -94,7 +96,7 @@ export default function LoginPage() {
           </Button>
         </div>
 
-        <p className="mt-6 text-center text-xs text-white/80 drop-shadow-sm">
+        <p className="mt-6 text-center text-xs text-muted-foreground">
           Trouble signing in? Contact your club secretary.
         </p>
       </div>

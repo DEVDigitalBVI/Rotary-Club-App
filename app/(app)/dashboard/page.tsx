@@ -13,8 +13,8 @@ import {
   channels,
   members,
   newsPosts,
+  balanceForMember,
 } from "@/lib/mock-data";
-import { balanceForMember } from "@/lib/mock-data";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 
 export default function DashboardPage() {
@@ -60,6 +60,7 @@ export default function DashboardPage() {
             <Button
               variant="link"
               className="mt-2 h-auto p-0 font-heading"
+              nativeButton={false}
               render={<Link href="/account" />}
             >
               View account <ArrowRight className="size-3.5" />
@@ -102,6 +103,7 @@ export default function DashboardPage() {
             <Button
               variant="link"
               className="mt-1 h-auto justify-start p-0 font-heading"
+              nativeButton={false}
               render={<Link href="/events" />}
             >
               View all events <ArrowRight className="size-3.5" />
@@ -136,6 +138,7 @@ export default function DashboardPage() {
             <Button
               variant="link"
               className="mt-1 h-auto p-0 font-heading"
+              nativeButton={false}
               render={<Link href="/directory" />}
             >
               Browse directory <ArrowRight className="size-3.5" />
@@ -176,6 +179,7 @@ export default function DashboardPage() {
             <Button
               variant="link"
               className="h-auto justify-start p-0 font-heading"
+              nativeButton={false}
               render={<Link href="/chat" />}
             >
               Open chat <ArrowRight className="size-3.5" />
@@ -205,6 +209,7 @@ export default function DashboardPage() {
             <Button
               variant="link"
               className="mt-1 h-auto justify-start p-0 font-heading"
+              nativeButton={false}
               render={<Link href="/news" />}
             >
               View all news <ArrowRight className="size-3.5" />
