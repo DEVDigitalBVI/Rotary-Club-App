@@ -5,99 +5,98 @@ import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   return (
-    <div className="relative flex min-h-full flex-1 items-center justify-center overflow-hidden bg-muted/40 px-4 py-12">
+    <div className="flex min-h-full flex-1 flex-col bg-muted/40">
       <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-64"
+        className="flex shrink-0 flex-col items-center gap-3 px-4 py-6 sm:py-8"
         style={{
           background:
             "linear-gradient(135deg, var(--rotary-blue), var(--rotary-azure) 55%, var(--rotary-turquoise))",
         }}
-      />
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/rotary-club-logo.png"
+          alt="Rotary Club of Road Town"
+          className="h-[9rem] w-auto drop-shadow-sm sm:h-[10.8rem]"
+        />
+        <p className="text-[1.75rem] font-medium text-white/90 drop-shadow-sm">
+          Member Portal
+        </p>
+      </div>
 
-      <div className="relative w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-1 text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/rotary-club-logo.png"
-            alt="Rotary Club of Road Town"
-            className="h-16 w-auto drop-shadow-sm"
-          />
-          <p className="text-sm font-medium text-white/90 drop-shadow-sm">
-            Member Portal
-          </p>
-        </div>
+      <div className="flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
+        <div className="w-full max-w-sm">
+          <div className="rounded-xl bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
+            <h2 className="font-heading text-lg font-semibold text-foreground">
+              Sign in
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              This app is for club members only. Use the email your club has
+              on file.
+            </p>
 
-        <div className="rounded-xl bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
-          <h2 className="font-heading text-lg font-semibold text-foreground">
-            Sign in
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            This app is for club members only. Use the email your club has on
-            file.
-          </p>
-
-          <form className="mt-6 flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                autoComplete="email"
-                defaultValue="jamaal.hodge@example.com"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/login"
-                  className="text-xs font-medium text-primary hover:underline"
-                >
-                  Forgot password?
-                </Link>
+            <form className="mt-6 flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  defaultValue="jamaal.hodge@example.com"
+                />
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                autoComplete="current-password"
-                defaultValue="••••••••"
-              />
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link
+                    href="/login"
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  defaultValue="••••••••"
+                />
+              </div>
+
+              <Button
+                size="lg"
+                className="mt-2 font-heading w-full"
+                nativeButton={false}
+                render={<Link href="/dashboard" />}
+              >
+                Sign in
+              </Button>
+            </form>
+
+            <div className="my-6 flex items-center gap-3">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground">or</span>
+              <div className="h-px flex-1 bg-border" />
             </div>
 
             <Button
+              variant="outline"
               size="lg"
-              className="mt-2 font-heading w-full"
+              className="font-heading w-full"
               nativeButton={false}
               render={<Link href="/dashboard" />}
             >
-              Sign in
+              <GoogleIcon className="size-4" />
+              Continue with Google
             </Button>
-          </form>
-
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-xs text-muted-foreground">or</span>
-            <div className="h-px flex-1 bg-border" />
           </div>
 
-          <Button
-            variant="outline"
-            size="lg"
-            className="font-heading w-full"
-            nativeButton={false}
-            render={<Link href="/dashboard" />}
-          >
-            <GoogleIcon className="size-4" />
-            Continue with Google
-          </Button>
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            Trouble signing in? Contact your club secretary.
+          </p>
         </div>
-
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Trouble signing in? Contact your club secretary.
-        </p>
       </div>
     </div>
   );

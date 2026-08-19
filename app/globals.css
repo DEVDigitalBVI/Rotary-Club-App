@@ -64,10 +64,11 @@
   --rotary-violet: #901f93;
   --rotary-grass: #009739;
 
-  /* Open Sans (nav/headings) + Georgia (body/captions), per the brand PRD's
-     free-alternative pairing for Frutiger/Sentinel. */
+  /* Open Sans (body) + Poppins (nav/headings, all-caps/bold) + Georgia
+     (body/captions), per the brand PRD's free-alternative pairing for
+     Frutiger/Sentinel. */
   --font-sans: var(--font-open-sans), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-open-sans), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-poppins), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --font-body: Georgia, Cambria, "Times New Roman", Times, serif;
 
   --background: oklch(0.955 0.021 246);
@@ -163,12 +164,24 @@
   h5,
   h6 {
     font-family: var(--font-heading);
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
   }
 }
 
 @layer utilities {
   .font-body {
     font-family: var(--font-body);
+  }
+  /* Every "header" element in the app (h1-h6, buttons, form labels, nav
+     items) opts into the heading typeface via this class. Weight and case
+     are forced so the all-caps/bold rule holds everywhere, even where a
+     usage also sets font-medium/font-semibold. */
+  .font-heading {
+    font-family: var(--font-heading);
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
   }
 }
