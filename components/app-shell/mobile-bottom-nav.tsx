@@ -19,15 +19,22 @@ export function MobileBottomNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "font-heading flex flex-1 flex-col items-center gap-0.5 py-2 text-[0.65rem] font-medium whitespace-nowrap",
+              "font-heading flex flex-1 flex-col items-center gap-1 py-2 text-[0.65rem] font-medium whitespace-nowrap",
               active ? "text-primary" : "text-muted-foreground"
             )}
           >
-            <Icon
-              className="size-5"
-              strokeWidth={active ? 2.5 : 2}
-              fill={active ? "color-mix(in oklch, var(--primary) 15%, transparent)" : "none"}
-            />
+            <span
+              className={cn(
+                "flex items-center justify-center rounded-full px-3 py-1 transition-colors",
+                active && "bg-primary/10"
+              )}
+            >
+              <Icon
+                className="size-5"
+                strokeWidth={active ? 2.5 : 2}
+                fill={active ? "color-mix(in oklch, var(--primary) 15%, transparent)" : "none"}
+              />
+            </span>
             {item.mobileLabel ?? item.label}
           </Link>
         );

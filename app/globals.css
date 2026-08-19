@@ -4,6 +4,15 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Soft, rounded "app" language: every rounded-md/lg/xl utility in the app
+   picks this scale up automatically, so cards, buttons, inputs and dialogs
+   all get noticeably softer corners from one place. */
+@theme {
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+}
+
 :root {
   --rotary-blue: #17458f;
   --rotary-gold: #f7a81b;
@@ -22,7 +31,7 @@
   --font-heading: var(--font-open-sans), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --font-body: Georgia, Cambria, "Times New Roman", Times, serif;
 
-  --background: oklch(0.984 0.004 262);
+  --background: oklch(0.955 0.021 246);
   --foreground: oklch(0.225 0.03 262);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.225 0.03 262);
@@ -32,14 +41,14 @@
   --primary-foreground: oklch(0.985 0 0);
   --secondary: var(--rotary-gold);
   --secondary-foreground: oklch(0.24 0.03 262);
-  --muted: oklch(0.958 0.006 262);
+  --muted: oklch(0.93 0.014 246);
   --muted-foreground: oklch(0.48 0.02 262);
   --accent: color-mix(in oklch, var(--rotary-sky) 12%, white);
   --accent-foreground: oklch(0.225 0.03 262);
   --destructive: var(--rotary-cardinal);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.906 0.008 262);
-  --input: oklch(0.906 0.008 262);
+  --border: oklch(0.9 0.012 246);
+  --input: oklch(0.9 0.012 246);
   --ring: var(--rotary-blue);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -47,14 +56,14 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --shadow-card: 0 1px 2px oklch(0.225 0.03 262 / 0.05), 0 10px 24px -8px oklch(0.225 0.03 262 / 0.12);
-  --sidebar: oklch(0.99 0.003 262);
+  --shadow-card: 0 2px 6px oklch(0.5 0.09 246 / 0.06), 0 20px 40px -18px oklch(0.5 0.14 246 / 0.22);
+  --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.225 0.03 262);
   --sidebar-primary: var(--rotary-blue);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: color-mix(in oklch, var(--rotary-sky) 12%, white);
   --sidebar-accent-foreground: oklch(0.225 0.03 262);
-  --sidebar-border: oklch(0.906 0.008 262);
+  --sidebar-border: oklch(0.9 0.012 246);
   --sidebar-ring: var(--rotary-blue);
 }
 
@@ -83,7 +92,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.35), 0 12px 28px -8px oklch(0 0 0 / 0.55);
+  --shadow-card: 0 2px 6px oklch(0 0 0 / 0.3), 0 22px 44px -18px oklch(0 0 0 / 0.6);
   --sidebar: oklch(0.19 0.017 262);
   --sidebar-foreground: oklch(0.94 0.006 262);
   --sidebar-primary: color-mix(in oklch, var(--rotary-blue) 75%, white);
