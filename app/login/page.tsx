@@ -29,7 +29,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-6 shadow-lg sm:p-8">
+        <div className="rounded-xl bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
           <h2 className="font-heading text-lg font-semibold text-foreground">
             Sign in
           </h2>

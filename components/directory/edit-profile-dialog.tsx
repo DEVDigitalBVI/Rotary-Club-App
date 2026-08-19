@@ -55,7 +55,7 @@ export function EditProfileDialog({ member }: { member: Member }) {
           <div className="flex items-center gap-3">
             <MemberAvatar
               member={{ ...member, avatarUrl }}
-              className="size-16 border border-border"
+              className="size-16"
               fallbackClassName="font-heading text-xl"
             />
             <div className="flex flex-col gap-1.5">

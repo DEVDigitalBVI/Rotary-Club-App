@@ -8,7 +8,7 @@ import type { EventItem } from "@/lib/mock-data";
 export function EventCard({ event }: { event: EventItem }) {
   return (
     <Link href={`/events/${event.id}`}>
-      <Card className="h-full transition-shadow hover:shadow-md">
+      <Card className="h-full transition-shadow hover:shadow-[var(--shadow-card-hover)]">
         <CardContent className="flex flex-col gap-3">
           <div className="flex items-start justify-between gap-2">
             <div>

@@ -36,7 +36,7 @@ export default async function MemberProfilePage({
           <CardContent className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
             <MemberAvatar
               member={member}
-              className="size-20 border border-border"
+              className="size-20"
               fallbackClassName="font-heading text-2xl"
             />
             <div className="min-w-0 flex-1">

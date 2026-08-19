@@ -87,11 +87,11 @@ export function MemberDirectory({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((member) => (
           <Link key={member.id} href={`/directory/${member.id}`}>
-            <Card className="h-full p-4 transition-shadow hover:shadow-md">
+            <Card className="h-full p-4 transition-shadow hover:shadow-[var(--shadow-card-hover)]">
               <div className="flex items-start gap-3">
                 <MemberAvatar
                   member={member}
-                  className="size-12 border border-border"
+                  className="size-12"
                   fallbackClassName="font-heading text-sm"
                 />
                 <div className="min-w-0 flex-1">

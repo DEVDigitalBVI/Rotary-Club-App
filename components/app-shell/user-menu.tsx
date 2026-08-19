@@ -25,7 +25,7 @@ export function UserMenu({
   const avatar = (
     <MemberAvatar
       member={member}
-      className="size-8 shrink-0 border border-border"
+      className="size-8 shrink-0"
       fallbackClassName="font-heading text-xs"
     />
   );
