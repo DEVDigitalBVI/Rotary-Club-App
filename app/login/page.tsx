@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { RotaryMark } from "@/components/brand/rotary-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,16 +16,16 @@ export default function LoginPage() {
       />
 
       <div className="relative w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <RotaryMark className="size-14 shadow-sm" />
-          <div>
-            <h1 className="font-heading text-xl font-semibold text-white drop-shadow-sm">
-              Rotary Club
-            </h1>
-            <p className="text-sm font-medium text-white/90 drop-shadow-sm">
-              Member Portal
-            </p>
-          </div>
+        <div className="mb-8 flex flex-col items-center gap-1 text-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/rotary-club-logo.png"
+            alt="Rotary Club of Road Town"
+            className="h-16 w-auto drop-shadow-sm"
+          />
+          <p className="text-sm font-medium text-white/90 drop-shadow-sm">
+            Member Portal
+          </p>
         </div>
 
         <div className="rounded-xl bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
