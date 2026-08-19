@@ -64,10 +64,10 @@
   --rotary-violet: #901f93;
   --rotary-grass: #009739;
 
-  /* Open Sans (body) + Poppins (nav/headings, all-caps/bold) + Georgia
+  /* Inter (body) + Poppins (nav/headings, all-caps/bold) + Georgia
      (body/captions), per the brand PRD's free-alternative pairing for
      Frutiger/Sentinel. */
-  --font-sans: var(--font-open-sans), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-poppins), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --font-body: Georgia, Cambria, "Times New Roman", Times, serif;
 
