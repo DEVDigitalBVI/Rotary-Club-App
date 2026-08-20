@@ -6,22 +6,34 @@ import { Label } from "@/components/ui/label";
 export default function LoginPage() {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-muted/40">
-      <div
-        className="flex shrink-0 flex-col items-center gap-3 px-4 py-6 sm:py-8"
-        style={{
-          background:
-            "linear-gradient(135deg, var(--rotary-blue), var(--rotary-azure) 55%, var(--rotary-turquoise))",
-        }}
-      >
+      <div className="relative flex aspect-[3/2] max-h-[28rem] shrink-0 flex-col overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/rotary-club-logo.png"
-          alt="Rotary Club of Road Town"
-          className="h-[9rem] w-auto drop-shadow-sm sm:h-[10.8rem]"
+          src="/login-header-photo.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover object-[65%_10%] sm:object-[58%_10%] lg:object-[50%_10%]"
         />
-        <p className="text-[1.75rem] font-medium text-white/90 drop-shadow-sm">
-          Member Portal
-        </p>
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(135deg, var(--rotary-blue), var(--rotary-azure) 55%, var(--rotary-turquoise))",
+            opacity: 0.55,
+          }}
+        />
+        <div className="relative flex items-center justify-between px-4 pt-4 sm:px-6 sm:pt-6">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/rotary-club-logo.png"
+            alt="Rotary Club of Road Town"
+            className="h-[4.55rem] w-auto drop-shadow-sm sm:h-[5.2rem]"
+          />
+          <p className="font-heading text-[1.14rem] text-white/90 drop-shadow-sm sm:text-[1.3rem]">
+            Member Portal
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
