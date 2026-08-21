@@ -49,10 +49,17 @@ export function CommitteeCard({
         )}
       </div>
 
-      {!director && (
+      {!director && committee.managedBy === "officers" && (
         <p className="rounded-lg border border-dashed border-border p-2.5 text-xs text-muted-foreground">
           Chaired by the President. Members are added by the President or
           Secretary.
+        </p>
+      )}
+
+      {!director && committee.managedBy === "director" && (
+        <p className="rounded-lg border border-dashed border-border p-2.5 text-xs text-muted-foreground">
+          No director assigned yet. The President or Secretary can assign
+          one, or manage members in the meantime.
         </p>
       )}
 
