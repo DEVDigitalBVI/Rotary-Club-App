@@ -185,3 +185,39 @@
     letter-spacing: 0.01em;
   }
 }
+/* Bottom-edge photo fade (login header).
+
+   A two-stop mask — black 78%, transparent 100% — leaves a visible seam:
+   opacity jumps from "not changing at all" to "changing fast" at a single
+   point, and the eye reads that break in the curve as a horizontal line
+   across the photo. These stops trace a smoothstep curve instead, so the
+   fade eases in from zero slope and there is no edge to catch on.
+
+   Keep the region tight to the bottom. Because the curve starts flat the
+   fade is invisible for its first few stops, so a 70% start still *reads*
+   as beginning near 78% -- but every percent earlier than that climbs
+   toward the subject's face, which the photo cannot afford. Widen this
+   only downward. */
+@utility mask-fade-b {
+  --mask-fade-b: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 1) 0%,
+    rgb(0 0 0 / 1) 70%,
+    rgb(0 0 0 / 0.957) 73.75%,
+    rgb(0 0 0 / 0.844) 77.5%,
+    rgb(0 0 0 / 0.684) 81.25%,
+    rgb(0 0 0 / 0.5) 85%,
+    rgb(0 0 0 / 0.316) 88.75%,
+    rgb(0 0 0 / 0.156) 92.5%,
+    rgb(0 0 0 / 0.043) 96.25%,
+    rgb(0 0 0 / 0) 100%
+  );
+  mask-image: var(--mask-fade-b);
+}
+
+/* Paired with the above so the fade can be dropped at a breakpoint
+   (lg:mask-fade-none), where the header becomes a rounded, shadowed card
+   with real edges and no fade to draw. */
+@utility mask-fade-none {
+  mask-image: none;
+}

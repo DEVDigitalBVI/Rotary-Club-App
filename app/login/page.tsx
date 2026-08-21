@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 export default function LoginPage() {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-muted/40">
-      <div className="relative flex aspect-[3/2] max-h-[40rem] shrink-0 flex-col overflow-hidden [mask-image:linear-gradient(to_bottom,black_0%,black_78%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_0%,black_78%,transparent_100%)] lg:mx-auto lg:mt-10 lg:max-w-3xl lg:rounded-2xl lg:shadow-[var(--shadow-card)] lg:[mask-image:none] lg:[-webkit-mask-image:none]">
+      <div className="relative flex aspect-[3/2] max-h-[40rem] shrink-0 flex-col overflow-hidden mask-fade-b lg:mx-auto lg:mt-10 lg:max-w-3xl lg:rounded-2xl lg:shadow-[var(--shadow-card)] lg:mask-fade-none">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/login-header-photo.jpg"
