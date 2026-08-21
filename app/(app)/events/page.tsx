@@ -2,7 +2,12 @@ import { PageHeader } from "@/components/page-header";
 import { EventCard } from "@/components/events/event-card";
 import { CreateEventDialog } from "@/components/events/create-event-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { events, currentMember, TODAY } from "@/lib/mock-data";
+import {
+  events,
+  currentMember,
+  canManageEvents,
+  TODAY,
+} from "@/lib/mock-data";
 
 export default function EventsPage() {
   const upcoming = [...events]
@@ -17,7 +22,7 @@ export default function EventsPage() {
       <PageHeader
         title="Events"
         description="Meetings and events, and your RSVP status."
-        actions={currentMember.role === "admin" ? <CreateEventDialog /> : undefined}
+        actions={canManageEvents(currentMember) ? <CreateEventDialog /> : undefined}
       />
 
       <div className="p-4 sm:p-8">

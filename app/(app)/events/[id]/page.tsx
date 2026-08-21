@@ -4,7 +4,14 @@ import { ArrowLeft, CalendarDays, Clock, MapPin, Mic, Video } from "lucide-react
 import { Card, CardContent } from "@/components/ui/card";
 import { MemberAvatar } from "@/components/member-avatar";
 import { RsvpControl } from "@/components/events/rsvp-control";
-import { events, members, currentMember } from "@/lib/mock-data";
+import { EventMaterials } from "@/components/events/event-materials";
+import {
+  events,
+  members,
+  currentMember,
+  canManageEvents,
+  TODAY,
+} from "@/lib/mock-data";
 import { formatDate } from "@/lib/format";
 
 export default async function EventDetailPage({
@@ -17,6 +24,8 @@ export default async function EventDetailPage({
   if (!event) notFound();
 
   const isAdmin = currentMember.role === "admin";
+  const mayManage = canManageEvents(currentMember);
+  const isUpcoming = event.date >= TODAY;
   const attendees = event.attendeeIds
     ?.map((mid) => members.find((m) => m.id === mid))
     .filter((m): m is NonNullable<typeof m> => Boolean(m));
@@ -81,6 +90,13 @@ export default async function EventDetailPage({
               <RsvpControl initial={event.myRsvp} />
             </CardContent>
           </Card>
+
+          <EventMaterials
+            flyer={event.flyer}
+            agenda={event.agenda}
+            canManage={mayManage}
+            showAgenda={isUpcoming}
+          />
         </div>
 
         <div className="flex flex-col gap-6">

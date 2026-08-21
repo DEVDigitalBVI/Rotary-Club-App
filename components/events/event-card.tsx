@@ -11,7 +11,17 @@ export function EventCard({ event }: { event: EventItem }) {
       <Card className="h-full transition-shadow hover:shadow-[var(--shadow-card-hover)]">
         <CardContent className="flex flex-col gap-3">
           <div className="flex items-start justify-between gap-2">
-            <div>
+            {/* A poster is the fastest way to recognise an event in a list. */}
+            {event.flyer && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={event.flyer.url}
+                alt=""
+                aria-hidden="true"
+                className="aspect-[3/4] w-14 shrink-0 rounded-md border border-border object-cover"
+              />
+            )}
+            <div className="min-w-0 flex-1">
               <p className="font-heading text-sm font-semibold text-foreground">
                 {event.title}
               </p>

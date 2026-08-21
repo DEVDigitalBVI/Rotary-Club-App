@@ -91,9 +91,20 @@ export default function DashboardPage() {
               <Link
                 key={event.id}
                 href={`/events/${event.id}`}
-                className="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0 hover:opacity-80"
+                className="flex items-start justify-between gap-3 rounded-lg py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/60"
               >
-                <div className="min-w-0">
+                {/* Same thumbnail treatment as the events list, so a meeting
+                    is recognisable by its poster wherever it appears. */}
+                {event.flyer && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={event.flyer.url}
+                    alt=""
+                    aria-hidden="true"
+                    className="aspect-[3/4] w-14 shrink-0 rounded-md border border-border object-cover"
+                  />
+                )}
+                <div className="min-w-0 flex-1">
                   <p className="font-heading truncate text-sm font-medium text-foreground">
                     {event.title}
                   </p>

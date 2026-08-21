@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Plus } from "lucide-react";
+import { useRef, useState } from "react";
+import { FileText, ImageIcon, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,13 +18,21 @@ import { Textarea } from "@/components/ui/textarea";
 export function CreateEventDialog() {
   const [open, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [flyerName, setFlyerName] = useState<string | null>(null);
+  const [agendaName, setAgendaName] = useState<string | null>(null);
+  const flyerRef = useRef<HTMLInputElement>(null);
+  const agendaRef = useRef<HTMLInputElement>(null);
 
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (!next) setSubmitted(false);
+        if (!next) {
+          setSubmitted(false);
+          setFlyerName(null);
+          setAgendaName(null);
+        }
       }}
     >
       <Button className="font-heading" onClick={() => setOpen(true)}>
@@ -72,6 +80,51 @@ export function CreateEventDialog() {
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="event-description">Description</Label>
               <Textarea id="event-description" rows={3} />
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label>Flyer</Label>
+                <input
+                  ref={flyerRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) =>
+                    setFlyerName(e.target.files?.[0]?.name ?? null)
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="font-heading justify-start"
+                  onClick={() => flyerRef.current?.click()}
+                >
+                  <ImageIcon />
+                  <span className="truncate">{flyerName ?? "Add flyer"}</span>
+                </Button>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Agenda</Label>
+                <input
+                  ref={agendaRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,application/pdf"
+                  className="hidden"
+                  onChange={(e) =>
+                    setAgendaName(e.target.files?.[0]?.name ?? null)
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="font-heading justify-start"
+                  onClick={() => agendaRef.current?.click()}
+                >
+                  <FileText />
+                  <span className="truncate">{agendaName ?? "Add agenda"}</span>
+                </Button>
+              </div>
             </div>
             <DialogFooter className="mt-2">
               <Button type="submit" className="font-heading">
