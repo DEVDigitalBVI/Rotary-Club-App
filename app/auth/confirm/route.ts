@@ -9,11 +9,21 @@ import { createClient } from "@/lib/supabase/server";
  * member is signed in — recovery links included, which is what lets
  * /update-password work without a separate "enter your old password" step.
  */
+// Only an in-app relative path is a safe redirect target. `next` comes
+// straight from a public query string, so anything else — a protocol-
+// relative "//evil.com", an absolute URL, or the "@" userinfo trick
+// ("https://ourapp.com@evil.com") — must be rejected rather than
+// concatenated into the redirect.
+function isSafeRedirectPath(path: string): boolean {
+  return path.startsWith("/") && !path.startsWith("//") && !path.includes("://");
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const next = searchParams.get("next") ?? "/dashboard";
+  const requestedNext = searchParams.get("next") ?? "/dashboard";
+  const next = isSafeRedirectPath(requestedNext) ? requestedNext : "/dashboard";
 
   if (tokenHash && type) {
     const supabase = await createClient();

@@ -9,16 +9,19 @@ export type AuthFormState = { error: string } | undefined;
 /**
  * The Origin header is present on same-site form/fetch requests (which is
  * how server actions post), so this covers local dev and any deployment
- * without needing a hardcoded site URL env var. Falls back to the Host
- * header for the rare client that omits Origin.
+ * without needing a hardcoded site URL env var. Deliberately does NOT fall
+ * back to the Host/X-Forwarded-Host header — those are attacker-controlled
+ * on a raw, non-browser request, and trusting them here would let someone
+ * steer the password-reset link mailed to a victim toward an arbitrary
+ * domain.
  */
 async function getOrigin() {
   const h = await headers();
   const origin = h.get("origin");
-  if (origin) return origin;
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  return `${proto}://${host}`;
+  if (!origin) {
+    throw new Error("Missing Origin header");
+  }
+  return origin;
 }
 
 export async function signIn(
@@ -100,8 +103,14 @@ export async function requestPasswordReset(
     return { error: "Enter your email." };
   }
 
+  let origin: string;
+  try {
+    origin = await getOrigin();
+  } catch {
+    return { error: "Couldn't process that request — please try again." };
+  }
+
   const supabase = await createClient();
-  const origin = await getOrigin();
   await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${origin}/auth/confirm?next=/update-password`,
   });
