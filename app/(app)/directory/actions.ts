@@ -156,3 +156,68 @@ export async function updateMemberStatusAction(
   revalidatePath("/directory");
   return { success: true };
 }
+
+/**
+ * Routed through the assign_member_position RPC rather than a plain table
+ * update — the permission rule is split (only the President may name a
+ * President-Elect or Secretary-Elect; the wider can_assign_roles() group
+ * covers President, Secretary, and Treasurer), so it has to live server-side.
+ */
+export async function assignMemberPositionAction(
+  memberId: string,
+  position: string | null
+): Promise<DirectoryFormState> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("assign_member_position", {
+    target_member_id: memberId,
+    new_position: position,
+  });
+
+  if (error) {
+    return { error: "Couldn't assign that role — you may not have permission." };
+  }
+
+  revalidatePath(`/directory/${memberId}`);
+  revalidatePath("/directory");
+  return { success: true };
+}
+
+/**
+ * Routed through the assign_committee_director RPC, which also seats the
+ * new director on their own committee's roster.
+ */
+export async function assignCommitteeDirectorAction(
+  committeeId: string,
+  memberId: string | null
+): Promise<DirectoryFormState> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("assign_committee_director", {
+    target_committee_id: committeeId,
+    target_member_id: memberId,
+  });
+
+  if (error) {
+    return { error: "Couldn't assign a director — you may not have permission." };
+  }
+
+  revalidatePath("/directory");
+  return { success: true };
+}
+
+/**
+ * The annual handover: promotes President-Elect and Secretary-Elect into
+ * the seats they were elected to, and clears whoever was outgoing. See
+ * start_new_rotary_year() — a vacant Elect slot just leaves that seat
+ * vacant rather than erroring.
+ */
+export async function startNewRotaryYearAction(): Promise<DirectoryFormState> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("start_new_rotary_year");
+
+  if (error) {
+    return { error: "Couldn't start the new Rotary year — you may not have permission." };
+  }
+
+  revalidatePath("/directory");
+  return { success: true };
+}

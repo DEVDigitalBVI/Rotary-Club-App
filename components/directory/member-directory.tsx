@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { CalendarClock, Plus, Search } from "lucide-react";
 import { MemberAvatar } from "@/components/member-avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,9 +23,12 @@ import { StatusBadge } from "@/components/status-badge";
 import { AddMemberDialog } from "@/components/directory/add-member-dialog";
 import { CommitteeCard } from "@/components/directory/committee-card";
 import { ManageCommitteeDialog } from "@/components/directory/manage-committee-dialog";
+import { AssignDirectorDialog } from "@/components/directory/assign-director-dialog";
+import { StartNewRotaryYearDialog } from "@/components/directory/start-new-rotary-year-dialog";
 import { formatDate } from "@/lib/format";
 import {
   canAddMembers,
+  canAssignRoles,
   committeeManageRight,
   committeesForMember,
   positionLabel,
@@ -69,8 +72,13 @@ export function MemberDirectory({
   const [recognitionFilter, setRecognitionFilter] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
   const [managing, setManaging] = useState<Committee | null>(null);
+  const [assigningDirectorFor, setAssigningDirectorFor] = useState<Committee | null>(
+    null
+  );
+  const [startingNewYear, setStartingNewYear] = useState(false);
 
   const mayAddMembers = canAddMembers(currentMember, committees);
+  const mayAssignRoles = canAssignRoles(currentMember);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -198,13 +206,25 @@ export function MemberDirectory({
               </div>
             </div>
 
-            {/* Adding a member is an officer act, not a committee one. */}
-            {mayAddMembers && (
-              <Button className="font-heading" onClick={() => setAddOpen(true)}>
-                <Plus />
-                Add member
-              </Button>
-            )}
+            <div className="flex shrink-0 items-center gap-2">
+              {mayAssignRoles && (
+                <Button
+                  variant="outline"
+                  className="font-heading"
+                  onClick={() => setStartingNewYear(true)}
+                >
+                  <CalendarClock />
+                  Start new Rotary year
+                </Button>
+              )}
+              {/* Adding a member is an officer act, not a committee one. */}
+              {mayAddMembers && (
+                <Button className="font-heading" onClick={() => setAddOpen(true)}>
+                  <Plus />
+                  Add member
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -323,6 +343,7 @@ export function MemberDirectory({
                 members={members}
                 manageRight={committeeManageRight(currentMember, committee)}
                 onManage={() => setManaging(committee)}
+                onAssignDirector={() => setAssigningDirectorFor(committee)}
               />
             ))}
           </div>
@@ -341,6 +362,21 @@ export function MemberDirectory({
         onOpenChange={(next) => {
           if (!next) setManaging(null);
         }}
+      />
+
+      <AssignDirectorDialog
+        committee={assigningDirectorFor}
+        members={members}
+        open={assigningDirectorFor !== null}
+        onOpenChange={(next) => {
+          if (!next) setAssigningDirectorFor(null);
+        }}
+      />
+
+      <StartNewRotaryYearDialog
+        members={members}
+        open={startingNewYear}
+        onOpenChange={setStartingNewYear}
       />
     </div>
   );

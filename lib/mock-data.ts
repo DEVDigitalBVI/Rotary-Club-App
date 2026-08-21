@@ -43,7 +43,12 @@ export type FoundationRecognition = {
 };
 
 /** Elected club officers. Distinct from committee directorships below. */
-export type ClubPosition = "president" | "president-elect" | "secretary" | "treasurer";
+export type ClubPosition =
+  | "president"
+  | "president-elect"
+  | "secretary"
+  | "secretary-elect"
+  | "treasurer";
 
 export type Member = {
   id: string;
@@ -320,6 +325,7 @@ const positionLabels: Record<ClubPosition, string> = {
   president: "President",
   "president-elect": "President-Elect",
   secretary: "Secretary",
+  "secretary-elect": "Secretary-Elect",
   treasurer: "Treasurer",
 };
 
@@ -337,18 +343,50 @@ export function committeesDirectedBy(memberId: string, roster = committees) {
 
 /**
  * The President, the Secretary, or the Club Administration director — the
- * people who run the club day to day. Several distinct permissions land on
- * this same group today; they stay separate exported functions below so that
- * one can change later without dragging the others along with it.
+ * people who run the club day to day. President-Elect and Secretary-Elect
+ * carry the same standing once the President names them (see
+ * canAssignRoles below for who may do the naming). Several distinct
+ * permissions land on this same group today; they stay separate exported
+ * functions below so that one can change later without dragging the others
+ * along with it.
  */
 function runsTheClub(member: Member, roster: Committee[]) {
-  if (member.position === "president" || member.position === "secretary") {
+  if (
+    member.position === "president" ||
+    member.position === "president-elect" ||
+    member.position === "secretary" ||
+    member.position === "secretary-elect"
+  ) {
     return true;
   }
   return roster.some(
     (committee) =>
       committee.id === "club-administration" && committee.directorId === member.id
   );
+}
+
+/**
+ * Who may assign President, Secretary, Treasurer, and committee directors,
+ * and who may run the annual handover (startNewRotaryYearAction).
+ * Deliberately narrower than runsTheClub(): the Club Administration
+ * director runs meetings, not the roster.
+ */
+export function canAssignRoles(member: Member) {
+  return (
+    member.position === "president" ||
+    member.position === "president-elect" ||
+    member.position === "secretary" ||
+    member.position === "secretary-elect"
+  );
+}
+
+/**
+ * The one person who may name a President-Elect or Secretary-Elect.
+ * Deliberately excludes the Elects themselves — full access to run the club
+ * day to day isn't the same as the standing to name your own successor.
+ */
+export function isPresident(member: Member) {
+  return member.position === "president";
 }
 
 /**
@@ -491,7 +529,7 @@ export function hasAnyRecognition(member: Member) {
  * happens to hold another directorship.
  */
 export function canEditRecognition(member: Member, roster = committees) {
-  if (member.position === "secretary") return true;
+  if (member.position === "secretary" || member.position === "secretary-elect") return true;
   return roster.some(
     (committee) =>
       committee.id === "foundation" && committee.directorId === member.id
@@ -515,9 +553,7 @@ export function committeeManageRight(
   committee: Committee
 ): CommitteeManageRight {
   if (committee.directorId === member.id) return "director";
-  if (member.position === "president" || member.position === "secretary") {
-    return "officer";
-  }
+  if (canAssignRoles(member)) return "officer";
   return null;
 }
 

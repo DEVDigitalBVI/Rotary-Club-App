@@ -11,7 +11,7 @@ type MemberRow = {
   join_date: string | null;
   status: "active" | "inactive" | "honorary";
   role: "member" | "admin";
-  position: "president" | "president-elect" | "secretary" | "treasurer" | null;
+  position: "president" | "president-elect" | "secretary" | "secretary-elect" | "treasurer" | null;
   bio: string | null;
   avatar_color: string | null;
   avatar_url: string | null;

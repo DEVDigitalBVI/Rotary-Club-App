@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Settings2, Users } from "lucide-react";
+import { Landmark, Settings2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MemberAvatar } from "@/components/member-avatar";
@@ -15,11 +15,13 @@ export function CommitteeCard({
   members,
   manageRight,
   onManage,
+  onAssignDirector,
 }: {
   committee: Committee;
   members: Member[];
   manageRight: CommitteeManageRight;
   onManage: () => void;
+  onAssignDirector?: () => void;
 }) {
   const byId = new Map(members.map((m) => [m.id, m]));
   const director = committee.directorId ? byId.get(committee.directorId) : undefined;
@@ -107,6 +109,17 @@ export function CommitteeCard({
               <Settings2 />
               Manage members
             </Button>
+            {manageRight === "officer" && committee.managedBy === "director" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-heading w-full"
+                onClick={onAssignDirector}
+              >
+                <Landmark />
+                Assign director
+              </Button>
+            )}
             {manageRight === "officer" && committee.directorId && (
               <p className="text-center text-xs text-muted-foreground">
                 You can edit this as a club officer.

@@ -7,11 +7,13 @@ import { StatusBadge } from "@/components/status-badge";
 import { EditProfileDialog } from "@/components/directory/edit-profile-dialog";
 import { MemberAdminMenu } from "@/components/directory/member-admin-menu";
 import { RecognitionCard } from "@/components/directory/recognition-card";
+import { AssignPositionDialog } from "@/components/directory/assign-position-dialog";
 import {
   committeesForMember,
   positionLabel,
   foundationRecognition,
   canEditRecognition,
+  canAssignRoles,
 } from "@/lib/mock-data";
 import { getMemberById, getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
@@ -84,6 +86,9 @@ export default async function MemberProfilePage({
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {(isSelf || isAdmin) && <EditProfileDialog member={member} />}
+              {currentMember && canAssignRoles(currentMember) && (
+                <AssignPositionDialog member={member} viewer={currentMember} />
+              )}
               {isAdmin && !isSelf && <MemberAdminMenu member={member} />}
             </div>
           </CardContent>
