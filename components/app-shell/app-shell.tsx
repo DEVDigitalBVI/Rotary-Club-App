@@ -3,9 +3,11 @@ import { SidebarNav } from "./sidebar-nav";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { UserMenu } from "./user-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { currentMember } from "@/lib/mock-data";
+import { getCurrentMember } from "@/lib/data/members";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export async function AppShell({ children }: { children: React.ReactNode }) {
+  const currentMember = await getCurrentMember();
+
   return (
     <div className="flex min-h-full min-w-0 flex-1">
       <aside className="sticky top-0 hidden h-dvh w-72 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex print:hidden">
@@ -18,7 +20,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <SidebarNav />
         <div className="flex items-center gap-2 border-t border-sidebar-border p-3">
           <div className="min-w-0 flex-1">
-            <UserMenu member={currentMember} variant="expanded" />
+            {currentMember ? (
+              <UserMenu member={currentMember} variant="expanded" />
+            ) : (
+              <p className="px-2 text-xs text-muted-foreground">
+                Account not linked to a member profile.
+              </p>
+            )}
           </div>
           <ThemeToggle className="shrink-0" />
         </div>
@@ -32,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <BrandLockup logoClassName="h-18" />
           <div className="flex items-center gap-1">
             <ThemeToggle className="text-white hover:bg-white/15 hover:text-white" />
-            <UserMenu member={currentMember} variant="compact" />
+            {currentMember && <UserMenu member={currentMember} variant="compact" />}
           </div>
         </header>
 
