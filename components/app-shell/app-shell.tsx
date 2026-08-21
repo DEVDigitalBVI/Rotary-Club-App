@@ -8,12 +8,12 @@ import { currentMember } from "@/lib/mock-data";
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-full min-w-0 flex-1">
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex print:hidden">
+      <aside className="sticky top-0 hidden h-dvh w-72 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex print:hidden">
         <div
-          className="flex h-28 items-center px-4"
+          className="flex h-32 items-center px-4"
           style={{ backgroundColor: "var(--rotary-blue)" }}
         >
-          <BrandLockup logoClassName="h-20" />
+          <BrandLockup logoClassName="h-24" />
         </div>
         <SidebarNav />
         <div className="flex items-center gap-2 border-t border-sidebar-border p-3">
@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className="sticky top-0 z-30 flex h-24 items-center justify-between px-4 md:hidden print:hidden"
           style={{ backgroundColor: "var(--rotary-blue)" }}
         >
-          <BrandLockup />
+          <BrandLockup logoClassName="h-18" />
           <div className="flex items-center gap-1">
             <ThemeToggle className="text-white hover:bg-white/15 hover:text-white" />
             <UserMenu member={currentMember} variant="compact" />
