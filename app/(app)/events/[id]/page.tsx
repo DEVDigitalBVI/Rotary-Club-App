@@ -5,14 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MemberAvatar } from "@/components/member-avatar";
 import { RsvpControl } from "@/components/events/rsvp-control";
 import { EventMaterials } from "@/components/events/event-materials";
-import {
-  events,
-  members,
-  currentMember,
-  canManageEvents,
-  TODAY,
-} from "@/lib/mock-data";
-import { formatDate } from "@/lib/format";
+import { getEventById } from "@/lib/data/events";
+import { getCurrentMember, getMembers } from "@/lib/data/members";
+import { getCommittees } from "@/lib/data/committees";
+import { canManageEvents } from "@/lib/mock-data";
+import { formatDate, todayDateString } from "@/lib/format";
 
 export default async function EventDetailPage({
   params,
@@ -20,12 +17,17 @@ export default async function EventDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const event = events.find((e) => e.id === id);
+  const [event, members, currentMember, committees] = await Promise.all([
+    getEventById(id),
+    getMembers(),
+    getCurrentMember(),
+    getCommittees(),
+  ]);
   if (!event) notFound();
 
-  const isAdmin = currentMember.role === "admin";
-  const mayManage = canManageEvents(currentMember);
-  const isUpcoming = event.date >= TODAY;
+  const isAdmin = currentMember?.role === "admin";
+  const mayManage = currentMember ? canManageEvents(currentMember, committees) : false;
+  const isUpcoming = event.date >= todayDateString();
   const attendees = event.attendeeIds
     ?.map((mid) => members.find((m) => m.id === mid))
     .filter((m): m is NonNullable<typeof m> => Boolean(m));
@@ -85,13 +87,20 @@ export default async function EventDetailPage({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent>
-              <RsvpControl initial={event.myRsvp} />
-            </CardContent>
-          </Card>
+          {currentMember && (
+            <Card>
+              <CardContent>
+                <RsvpControl
+                  eventId={event.id}
+                  memberId={currentMember.id}
+                  initial={event.myRsvp}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           <EventMaterials
+            eventId={event.id}
             flyer={event.flyer}
             agenda={event.agenda}
             canManage={mayManage}

@@ -2,19 +2,26 @@ import { PageHeader } from "@/components/page-header";
 import { EventCard } from "@/components/events/event-card";
 import { CreateEventDialog } from "@/components/events/create-event-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  events,
-  currentMember,
-  canManageEvents,
-  TODAY,
-} from "@/lib/mock-data";
+import { getEvents } from "@/lib/data/events";
+import { getCurrentMember } from "@/lib/data/members";
+import { getCommittees } from "@/lib/data/committees";
+import { canManageEvents } from "@/lib/mock-data";
+import { todayDateString } from "@/lib/format";
 
-export default function EventsPage() {
+export default async function EventsPage() {
+  const [events, currentMember, committees] = await Promise.all([
+    getEvents(),
+    getCurrentMember(),
+    getCommittees(),
+  ]);
+  const mayManage = currentMember ? canManageEvents(currentMember, committees) : false;
+  const today = todayDateString();
+
   const upcoming = [...events]
-    .filter((e) => e.date >= TODAY)
+    .filter((e) => e.date >= today)
     .sort((a, b) => (a.date < b.date ? -1 : 1));
   const past = [...events]
-    .filter((e) => e.date < TODAY)
+    .filter((e) => e.date < today)
     .sort((a, b) => (a.date < b.date ? 1 : -1));
 
   return (
@@ -22,7 +29,7 @@ export default function EventsPage() {
       <PageHeader
         title="Events"
         description="Meetings and events, and your RSVP status."
-        actions={canManageEvents(currentMember) ? <CreateEventDialog /> : undefined}
+        actions={mayManage ? <CreateEventDialog /> : undefined}
       />
 
       <div className="p-4 sm:p-8">

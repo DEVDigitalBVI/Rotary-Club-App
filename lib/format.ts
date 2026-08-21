@@ -26,6 +26,31 @@ export function todayMonthDay(timeZone: string = CLUB_TIME_ZONE) {
   return `${month}-${day}`;
 }
 
+/**
+ * A timestamptz instant as a YYYY-MM-DD date string in the club's local
+ * timezone — the shape upcoming/past sorting and formatDate() expect. Needed
+ * because "today" in BVI local time can be a different calendar day than
+ * `new Date()` read in the server's own timezone (UTC on Vercel).
+ */
+function clubDateString(date: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
+
+export function todayDateString(timeZone: string = CLUB_TIME_ZONE) {
+  return clubDateString(new Date(), timeZone);
+}
+
+export function toClubDateString(iso: string, timeZone: string = CLUB_TIME_ZONE) {
+  return clubDateString(new Date(iso), timeZone);
+}
+
 /** A birthday's month and day, with no year (the year on file isn't the point). */
 export function formatBirthday(iso: string) {
   return formatDate(iso, { year: undefined, month: "long", day: "numeric" });

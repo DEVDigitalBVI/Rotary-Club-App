@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Check, HelpCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RsvpStatus } from "@/lib/mock-data";
+import { updateRsvpAction } from "@/app/(app)/events/actions";
 
 const options: { value: Exclude<RsvpStatus, "none">; label: string; icon: typeof Check }[] = [
   { value: "yes", label: "Going", icon: Check },
@@ -12,8 +13,31 @@ const options: { value: Exclude<RsvpStatus, "none">; label: string; icon: typeof
   { value: "no", label: "Not going", icon: X },
 ];
 
-export function RsvpControl({ initial }: { initial: RsvpStatus }) {
+export function RsvpControl({
+  eventId,
+  memberId,
+  initial,
+}: {
+  eventId: string;
+  memberId: string;
+  initial: RsvpStatus;
+}) {
   const [status, setStatus] = useState<RsvpStatus>(initial);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function choose(value: Exclude<RsvpStatus, "none">) {
+    const previous = status;
+    setStatus(value);
+    setError(null);
+    startTransition(async () => {
+      const result = await updateRsvpAction(eventId, memberId, value);
+      if (result?.error) {
+        setStatus(previous);
+        setError(result.error);
+      }
+    });
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -26,8 +50,9 @@ export function RsvpControl({ initial }: { initial: RsvpStatus }) {
             <Button
               key={opt.value}
               variant={active ? "default" : "outline"}
+              disabled={pending}
               className={cn("font-heading", active && "shadow-sm")}
-              onClick={() => setStatus(opt.value)}
+              onClick={() => choose(opt.value)}
             >
               <Icon />
               {opt.label}
@@ -35,6 +60,7 @@ export function RsvpControl({ initial }: { initial: RsvpStatus }) {
           );
         })}
       </div>
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
