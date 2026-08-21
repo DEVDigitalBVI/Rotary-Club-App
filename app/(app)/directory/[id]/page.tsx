@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Mail, Phone, Calendar } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Calendar, Cake } from "lucide-react";
 import { MemberAvatar } from "@/components/member-avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
@@ -15,7 +15,7 @@ import {
 } from "@/lib/mock-data";
 import { getMemberById, getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatBirthday } from "@/lib/format";
 
 export default async function MemberProfilePage({
   params,
@@ -112,6 +112,12 @@ export default async function MemberProfilePage({
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="size-4" />
                 Member since {formatDate(member.joinDate, { year: "numeric", month: "long", day: undefined })}
+              </div>
+            )}
+            {member.dateOfBirth && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Cake className="size-4" />
+                Birthday {formatBirthday(member.dateOfBirth)}
               </div>
             )}
           </CardContent>

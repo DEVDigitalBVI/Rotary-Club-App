@@ -60,6 +60,8 @@ export type Member = {
   /** Absent when the club has nothing recorded yet. */
   foundation?: FoundationRecognition;
   bio?: string;
+  /** YYYY-MM-DD. Absent until the member sets it themselves. */
+  dateOfBirth?: string;
   avatarColor: string;
   avatarUrl?: string;
 };

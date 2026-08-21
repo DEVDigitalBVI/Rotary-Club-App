@@ -56,11 +56,12 @@ export async function updateProfileAction(
 ): Promise<DirectoryFormState> {
   const phone = String(formData.get("phone") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
+  const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("members")
-    .update({ phone: phone || null, bio: bio || null })
+    .update({ phone: phone || null, bio: bio || null, date_of_birth: dateOfBirth || null })
     .eq("id", memberId);
 
   if (error) {

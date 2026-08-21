@@ -7,6 +7,7 @@ import { NewsSourceBadge } from "@/components/news-source-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MemberAvatar } from "@/components/member-avatar";
+import { BirthdayBanner } from "@/components/dashboard/birthday-banner";
 import {
   currentMember,
   events,
@@ -18,8 +19,14 @@ import {
   TODAY,
 } from "@/lib/mock-data";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { getCurrentMember, getTodaysBirthdays } from "@/lib/data/members";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const [viewer, birthdaysToday] = await Promise.all([
+    getCurrentMember(),
+    getTodaysBirthdays(),
+  ]);
+
   const upcoming = events
     .filter((e) => e.date >= TODAY)
     .sort((a, b) => (a.date < b.date ? -1 : 1))
@@ -43,6 +50,8 @@ export default function DashboardPage() {
         title={`Welcome back, ${firstName}`}
         description="Here's what's happening in the club."
       />
+
+      <BirthdayBanner viewerId={viewer?.id} birthdays={birthdaysToday} />
 
       <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-8 lg:grid-cols-3">
         {/* Balance */}

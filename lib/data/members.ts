@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { initialsFromName } from "@/lib/format";
+import { initialsFromName, todayMonthDay } from "@/lib/format";
 import type { Member } from "@/lib/mock-data";
 
 type MemberRow = {
@@ -15,6 +15,7 @@ type MemberRow = {
   bio: string | null;
   avatar_color: string | null;
   avatar_url: string | null;
+  date_of_birth: string | null;
   paul_harris_count: number;
   polio_plus_society: boolean;
   action_groups: string[];
@@ -35,6 +36,7 @@ function toMember(row: MemberRow): Member {
     bio: row.bio ?? undefined,
     avatarColor: row.avatar_color ?? "var(--rotary-blue)",
     avatarUrl: row.avatar_url ?? undefined,
+    dateOfBirth: row.date_of_birth ?? undefined,
     foundation: {
       paulHarrisCount: row.paul_harris_count,
       polioPlusSociety: row.polio_plus_society,
@@ -80,4 +82,25 @@ export async function getMembers(): Promise<Member[]> {
     .returns<MemberRow[]>();
 
   return (data ?? []).map(toMember);
+}
+
+/**
+ * Members whose birthday is today, club-local. The club is small enough that
+ * fetching everyone with a date on file and filtering here is simpler than a
+ * date-part index, and matches how getMembers() already fetches the whole
+ * roster.
+ */
+export async function getTodaysBirthdays(): Promise<Member[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("members")
+    .select("*")
+    .not("date_of_birth", "is", null)
+    .order("name")
+    .returns<MemberRow[]>();
+
+  const monthDay = todayMonthDay();
+  return (data ?? [])
+    .filter((row) => row.date_of_birth!.slice(5) === monthDay)
+    .map(toMember);
 }

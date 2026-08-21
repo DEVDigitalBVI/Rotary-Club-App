@@ -71,6 +71,18 @@ export function EditProfileDialog({ member }: { member: Member }) {
             <Input id="edit-phone" name="phone" type="tel" defaultValue={member.phone} />
           </div>
           <div className="flex flex-col gap-1.5">
+            <Label htmlFor="edit-dob">Birthday</Label>
+            <Input
+              id="edit-dob"
+              name="dateOfBirth"
+              type="date"
+              defaultValue={member.dateOfBirth}
+            />
+            <p className="text-xs text-muted-foreground">
+              We&apos;ll give you a shout-out on the home screen that day.
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-bio">Bio</Label>
             <Textarea id="edit-bio" name="bio" rows={3} defaultValue={member.bio} />
           </div>
