@@ -7,133 +7,353 @@ import { MemberAvatar } from "@/components/member-avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/status-badge";
 import { AddMemberDialog } from "@/components/directory/add-member-dialog";
+import { CommitteeCard } from "@/components/directory/committee-card";
+import { ManageCommitteeDialog } from "@/components/directory/manage-committee-dialog";
 import { formatDate } from "@/lib/format";
-import type { Member } from "@/lib/mock-data";
+import {
+  canAddMembers,
+  committeeManageRight,
+  committeesForMember,
+  positionLabel,
+  actionGroupsByArea,
+  foundationRecognition,
+  paulHarrisLabel,
+  type Committee,
+  type Member,
+} from "@/lib/mock-data";
+
+/**
+ * `all`, `phf`, `polioplus`, or `ag:<group name>`. Encoded in one string so
+ * the whole thing fits a single Select rather than sprawling into three
+ * controls that are almost never used together.
+ */
+function matchesRecognition(member: Member, filter: string) {
+  if (filter === "all") return true;
+  const recognition = foundationRecognition(member);
+  if (filter === "phf") return recognition.paulHarrisCount > 0;
+  if (filter === "polioplus") return recognition.polioPlusSociety;
+  if (filter.startsWith("ag:")) {
+    return recognition.actionGroups.includes(filter.slice(3));
+  }
+  return true;
+}
 
 export function MemberDirectory({
   members,
-  isAdmin,
+  committees,
+  currentMember,
 }: {
   members: Member[];
-  isAdmin: boolean;
+  committees: Committee[];
+  currentMember: Member;
 }) {
   const [query, setQuery] = useState("");
-  const [committee, setCommittee] = useState("all");
+  const [committeeFilter, setCommitteeFilter] = useState("all");
+  // One control covers all three kinds of Foundation recognition. The
+  // Foundation director's real need is a list they can act on — "who is in the
+  // PolioPlus Society" — which a per-profile view can't answer.
+  const [recognitionFilter, setRecognitionFilter] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
 
-  const committees = useMemo(() => {
-    const set = new Set<string>();
-    members.forEach((m) => m.committees.forEach((c) => set.add(c)));
-    return Array.from(set).sort();
-  }, [members]);
+  // Committee rosters live in state so a director's edits show up immediately
+  // on the cards and on the member badges — the same design-preview treatment
+  // the chat screen gives new messages.
+  const [roster, setRoster] = useState(committees);
+  const [managing, setManaging] = useState<Committee | null>(null);
 
-  const filtered = members.filter((m) => {
-    const matchesQuery =
-      query.trim().length === 0 ||
-      m.name.toLowerCase().includes(query.toLowerCase()) ||
-      m.classification.toLowerCase().includes(query.toLowerCase());
-    const matchesCommittee = committee === "all" || m.committees.includes(committee);
-    return matchesQuery && matchesCommittee;
-  });
+  const mayAddMembers = canAddMembers(currentMember, roster);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return members.filter((member) => {
+      const matchesQuery =
+        q.length === 0 ||
+        member.name.toLowerCase().includes(q) ||
+        member.classification.toLowerCase().includes(q);
+      const matchesCommittee =
+        committeeFilter === "all" ||
+        roster.some(
+          (committee) =>
+            committee.id === committeeFilter &&
+            committee.memberIds.includes(member.id)
+        );
+      return (
+        matchesQuery &&
+        matchesCommittee &&
+        matchesRecognition(member, recognitionFilter)
+      );
+    });
+  }, [members, query, committeeFilter, recognitionFilter, roster]);
+
+  const committeeFilterLabel = (value: string) =>
+    roster.find((committee) => committee.id === value)?.name ??
+    "All committees";
+
+  const recognitionFilterLabel = (value: string) => {
+    if (value === "phf") return "Paul Harris Fellows";
+    if (value === "polioplus") return "PolioPlus Society";
+    if (value.startsWith("ag:")) return value.slice(3);
+    return "Any recognition";
+  };
+
+  const filtersActive =
+    query.trim().length > 0 ||
+    committeeFilter !== "all" ||
+    recognitionFilter !== "all";
 
   return (
     <div className="flex flex-col gap-4 p-4 sm:p-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 flex-col gap-3 sm:flex-row">
-          <div className="relative flex-1 sm:max-w-xs">
-            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search by name or classification"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <Select value={committee} onValueChange={(v) => setCommittee(v as string)}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="All committees" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All committees</SelectItem>
-              {committees.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {isAdmin && (
-          <Button className="font-heading" onClick={() => setAddOpen(true)}>
-            <Plus />
-            Add member
-          </Button>
-        )}
-      </div>
+      <Tabs defaultValue="members">
+        <TabsList>
+          <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
+          <TabsTrigger value="committees">
+            Committees ({roster.length})
+          </TabsTrigger>
+        </TabsList>
 
-      <p className="text-sm text-muted-foreground">
-        {filtered.length} of {members.length} members
-      </p>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filtered.map((member) => (
-          <Link key={member.id} href={`/directory/${member.id}`}>
-            <Card className="h-full p-4 transition-shadow hover:shadow-[var(--shadow-card-hover)]">
-              <div className="flex items-start gap-3">
-                <MemberAvatar
-                  member={member}
-                  className="size-12"
-                  fallbackClassName="font-heading text-sm"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="font-heading truncate text-sm font-semibold text-foreground">
-                    {member.name}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {member.classification}
-                  </p>
-                  {member.status !== "active" && (
-                    <StatusBadge
-                      tone={member.status === "honorary" ? "violet" : "neutral"}
-                      className="mt-1.5"
-                    >
-                      {member.status === "honorary" ? "Honorary" : "Inactive"}
-                    </StatusBadge>
-                  )}
+        <TabsContent value="members" className="mt-4 flex flex-col gap-4">
+          {/* Labelled individually: once a filter is set, a bare trigger reading
+              "Membership" or "Peace" gives no clue which axis it narrowed. */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <div className="flex flex-col gap-1.5 sm:max-w-xs sm:flex-1">
+                <Label htmlFor="directory-search">Search</Label>
+                <div className="relative">
+                  <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="directory-search"
+                    placeholder="Name or classification"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="pl-8"
+                  />
                 </div>
               </div>
-              {member.committees.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {member.committees.map((c) => (
-                    <StatusBadge key={c} tone="sky">
-                      {c}
-                    </StatusBadge>
-                  ))}
-                </div>
-              )}
-              <p className="mt-3 text-xs text-muted-foreground">
-                Member since {formatDate(member.joinDate, { year: "numeric", month: "long", day: undefined })}
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="directory-committee">Committee</Label>
+                <Select
+                  value={committeeFilter}
+                  onValueChange={(v) => setCommitteeFilter(v as string)}
+                >
+                  <SelectTrigger
+                    id="directory-committee"
+                    className="w-full sm:w-52"
+                  >
+                    <SelectValue>{committeeFilterLabel}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All committees</SelectItem>
+                    {roster.map((committee) => (
+                      <SelectItem key={committee.id} value={committee.id}>
+                        {committee.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="directory-recognition">
+                  Foundation recognition
+                </Label>
+                <Select
+                  value={recognitionFilter}
+                  onValueChange={(v) => setRecognitionFilter(v as string)}
+                >
+                  <SelectTrigger
+                    id="directory-recognition"
+                    className="w-full sm:w-56"
+                  >
+                    <SelectValue>{recognitionFilterLabel}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Any recognition</SelectItem>
+                    <SelectItem value="phf">Paul Harris Fellows</SelectItem>
+                    <SelectItem value="polioplus">PolioPlus Society</SelectItem>
+                    {actionGroupsByArea.map((entry) => (
+                      <SelectGroup key={entry.area}>
+                        <SelectSeparator />
+                        <SelectLabel className="font-heading pt-2 text-[0.7rem] text-foreground">
+                          {entry.area}
+                        </SelectLabel>
+                        {entry.groups.map((group) => (
+                          <SelectItem key={group} value={`ag:${group}`}>
+                            {group}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Adding a member is an officer act, not a committee one. */}
+            {mayAddMembers && (
+              <Button className="font-heading" onClick={() => setAddOpen(true)}>
+                <Plus />
+                Add member
+              </Button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p className="text-sm text-muted-foreground">
+              {filtered.length} of {members.length} members
+            </p>
+            {filtersActive && (
+              <Button
+                variant="link"
+                size="sm"
+                className="font-heading h-auto p-0"
+                onClick={() => {
+                  setQuery("");
+                  setCommitteeFilter("all");
+                  setRecognitionFilter("all");
+                }}
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filtered.map((member) => {
+              const memberCommittees = committeesForMember(member.id, roster);
+              const office = positionLabel(member.position);
+              // Compact here; the profile carries the full recognition detail.
+              const recognition = foundationRecognition(member);
+              const phf = paulHarrisLabel(recognition.paulHarrisCount, true);
+              return (
+                <Link key={member.id} href={`/directory/${member.id}`}>
+                  <Card className="h-full p-4 transition-shadow hover:shadow-[var(--shadow-card-hover)]">
+                    <div className="flex items-start gap-3">
+                      <MemberAvatar
+                        member={member}
+                        className="size-12"
+                        fallbackClassName="font-heading text-sm"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-heading truncate text-sm font-semibold text-foreground">
+                          {member.name}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {member.classification}
+                        </p>
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {office && (
+                            <StatusBadge tone="gold">{office}</StatusBadge>
+                          )}
+                          {phf && <StatusBadge tone="grass">{phf}</StatusBadge>}
+                          {recognition.polioPlusSociety && (
+                            <StatusBadge tone="cardinal">PolioPlus</StatusBadge>
+                          )}
+                          {member.status !== "active" && (
+                            <StatusBadge
+                              tone={
+                                member.status === "honorary" ? "violet" : "neutral"
+                              }
+                            >
+                              {member.status === "honorary"
+                                ? "Honorary"
+                                : "Inactive"}
+                            </StatusBadge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {memberCommittees.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        {memberCommittees.map((committee) => (
+                          <StatusBadge
+                            key={committee.id}
+                            tone={
+                              committee.directorId === member.id ? "violet" : "sky"
+                            }
+                          >
+                            {committee.name}
+                            {committee.directorId === member.id && " · Director"}
+                          </StatusBadge>
+                        ))}
+                      </div>
+                    )}
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Member since{" "}
+                      {formatDate(member.joinDate, {
+                        year: "numeric",
+                        month: "long",
+                        day: undefined,
+                      })}
+                    </p>
+                  </Card>
+                </Link>
+              );
+            })}
+            {filtered.length === 0 && (
+              <p className="col-span-full py-12 text-center text-sm text-muted-foreground">
+                No members match your search.
               </p>
-            </Card>
-          </Link>
-        ))}
-        {filtered.length === 0 && (
-          <p className="col-span-full py-12 text-center text-sm text-muted-foreground">
-            No members match your search.
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="committees" className="mt-4 flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            Five standing committees, each led by a director, plus the Board.
+            Directors manage their own committee&apos;s roster; the President
+            and Secretary can step in on any of them.
           </p>
-        )}
-      </div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {roster.map((committee) => (
+              <CommitteeCard
+                key={committee.id}
+                committee={committee}
+                members={members}
+                manageRight={committeeManageRight(currentMember, committee)}
+                onManage={() => setManaging(committee)}
+              />
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <AddMemberDialog open={addOpen} onOpenChange={setAddOpen} />
+
+      <ManageCommitteeDialog
+        committee={managing}
+        members={members}
+        manageRight={
+          managing ? committeeManageRight(currentMember, managing) : null
+        }
+        open={managing !== null}
+        onOpenChange={(next) => {
+          if (!next) setManaging(null);
+        }}
+        onSave={(memberIds) => {
+          setRoster((prev) =>
+            prev.map((committee) =>
+              committee.id === managing?.id
+                ? { ...committee, memberIds }
+                : committee
+            )
+          );
+        }}
+      />
     </div>
   );
 }

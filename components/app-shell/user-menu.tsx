@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import type { Member } from "@/lib/mock-data";
+import { positionLabel, type Member } from "@/lib/mock-data";
 
 export function UserMenu({
   member,
@@ -48,7 +48,7 @@ export function UserMenu({
                 {member.name}
               </span>
               <span className="truncate text-xs text-muted-foreground">
-                {member.role === "admin" ? "Board / Admin" : "Member"}
+                {positionLabel(member.position) ?? "Member"}
               </span>
             </span>
             <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />

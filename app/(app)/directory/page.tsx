@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/page-header";
 import { MemberDirectory } from "@/components/directory/member-directory";
-import { members, currentMember } from "@/lib/mock-data";
+import { members, committees, currentMember } from "@/lib/mock-data";
 
 export default function DirectoryPage() {
   return (
@@ -9,7 +9,11 @@ export default function DirectoryPage() {
         title="Directory"
         description="Find fellow members and see who's on which committee."
       />
-      <MemberDirectory members={members} isAdmin={currentMember.role === "admin"} />
+      <MemberDirectory
+        members={members}
+        committees={committees}
+        currentMember={currentMember}
+      />
     </div>
   );
 }

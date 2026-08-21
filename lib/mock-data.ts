@@ -22,6 +22,29 @@ export function daysBefore(iso: string, days: number) {
 export type MembershipStatus = "active" | "inactive" | "honorary";
 export type MemberRole = "member" | "admin";
 
+/**
+ * Rotary Foundation recognition. Kept on the member but not editable by them:
+ * these are club records of giving, maintained by the Secretary and the
+ * Foundation director, so a member cannot award themselves a Paul Harris.
+ */
+export type FoundationRecognition = {
+  /**
+   * How many Paul Harris Fellow recognitions the member holds, stored as a
+   * total: 0 none, 1 a Paul Harris Fellow, 4 a fellow with three additional
+   * recognitions. Note that Rotary's shorthand counts the *additions*, so a
+   * total of 4 is written "PHF+3" — paulHarrisLabel() does that conversion, so
+   * store the total here and never the +N.
+   */
+  paulHarrisCount: number;
+  /** Member of the PolioPlus Society. */
+  polioPlusSociety: boolean;
+  /** Rotary Action Groups the member belongs to. */
+  actionGroups: string[];
+};
+
+/** Elected club officers. Distinct from committee directorships below. */
+export type ClubPosition = "president" | "president-elect" | "secretary" | "treasurer";
+
 export type Member = {
   id: string;
   name: string;
@@ -32,7 +55,10 @@ export type Member = {
   joinDate: string;
   status: MembershipStatus;
   role: MemberRole;
-  committees: string[];
+  /** Set only for the handful of members holding an elected office. */
+  position?: ClubPosition;
+  /** Absent when the club has nothing recorded yet. */
+  foundation?: FoundationRecognition;
   bio?: string;
   avatarColor: string;
   avatarUrl?: string;
@@ -49,10 +75,15 @@ export const members: Member[] = [
     joinDate: "2021-03-14",
     status: "active",
     role: "admin",
-    committees: ["Board", "Membership"],
+    position: "secretary",
     bio: "Club secretary. Builds the tools nobody else wants to.",
     avatarColor: "var(--rotary-blue)",
     avatarUrl: "https://i.pravatar.cc/150?u=m-hodge",
+    foundation: {
+      paulHarrisCount: 1,
+      polioPlusSociety: false,
+      actionGroups: ["Environmental Sustainability"],
+    },
   },
   {
     id: "m-francis",
@@ -64,10 +95,15 @@ export const members: Member[] = [
     joinDate: "2018-09-02",
     status: "active",
     role: "admin",
-    committees: ["Board", "Community Service"],
+    position: "president",
     bio: "Club president, 2025–2026. Runs the reef cleanup every spring.",
     avatarColor: "var(--rotary-turquoise)",
     avatarUrl: "https://i.pravatar.cc/150?u=m-francis",
+    foundation: {
+      paulHarrisCount: 4,
+      polioPlusSociety: true,
+      actionGroups: ["Environmental Sustainability", "Water, Sanitation, and Hygiene (WASH)"],
+    },
   },
   {
     id: "m-charles",
@@ -79,9 +115,14 @@ export const members: Member[] = [
     joinDate: "2016-01-20",
     status: "active",
     role: "admin",
-    committees: ["Board", "Finance"],
+    position: "treasurer",
     bio: "Treasurer. Sends the friendliest past-due reminders in the district.",
     avatarColor: "var(--rotary-grass)",
+    foundation: {
+      paulHarrisCount: 2,
+      polioPlusSociety: true,
+      actionGroups: [],
+    },
   },
   {
     id: "m-james",
@@ -93,7 +134,6 @@ export const members: Member[] = [
     joinDate: "2022-06-11",
     status: "active",
     role: "member",
-    committees: ["Events"],
     avatarColor: "var(--rotary-cranberry)",
   },
   {
@@ -106,8 +146,12 @@ export const members: Member[] = [
     joinDate: "2019-11-05",
     status: "active",
     role: "member",
-    committees: ["Community Service"],
     avatarColor: "var(--rotary-violet)",
+    foundation: {
+      paulHarrisCount: 1,
+      polioPlusSociety: false,
+      actionGroups: ["Disaster Assistance"],
+    },
   },
   {
     id: "m-defreitas",
@@ -119,8 +163,12 @@ export const members: Member[] = [
     joinDate: "2023-02-27",
     status: "active",
     role: "member",
-    committees: ["International Service"],
     avatarColor: "var(--rotary-sky)",
+    foundation: {
+      paulHarrisCount: 1,
+      polioPlusSociety: false,
+      actionGroups: ["Reproductive, Maternal, and Child Health"],
+    },
   },
   {
     id: "m-rollins",
@@ -132,7 +180,6 @@ export const members: Member[] = [
     joinDate: "2020-08-19",
     status: "inactive",
     role: "member",
-    committees: ["Membership"],
     avatarColor: "var(--rotary-orange)",
   },
   {
@@ -145,9 +192,13 @@ export const members: Member[] = [
     joinDate: "2014-04-30",
     status: "honorary",
     role: "member",
-    committees: [],
     bio: "Past president, 2016–2017.",
     avatarColor: "var(--rotary-azure)",
+    foundation: {
+      paulHarrisCount: 6,
+      polioPlusSociety: true,
+      actionGroups: ["Peace"],
+    },
   },
   {
     id: "m-outten",
@@ -159,12 +210,284 @@ export const members: Member[] = [
     joinDate: "2021-10-08",
     status: "active",
     role: "member",
-    committees: ["Events", "Community Service"],
     avatarColor: "var(--rotary-cardinal)",
+    foundation: {
+      paulHarrisCount: 0,
+      polioPlusSociety: true,
+      actionGroups: [],
+    },
   },
 ];
 
 export const currentMember = members[0];
+
+// ---------------------------------------------------------------------------
+// Committees
+// ---------------------------------------------------------------------------
+
+// The club runs five standing committees, each led by a director. Committees
+// are their own records rather than a list of strings on each member, because
+// they now carry a director and an editable roster — and because the roster is
+// the thing a director is given permission to change.
+
+export type CommitteeId =
+  | "board"
+  | "youth-service"
+  | "membership"
+  | "club-administration"
+  | "foundation"
+  | "community-service";
+
+export type Committee = {
+  id: CommitteeId;
+  name: string;
+  description: string;
+  /**
+   * The member who leads it. Absent on the Board, which the President chairs
+   * ex officio rather than having a director appointed to it.
+   */
+  directorId?: string;
+  /** Includes the director — they sit on their own committee. */
+  memberIds: string[];
+  /**
+   * How the committee is led. A standing committee has a director who runs it;
+   * the Board is led by the officers collectively. This describes leadership,
+   * not permission — see committeeManageRight() for who may edit a roster.
+   */
+  managedBy: "director" | "officers";
+};
+
+export const committees: Committee[] = [
+  {
+    id: "board",
+    name: "Board of Directors",
+    description: "The club officers and committee directors.",
+    memberIds: [
+      "m-francis",
+      "m-hodge",
+      "m-charles",
+      "m-defreitas",
+      "m-simmonds",
+      "m-pemberton",
+    ],
+    managedBy: "officers",
+  },
+  {
+    id: "youth-service",
+    name: "Youth Service",
+    description: "Interact, Rotaract, RYLA, and youth exchange.",
+    directorId: "m-defreitas",
+    memberIds: ["m-defreitas", "m-james"],
+    managedBy: "director",
+  },
+  {
+    id: "membership",
+    name: "Membership",
+    description: "Recruiting, proposing, and retaining members.",
+    directorId: "m-hodge",
+    memberIds: ["m-hodge", "m-rollins", "m-francis"],
+    managedBy: "director",
+  },
+  {
+    id: "club-administration",
+    name: "Club Administration",
+    description: "Meetings, hospitality, and running the club week to week.",
+    directorId: "m-charles",
+    memberIds: ["m-charles", "m-james", "m-hodge"],
+    managedBy: "director",
+  },
+  {
+    id: "foundation",
+    name: "Foundation",
+    description: "Rotary Foundation giving, grants, and PolioPlus.",
+    directorId: "m-simmonds",
+    memberIds: ["m-simmonds", "m-outten"],
+    managedBy: "director",
+  },
+  {
+    id: "community-service",
+    name: "Community Service",
+    description: "Local projects and hands-on service across the territory.",
+    directorId: "m-pemberton",
+    memberIds: ["m-pemberton", "m-outten", "m-francis"],
+    managedBy: "director",
+  },
+];
+
+const positionLabels: Record<ClubPosition, string> = {
+  president: "President",
+  "president-elect": "President-Elect",
+  secretary: "Secretary",
+  treasurer: "Treasurer",
+};
+
+export function positionLabel(position: ClubPosition | undefined) {
+  return position ? positionLabels[position] : undefined;
+}
+
+export function committeesForMember(memberId: string, roster = committees) {
+  return roster.filter((committee) => committee.memberIds.includes(memberId));
+}
+
+export function committeesDirectedBy(memberId: string, roster = committees) {
+  return roster.filter((committee) => committee.directorId === memberId);
+}
+
+/**
+ * Adding someone to the club roster is a club-officer act, not a committee
+ * one: it is how a person becomes a Rotarian here. Kept to the President, the
+ * Secretary, and the Club Administration director.
+ */
+export function canAddMembers(member: Member, roster = committees) {
+  if (member.position === "president" || member.position === "secretary") {
+    return true;
+  }
+  return roster.some(
+    (committee) =>
+      committee.id === "club-administration" && committee.directorId === member.id
+  );
+}
+
+/**
+ * Rotary Action Groups, grouped by the area of focus each serves. Kept in that
+ * structure rather than flattened alphabetically because the areas of focus
+ * are how Rotarians navigate this list — someone looking for their group knows
+ * the cause before they know the group's exact name.
+ *
+ * Names are RI's own, punctuation included: display them verbatim, and treat
+ * them as the stored value, so renaming one here is a data migration.
+ */
+export const actionGroupsByArea: { area: string; groups: string[] }[] = [
+  {
+    area: "Promoting Peace",
+    groups: [
+      "Domestic Violence Prevention",
+      "Peace",
+      "Refugees, Forced Displacement, and Migration",
+      "Slavery Prevention",
+    ],
+  },
+  {
+    area: "Fighting Disease",
+    groups: [
+      "Addiction Prevention",
+      "Alzheimer's and Dementia",
+      "Blindness Prevention",
+      "Blood, Tissue, and Organ Donation",
+      "Diabetes",
+      "Family Health and AIDS Prevention",
+      "Health Education and Wellness",
+      "Hearing",
+      "Hepatitis Eradication",
+      "Malaria",
+      "Mental Health Initiatives",
+      "Multiple Sclerosis",
+      "Polio Survivors and Associates",
+    ],
+  },
+  {
+    area: "Providing Clean Water and Sanitation",
+    groups: [
+      "Menstrual Health and Hygiene",
+      "Water, Sanitation, and Hygiene (WASH)",
+    ],
+  },
+  {
+    area: "Saving Mothers and Children",
+    groups: ["Clubfoot", "Reproductive, Maternal, and Child Health"],
+  },
+  {
+    area: "Supporting Education",
+    groups: ["Basic Education and Literacy"],
+  },
+  {
+    area: "Growing Local Economies",
+    groups: ["Community Economic Development", "Disaster Assistance"],
+  },
+  {
+    area: "Protecting the Environment",
+    groups: ["Endangered Species", "Environmental Sustainability"],
+  },
+  {
+    area: "Multi-Focus Groups",
+    groups: ["Food Plant Solutions"],
+  },
+];
+
+/** Flat list, for anything that just needs to know the valid values. */
+export const actionGroupOptions = actionGroupsByArea.flatMap(
+  (entry) => entry.groups
+);
+
+const emptyRecognition: FoundationRecognition = {
+  paulHarrisCount: 0,
+  polioPlusSociety: false,
+  actionGroups: [],
+};
+
+/** Normalises the optional field so callers never branch on undefined. */
+export function foundationRecognition(member: Member): FoundationRecognition {
+  return member.foundation ?? emptyRecognition;
+}
+
+/**
+ * Formats a recognition total the way Rotary International writes it: the
+ * first recognition is a plain "Paul Harris Fellow", and each one after that
+ * is a "+N" counting the additions — so a total of 4 reads PHF+3, not PHF×4.
+ * Returns null below 1 so callers render nothing rather than an empty badge.
+ */
+export function paulHarrisLabel(count: number, short = false) {
+  if (count < 1) return null;
+  if (count === 1) return short ? "PHF" : "Paul Harris Fellow";
+  // Abbreviated it closes up ("PHF+3"); spelled out it takes a space
+  // ("Paul Harris Fellow +3"), which is how RI sets it.
+  return short ? `PHF+${count - 1}` : `Paul Harris Fellow +${count - 1}`;
+}
+
+export function hasAnyRecognition(member: Member) {
+  const recognition = foundationRecognition(member);
+  return (
+    recognition.paulHarrisCount > 0 ||
+    recognition.polioPlusSociety ||
+    recognition.actionGroups.length > 0
+  );
+}
+
+/**
+ * Foundation recognition is a giving record, so it is maintained by the
+ * Secretary and the Foundation director rather than by members or by whoever
+ * happens to hold another directorship.
+ */
+export function canEditRecognition(member: Member, roster = committees) {
+  if (member.position === "secretary") return true;
+  return roster.some(
+    (committee) =>
+      committee.id === "foundation" && committee.directorId === member.id
+  );
+}
+
+/** Why a member may edit a committee's roster, or null if they may not. */
+export type CommitteeManageRight = "director" | "officer" | null;
+
+/**
+ * A director owns their own committee's roster. The President and Secretary
+ * can edit any of them, but that is an override rather than their normal
+ * business — it exists for the director who is travelling, unresponsive, or
+ * mid-handover. So this returns *why* the right is held rather than a bare
+ * boolean, and the UI says which one is in play: an officer reshuffling
+ * someone else's committee should be able to see that that is what they are
+ * doing.
+ */
+export function committeeManageRight(
+  member: Member,
+  committee: Committee
+): CommitteeManageRight {
+  if (committee.directorId === member.id) return "director";
+  if (member.position === "president" || member.position === "secretary") {
+    return "officer";
+  }
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Events

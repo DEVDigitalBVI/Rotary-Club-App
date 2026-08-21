@@ -6,7 +6,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { EditProfileDialog } from "@/components/directory/edit-profile-dialog";
 import { MemberAdminMenu } from "@/components/directory/member-admin-menu";
-import { members, currentMember } from "@/lib/mock-data";
+import { RecognitionCard } from "@/components/directory/recognition-card";
+import {
+  members,
+  currentMember,
+  committeesForMember,
+  positionLabel,
+  foundationRecognition,
+  canEditRecognition,
+} from "@/lib/mock-data";
 import { formatDate } from "@/lib/format";
 
 export default async function MemberProfilePage({
@@ -19,6 +27,8 @@ export default async function MemberProfilePage({
   if (!member) notFound();
 
   const isSelf = member.id === currentMember.id;
+  const memberCommittees = committeesForMember(member.id);
+  const office = positionLabel(member.position);
   const isAdmin = currentMember.role === "admin";
 
   return (
@@ -44,9 +54,7 @@ export default async function MemberProfilePage({
                 <h1 className="font-heading text-xl font-semibold text-foreground">
                   {member.name}
                 </h1>
-                {member.role === "admin" && (
-                  <StatusBadge tone="gold">Board / Admin</StatusBadge>
-                )}
+                {office && <StatusBadge tone="gold">{office}</StatusBadge>}
                 {member.status !== "active" && (
                   <StatusBadge tone={member.status === "honorary" ? "violet" : "neutral"}>
                     {member.status === "honorary" ? "Honorary" : "Inactive"}
@@ -56,11 +64,15 @@ export default async function MemberProfilePage({
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {member.classification}
               </p>
-              {member.committees.length > 0 && (
+              {memberCommittees.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {member.committees.map((c) => (
-                    <StatusBadge key={c} tone="sky">
-                      {c}
+                  {memberCommittees.map((committee) => (
+                    <StatusBadge
+                      key={committee.id}
+                      tone={committee.directorId === member.id ? "violet" : "sky"}
+                    >
+                      {committee.name}
+                      {committee.directorId === member.id && " · Director"}
                     </StatusBadge>
                   ))}
                 </div>
@@ -98,6 +110,12 @@ export default async function MemberProfilePage({
             </div>
           </CardContent>
         </Card>
+
+        <RecognitionCard
+          member={member}
+          recognition={foundationRecognition(member)}
+          canEdit={canEditRecognition(currentMember)}
+        />
 
         {member.bio && (
           <Card className="lg:col-span-3">
