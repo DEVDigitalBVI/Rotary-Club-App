@@ -25,11 +25,8 @@ export function NewsFeed({
 }) {
   const [filter, setFilter] = useState<NewsSource | "all">("all");
   const [editing, setEditing] = useState<NewsPost | null>(null);
-  // Mirrors the incoming posts, but edits land here so a correction shows up
-  // immediately without a backend to round-trip through.
-  const [items, setItems] = useState(posts);
 
-  const filtered = items.filter((p) => filter === "all" || p.source === filter);
+  const filtered = posts.filter((p) => filter === "all" || p.source === filter);
 
   return (
     <div className="flex flex-col gap-4">
@@ -120,22 +117,6 @@ export function NewsFeed({
         open={editing !== null}
         onOpenChange={(next) => {
           if (!next) setEditing(null);
-        }}
-        onSave={(updates) => {
-          setItems((prev) =>
-            prev.map((item) =>
-              item.id === editing?.id
-                ? {
-                    ...item,
-                    title: updates.title,
-                    body: updates.body,
-                    image: updates.photo
-                      ? { url: updates.photo.url, alt: updates.photo.name }
-                      : undefined,
-                  }
-                : item
-            )
-          );
         }}
       />
     </div>
