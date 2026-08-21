@@ -39,3 +39,14 @@ export function initialsFromName(name: string) {
     .slice(0, 2)
     .toUpperCase();
 }
+
+/**
+ * Whole days from `fromIso` to `toIso` (both YYYY-MM-DD), positive when `to`
+ * is the later date. Computed in UTC so the answer doesn't shift with the
+ * viewer's timezone, and so it stays identical between server and client.
+ */
+export function daysBetween(fromIso: string, toIso: string) {
+  const from = Date.parse(`${fromIso}T00:00:00Z`);
+  const to = Date.parse(`${toIso}T00:00:00Z`);
+  return Math.round((to - from) / 86_400_000);
+}

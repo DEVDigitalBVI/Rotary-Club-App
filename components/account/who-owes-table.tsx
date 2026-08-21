@@ -10,13 +10,21 @@ import {
 import { MemberAvatar } from "@/components/member-avatar";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency } from "@/lib/format";
-import { balanceForMember, type Member } from "@/lib/mock-data";
+import {
+  balanceForMember,
+  overdueBalanceForMember,
+  type Member,
+} from "@/lib/mock-data";
 
 export function WhoOwesTable({ members }: { members: Member[] }) {
   const owing = members
-    .map((m) => ({ member: m, balance: balanceForMember(m.id) }))
+    .map((m) => ({
+      member: m,
+      balance: balanceForMember(m.id),
+      overdue: overdueBalanceForMember(m.id),
+    }))
     .filter((row) => row.balance > 0)
-    .sort((a, b) => b.balance - a.balance);
+    .sort((a, b) => b.overdue - a.overdue || b.balance - a.balance);
 
   if (owing.length === 0) {
     return (
@@ -35,7 +43,7 @@ export function WhoOwesTable({ members }: { members: Member[] }) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {owing.map(({ member, balance }) => (
+        {owing.map(({ member, balance, overdue }) => (
           <TableRow key={member.id}>
             <TableCell>
               <Link
@@ -51,7 +59,14 @@ export function WhoOwesTable({ members }: { members: Member[] }) {
               </Link>
             </TableCell>
             <TableCell className="text-right">
-              <StatusBadge tone="cardinal">{formatCurrency(balance)}</StatusBadge>
+              <StatusBadge tone={overdue > 0 ? "cardinal" : "gold"}>
+                {formatCurrency(balance)}
+              </StatusBadge>
+              {overdue > 0 && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {formatCurrency(overdue)} overdue
+                </p>
+              )}
             </TableCell>
           </TableRow>
         ))}

@@ -14,6 +14,7 @@ import {
   members,
   newsPosts,
   balanceForMember,
+  overdueBalanceForMember,
   TODAY,
 } from "@/lib/mock-data";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -25,6 +26,7 @@ export default function DashboardPage() {
     .slice(0, 3);
 
   const balance = balanceForMember(currentMember.id);
+  const overdue = overdueBalanceForMember(currentMember.id);
 
   const latestMessages = channels
     .flatMap((c) => c.messages.map((m) => ({ ...m, channel: c.name })))
@@ -53,10 +55,17 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="font-heading text-3xl font-semibold text-foreground">
-              {formatCurrency(Math.abs(balance))}
+              {formatCurrency(balance)}
             </p>
-            <StatusBadge tone={balance > 0 ? "cardinal" : "grass"} className="mt-2">
-              {balance > 0 ? "Balance owed" : balance < 0 ? "Credit on account" : "Paid up"}
+            <StatusBadge
+              tone={overdue > 0 ? "cardinal" : balance > 0 ? "gold" : "grass"}
+              className="mt-2"
+            >
+              {overdue > 0
+                ? `${formatCurrency(overdue)} overdue`
+                : balance > 0
+                  ? "Balance owed"
+                  : "Paid up"}
             </StatusBadge>
             <Button
               variant="link"

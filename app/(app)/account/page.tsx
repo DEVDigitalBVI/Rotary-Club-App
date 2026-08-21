@@ -1,77 +1,92 @@
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
-import { InvoiceButton } from "@/components/account/invoice-button";
-import { LedgerTable } from "@/components/account/ledger-table";
+import { SyncStatus } from "@/components/account/sync-status";
+import { InvoiceList } from "@/components/account/invoice-list";
+import { PaymentHistory } from "@/components/account/payment-history";
 import { WhoOwesTable } from "@/components/account/who-owes-table";
-import { RecordPaymentDialog } from "@/components/account/record-payment-dialog";
-import { FeeSettingsDialog } from "@/components/account/fee-settings-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   currentMember,
   members,
-  feeSettings,
-  ledgerForMember,
+  invoicesForMember,
+  paymentsForMember,
   balanceForMember,
+  overdueBalanceForMember,
+  quickbooksSync,
+  isOverdue,
   TODAY,
-  daysBefore,
 } from "@/lib/mock-data";
-import { formatCurrency } from "@/lib/format";
-
-const THIRTY_DAYS_AGO = daysBefore(TODAY, 30);
+import { formatCurrency, formatDate, daysBetween } from "@/lib/format";
 
 export default function AccountPage() {
   const isAdmin = currentMember.role === "admin";
-  const entries = ledgerForMember(currentMember.id);
-  const recentEntries = entries.filter((e) => e.date >= THIRTY_DAYS_AGO);
+  const allInvoices = invoicesForMember(currentMember.id);
+  const openInvoices = allInvoices.filter((invoice) => invoice.balance > 0);
   const balance = balanceForMember(currentMember.id);
-  const owedItems = entries
-    .slice()
-    .reverse()
-    .reduce<{ label: string; amount: number }[]>((acc, entry) => {
-      if (entry.type === "charge") acc.push({ label: entry.label, amount: entry.amount });
-      return acc;
-    }, [])
-    .slice(-3);
+  const overdue = overdueBalanceForMember(currentMember.id);
+
+  // The soonest thing the member actually has to act on.
+  const nextDue = [...openInvoices]
+    .filter((invoice) => !isOverdue(invoice))
+    .sort((a, b) => (a.dueDate < b.dueDate ? -1 : 1))[0];
 
   return (
     <div>
       <PageHeader
         title="My Account"
         description="Your balance is private — only you and the treasurer can see it."
-        actions={<InvoiceButton />}
+        actions={
+          <SyncStatus
+            lastSyncedAt={quickbooksSync.lastSyncedAt}
+            status={quickbooksSync.status}
+          />
+        }
       />
 
       <div className="flex flex-col gap-6 p-4 sm:p-8">
         <Card>
-          <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Current balance</p>
-              <p className="font-heading mt-1 text-4xl font-semibold text-foreground">
-                {formatCurrency(Math.abs(balance))}
+              <p className="text-sm text-muted-foreground">
+                {balance > 0 ? "You owe" : "Current balance"}
               </p>
-              <StatusBadge tone={balance > 0 ? "cardinal" : "grass"} className="mt-2">
-                {balance > 0
-                  ? "Balance owed"
-                  : balance < 0
-                    ? "Credit on account"
-                    : "Paid up"}
-              </StatusBadge>
-            </div>
-            {balance > 0 && owedItems.length > 0 && (
-              <div className="rounded-lg bg-muted px-4 py-3 text-sm sm:min-w-64">
-                <p className="mb-1.5 text-xs font-medium text-muted-foreground">
-                  Made up of
+              <p className="font-heading mt-1 text-4xl font-semibold text-foreground">
+                {formatCurrency(balance)}
+              </p>
+
+              {balance === 0 ? (
+                <StatusBadge tone="grass" className="mt-2">
+                  Paid up
+                </StatusBadge>
+              ) : overdue > 0 ? (
+                <StatusBadge tone="cardinal" className="mt-2">
+                  {formatCurrency(overdue)} overdue
+                </StatusBadge>
+              ) : (
+                <StatusBadge tone="sky" className="mt-2">
+                  {openInvoices.length === 1
+                    ? "1 open invoice"
+                    : `${openInvoices.length} open invoices`}
+                </StatusBadge>
+              )}
+
+              {nextDue && overdue === 0 && (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Due {formatDate(nextDue.dueDate)} —{" "}
+                  {describeDaysUntil(daysBetween(TODAY, nextDue.dueDate))}.
                 </p>
-                <ul className="flex flex-col gap-1">
-                  {owedItems.map((item, i) => (
-                    <li key={i} className="flex items-center justify-between gap-4">
-                      <span className="text-foreground">{item.label}</span>
-                      <span className="font-medium text-foreground">
-                        {formatCurrency(item.amount)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+              )}
+            </div>
+
+            {balance > 0 && (
+              <div className="rounded-lg bg-muted px-4 py-3 text-sm sm:max-w-64">
+                <p className="mb-1 text-xs font-medium text-muted-foreground">
+                  How to pay
+                </p>
+                <p className="text-foreground">
+                  Pay at the hospitality desk, or contact the treasurer to
+                  arrange payment.
+                </p>
               </div>
             )}
           </CardContent>
@@ -80,24 +95,35 @@ export default function AccountPage() {
         <Card>
           <CardContent>
             <h2 className="font-heading text-sm font-semibold text-foreground">
-              Activity — last 30 days
+              Open invoices
             </h2>
             <div className="mt-3">
-              <LedgerTable entries={recentEntries} />
+              <InvoiceList invoices={openInvoices} today={TODAY} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent>
+            <h2 className="font-heading text-sm font-semibold text-foreground">
+              Payment history
+            </h2>
+            <div className="mt-3">
+              <PaymentHistory payments={paymentsForMember(currentMember.id)} />
             </div>
           </CardContent>
         </Card>
 
         {isAdmin && (
           <>
-            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-2">
               <h2 className="font-heading text-lg font-semibold text-foreground">
-                Treasurer tools
+                Treasurer view
               </h2>
-              <div className="flex flex-wrap gap-2">
-                <FeeSettingsDialog settings={feeSettings} />
-                <RecordPaymentDialog members={members} />
-              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Read-only. Invoices and payments are created in QuickBooks —
+                this is a view of what&apos;s there.
+              </p>
             </div>
 
             <Card>
@@ -115,4 +141,10 @@ export default function AccountPage() {
       </div>
     </div>
   );
+}
+
+function describeDaysUntil(days: number) {
+  if (days === 0) return "today";
+  if (days === 1) return "tomorrow";
+  return `in ${days} days`;
 }

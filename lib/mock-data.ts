@@ -284,53 +284,213 @@ export const events: EventItem[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Dues & meeting fees — account ledger
+// Accounts — mirrored from QuickBooks Online
 // ---------------------------------------------------------------------------
 
-export type LedgerEntry = {
+// QuickBooks is the system of record for anything money-related: invoices
+// originate there and payments are applied against member accounts there. The
+// app never writes — it reads, and its job is to make the numbers legible to a
+// member who is not going to log into QuickBooks to decipher them.
+//
+// These shapes deliberately mirror the QBO Accounting API entities (Invoice,
+// its Lines, and Payment) rather than inventing a friendlier model, so that
+// replacing this file with real API responses is a data-source change and not
+// a redesign. Amounts are dollars; QBO returns them as decimals.
+
+export type InvoiceLine = {
+  id: string;
+  description: string;
+  /** The meeting or event the line covers, where there is one. */
+  serviceDate?: string;
+  amount: number;
+};
+
+export type Invoice = {
+  id: string;
+  /** QBO's human-facing invoice number (DocNumber) — what the member quotes. */
+  docNumber: string;
+  memberId: string;
+  /** QBO TxnDate: the date the invoice was issued. */
+  txnDate: string;
+  dueDate: string;
+  total: number;
+  /** Amount still outstanding. Zero once fully paid. */
+  balance: number;
+  lines: InvoiceLine[];
+  /**
+   * A QuickBooks Payments link, present only if the club has that product
+   * enabled — it is a separate subscription from QuickBooks Online itself and
+   * has not been confirmed for this club yet. While it is undefined the UI
+   * tells members how to pay in person instead of showing a dead button.
+   */
+  paymentLink?: string;
+};
+
+export type PaymentMethod = "cash" | "check" | "online";
+
+export type Payment = {
   id: string;
   memberId: string;
-  type: "charge" | "payment";
+  txnDate: string;
   amount: number;
-  date: string;
-  label: string;
-  meta?: string; // meeting name for charges, payment method for payments
+  method: PaymentMethod;
+  /** Cheque number or similar — QBO's PaymentRefNum. */
+  reference?: string;
+  /** DocNumber of the invoice this payment was applied against. */
+  appliedTo?: string;
 };
 
-export const feeSettings = {
-  inPersonFee: 30,
-  onlineFee: 5,
-  annualDues: 250,
-};
-
-export type FeeSettings = typeof feeSettings;
-
-export const ledgerEntries: LedgerEntry[] = [
-  { id: "l-1", memberId: "m-hodge", type: "payment", amount: 150, date: "2026-07-01", label: "Prepayment", meta: "Online" },
-  { id: "l-2", memberId: "m-hodge", type: "charge", amount: 30, date: "2026-07-09", label: "Weekly Club Meeting", meta: "In person" },
-  { id: "l-3", memberId: "m-hodge", type: "charge", amount: 30, date: "2026-07-16", label: "Weekly Club Meeting", meta: "In person" },
-  { id: "l-4", memberId: "m-hodge", type: "charge", amount: 5, date: "2026-07-23", label: "Weekly Club Meeting", meta: "Online" },
-  { id: "l-5", memberId: "m-hodge", type: "charge", amount: 30, date: "2026-07-25", label: "Scholarship Fund Golf Tournament", meta: "In person" },
-  { id: "l-6", memberId: "m-hodge", type: "charge", amount: 30, date: "2026-08-13", label: "Weekly Club Meeting", meta: "In person" },
-  { id: "l-7", memberId: "m-james", type: "charge", amount: 30, date: "2026-08-13", label: "Weekly Club Meeting", meta: "In person" },
-  { id: "l-8", memberId: "m-james", type: "charge", amount: 250, date: "2026-07-01", label: "Annual Membership Dues", meta: "2026–2027" },
-  { id: "l-9", memberId: "m-james", type: "payment", amount: 100, date: "2026-07-05", label: "Payment", meta: "Check #1042" },
-  { id: "l-10", memberId: "m-pemberton", type: "charge", amount: 30, date: "2026-08-13", label: "Weekly Club Meeting", meta: "In person" },
-  { id: "l-11", memberId: "m-pemberton", type: "charge", amount: 30, date: "2026-07-25", label: "Scholarship Fund Golf Tournament", meta: "In person" },
-  { id: "l-12", memberId: "m-rollins", type: "charge", amount: 250, date: "2026-07-01", label: "Annual Membership Dues", meta: "2026–2027" },
+export const invoices: Invoice[] = [
+  {
+    id: "inv-1041",
+    docNumber: "1041",
+    memberId: "m-hodge",
+    txnDate: "2026-08-01",
+    dueDate: "2026-08-15",
+    total: 95,
+    balance: 0,
+    lines: [
+      { id: "ln-1", description: "Weekly meeting — in person", serviceDate: "2026-07-09", amount: 30 },
+      { id: "ln-2", description: "Weekly meeting — in person", serviceDate: "2026-07-16", amount: 30 },
+      { id: "ln-3", description: "Weekly meeting — online", serviceDate: "2026-07-23", amount: 5 },
+      { id: "ln-4", description: "Scholarship Fund Golf Tournament", serviceDate: "2026-07-25", amount: 30 },
+    ],
+  },
+  {
+    id: "inv-1052",
+    docNumber: "1052",
+    memberId: "m-hodge",
+    txnDate: "2026-08-15",
+    dueDate: "2026-08-31",
+    total: 60,
+    balance: 60,
+    lines: [
+      { id: "ln-5", description: "Weekly meeting — in person", serviceDate: "2026-08-06", amount: 30 },
+      { id: "ln-6", description: "Weekly meeting — in person", serviceDate: "2026-08-13", amount: 30 },
+    ],
+  },
+  {
+    id: "inv-1038",
+    docNumber: "1038",
+    memberId: "m-james",
+    txnDate: "2026-07-01",
+    dueDate: "2026-07-31",
+    total: 250,
+    balance: 150,
+    lines: [
+      { id: "ln-7", description: "Annual membership dues 2026–2027", amount: 250 },
+    ],
+  },
+  {
+    id: "inv-1053",
+    docNumber: "1053",
+    memberId: "m-james",
+    txnDate: "2026-08-15",
+    dueDate: "2026-08-31",
+    total: 30,
+    balance: 30,
+    lines: [
+      { id: "ln-8", description: "Weekly meeting — in person", serviceDate: "2026-08-13", amount: 30 },
+    ],
+  },
+  {
+    id: "inv-1054",
+    docNumber: "1054",
+    memberId: "m-pemberton",
+    txnDate: "2026-08-15",
+    dueDate: "2026-08-31",
+    total: 60,
+    balance: 60,
+    lines: [
+      { id: "ln-9", description: "Scholarship Fund Golf Tournament", serviceDate: "2026-07-25", amount: 30 },
+      { id: "ln-10", description: "Weekly meeting — in person", serviceDate: "2026-08-13", amount: 30 },
+    ],
+  },
+  {
+    id: "inv-1039",
+    docNumber: "1039",
+    memberId: "m-rollins",
+    txnDate: "2026-07-01",
+    dueDate: "2026-07-31",
+    total: 250,
+    balance: 250,
+    lines: [
+      { id: "ln-11", description: "Annual membership dues 2026–2027", amount: 250 },
+    ],
+  },
+  {
+    id: "inv-1040",
+    docNumber: "1040",
+    memberId: "m-francis",
+    txnDate: "2026-08-01",
+    dueDate: "2026-08-15",
+    total: 60,
+    balance: 0,
+    lines: [
+      { id: "ln-12", description: "Weekly meeting — in person", serviceDate: "2026-07-09", amount: 30 },
+      { id: "ln-13", description: "Weekly meeting — in person", serviceDate: "2026-07-16", amount: 30 },
+    ],
+  },
 ];
 
-export function ledgerForMember(memberId: string) {
-  return ledgerEntries
-    .filter((entry) => entry.memberId === memberId)
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+export const payments: Payment[] = [
+  { id: "pmt-1", memberId: "m-hodge", txnDate: "2026-08-04", amount: 95, method: "check", reference: "Check #2210", appliedTo: "1041" },
+  { id: "pmt-2", memberId: "m-james", txnDate: "2026-07-05", amount: 100, method: "check", reference: "Check #1042", appliedTo: "1038" },
+  { id: "pmt-3", memberId: "m-francis", txnDate: "2026-08-06", amount: 60, method: "cash", appliedTo: "1040" },
+  { id: "pmt-4", memberId: "m-hodge", txnDate: "2026-07-01", amount: 150, method: "online", reference: "Prepayment", appliedTo: "1030" },
+];
+
+/** Newest first, matching how QBO lists a customer's transactions. */
+export function invoicesForMember(memberId: string) {
+  return invoices
+    .filter((invoice) => invoice.memberId === memberId)
+    .sort((a, b) => (a.txnDate < b.txnDate ? 1 : -1));
 }
 
-export function balanceForMember(memberId: string) {
-  return ledgerEntries
-    .filter((entry) => entry.memberId === memberId)
-    .reduce((balance, entry) => balance + (entry.type === "charge" ? entry.amount : -entry.amount), 0);
+export function paymentsForMember(memberId: string) {
+  return payments
+    .filter((payment) => payment.memberId === memberId)
+    .sort((a, b) => (a.txnDate < b.txnDate ? 1 : -1));
 }
+
+/**
+ * What the member owes: the sum of what is still outstanding on their
+ * invoices. This is the app's stand-in for QBO's customer Balance field, which
+ * a real integration would read directly rather than recompute.
+ */
+export function balanceForMember(memberId: string) {
+  return invoicesForMember(memberId).reduce(
+    (total, invoice) => total + invoice.balance,
+    0
+  );
+}
+
+/** An invoice is overdue once its due date has passed with a balance left. */
+export function isOverdue(invoice: Invoice, today: string = TODAY) {
+  return invoice.balance > 0 && invoice.dueDate < today;
+}
+
+export function overdueBalanceForMember(memberId: string, today: string = TODAY) {
+  return invoicesForMember(memberId)
+    .filter((invoice) => isOverdue(invoice, today))
+    .reduce((total, invoice) => total + invoice.balance, 0);
+}
+
+/**
+ * Stands in for the record a real integration would keep of its last
+ * successful pull from the QuickBooks API. Offset from the current clock so
+ * the preview always shows a healthy, recent sync; a real one would be a
+ * stored timestamp, and "stale" and "disconnected" are the states the UI has
+ * to survive — QBO's OAuth tokens expire, so a connection that silently died
+ * is a normal condition rather than an edge case.
+ */
+export const quickbooksSync: {
+  lastSyncedAt: string;
+  status: "ok" | "stale" | "disconnected";
+} = {
+  lastSyncedAt: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+  status: "ok",
+};
 
 // ---------------------------------------------------------------------------
 // News
