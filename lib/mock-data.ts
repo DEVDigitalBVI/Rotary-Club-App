@@ -334,11 +334,12 @@ export function committeesDirectedBy(memberId: string, roster = committees) {
 }
 
 /**
- * Adding someone to the club roster is a club-officer act, not a committee
- * one: it is how a person becomes a Rotarian here. Kept to the President, the
- * Secretary, and the Club Administration director.
+ * The President, the Secretary, or the Club Administration director — the
+ * people who run the club day to day. Several distinct permissions land on
+ * this same group today; they stay separate exported functions below so that
+ * one can change later without dragging the others along with it.
  */
-export function canAddMembers(member: Member, roster = committees) {
+function runsTheClub(member: Member, roster: Committee[]) {
   if (member.position === "president" || member.position === "secretary") {
     return true;
   }
@@ -346,6 +347,22 @@ export function canAddMembers(member: Member, roster = committees) {
     (committee) =>
       committee.id === "club-administration" && committee.directorId === member.id
   );
+}
+
+/**
+ * Adding someone to the club roster is a club-officer act, not a committee
+ * one: it is how a person becomes a Rotarian here.
+ */
+export function canAddMembers(member: Member, roster = committees) {
+  return runsTheClub(member, roster);
+}
+
+/**
+ * Posting meeting materials — flyers and agendas — falls to whoever runs the
+ * meetings, which is Club Administration's stated remit.
+ */
+export function canManageEvents(member: Member, roster = committees) {
+  return runsTheClub(member, roster);
 }
 
 /**
@@ -495,6 +512,21 @@ export function committeeManageRight(
 
 export type RsvpStatus = "yes" | "no" | "maybe" | "none";
 
+/** The poster for an event — the thing that gets shared around before it. */
+export type EventFlyer = {
+  url: string;
+  alt: string;
+};
+
+/** The agenda document for a meeting. */
+export type EventAgenda = {
+  fileName: string;
+  url: string;
+  /** ISO date the file was posted. */
+  uploadedAt: string;
+  sizeLabel?: string;
+};
+
 export type EventItem = {
   id: string;
   title: string;
@@ -509,6 +541,8 @@ export type EventItem = {
   myRsvp: RsvpStatus;
   attendance?: { present: number; total: number };
   attendeeIds?: string[];
+  flyer?: EventFlyer;
+  agenda?: EventAgenda;
 };
 
 export const events: EventItem[] = [
@@ -523,6 +557,10 @@ export const events: EventItem[] = [
       "Regular weekly luncheon meeting with club business and program.",
     speaker: { name: "Dr. Nadia DeFreitas", topic: "Pediatric outreach in the sister isles" },
     rsvpDeadline: "2026-08-19",
+    flyer: {
+      url: "/flyers/weekly-meeting.svg",
+      alt: "Flyer for the weekly club meeting on 20 August",
+    },
     rsvps: { yes: 24, no: 3, maybe: 2 },
     myRsvp: "yes",
     attendeeIds: [
