@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { Check, Minus, Plus, Search, X } from "lucide-react";
 import {
   Dialog,
@@ -20,6 +20,7 @@ import {
   type FoundationRecognition,
   type Member,
 } from "@/lib/mock-data";
+import { updateRecognitionAction } from "@/app/(app)/directory/actions";
 
 /**
  * PHF+8 is the top Paul Harris level — a total of nine recognitions. Beyond it
@@ -33,16 +34,15 @@ export function EditRecognitionDialog({
   recognition,
   open,
   onOpenChange,
-  onSave,
 }: {
   member: Member;
   recognition: FoundationRecognition;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (next: FoundationRecognition) => void;
 }) {
   const [draft, setDraft] = useState(recognition);
-  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
   const [groupQuery, setGroupQuery] = useState("");
 
   // Re-seed whenever the dialog is reopened, so a cancelled edit is discarded.
@@ -50,7 +50,7 @@ export function EditRecognitionDialog({
   if (open && !wasOpen) {
     setWasOpen(true);
     setDraft(recognition);
-    setSaved(false);
+    setError(null);
     setGroupQuery("");
   } else if (!open && wasOpen) {
     setWasOpen(false);
@@ -101,14 +101,13 @@ export function EditRecognitionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {saved ? (
-          <p className="rounded-lg bg-muted p-3 text-sm text-foreground">
-            This is a design preview — recognition changes aren&apos;t saved yet.
+        {error && (
+          <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            {error}
           </p>
-        ) : (
-          <>
-            <div className="flex flex-col gap-2">
-              <Label>Paul Harris Fellow</Label>
+        )}
+        <div className="flex flex-col gap-2">
+          <Label>Paul Harris Fellow</Label>
               <div className="flex items-center gap-3">
                 <Button
                   type="button"
@@ -249,17 +248,23 @@ export function EditRecognitionDialog({
             <DialogFooter className="mt-2">
               <Button
                 type="button"
+                disabled={pending}
                 className="font-heading"
                 onClick={() => {
-                  onSave(draft);
-                  setSaved(true);
+                  setError(null);
+                  startTransition(async () => {
+                    const result = await updateRecognitionAction(member.id, draft);
+                    if (result?.error) {
+                      setError(result.error);
+                    } else {
+                      onOpenChange(false);
+                    }
+                  });
                 }}
               >
-                Save recognition
+                {pending ? "Saving…" : "Save recognition"}
               </Button>
             </DialogFooter>
-          </>
-        )}
       </DialogContent>
     </Dialog>
   );

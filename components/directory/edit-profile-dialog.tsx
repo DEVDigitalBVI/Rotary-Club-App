@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Camera } from "lucide-react";
+import { useState, useTransition } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,27 +13,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MemberAvatar } from "@/components/member-avatar";
 import type { Member } from "@/lib/mock-data";
+import { updateProfileAction } from "@/app/(app)/directory/actions";
 
 export function EditProfileDialog({ member }: { member: Member }) {
   const [open, setOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(member.avatarUrl);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!avatarUrl || !avatarUrl.startsWith("blob:")) return;
-    return () => URL.revokeObjectURL(avatarUrl);
-  }, [avatarUrl]);
-
-  function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setAvatarUrl(URL.createObjectURL(file));
-  }
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (next) setError(null);
+      }}
+    >
       <Button variant="outline" className="font-heading" onClick={() => setOpen(true)}>
         Edit profile
       </Button>
@@ -49,61 +43,40 @@ export function EditProfileDialog({ member }: { member: Member }) {
           className="flex flex-col gap-3"
           onSubmit={(e) => {
             e.preventDefault();
-            setOpen(false);
+            const formData = new FormData(e.currentTarget);
+            startTransition(async () => {
+              const result = await updateProfileAction(member.id, undefined, formData);
+              if (result?.error) {
+                setError(result.error);
+              } else {
+                setOpen(false);
+              }
+            });
           }}
         >
-          <div className="flex items-center gap-3">
-            <MemberAvatar
-              member={{ ...member, avatarUrl }}
-              className="size-16"
-              fallbackClassName="font-heading text-xl"
-            />
-            <div className="flex flex-col gap-1.5">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handlePhotoSelect}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="font-heading"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Camera />
-                Change photo
-              </Button>
-              {avatarUrl && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground"
-                  onClick={() => setAvatarUrl(undefined)}
-                >
-                  Remove photo
-                </Button>
-              )}
-            </div>
-          </div>
+          {error && (
+            <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </p>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-email">Email</Label>
-            <Input id="edit-email" type="email" defaultValue={member.email} />
+            <Input id="edit-email" type="email" defaultValue={member.email} disabled />
+            <p className="text-xs text-muted-foreground">
+              Contact your secretary to change the email on file.
+            </p>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-phone">Phone</Label>
-            <Input id="edit-phone" type="tel" defaultValue={member.phone} />
+            <Input id="edit-phone" name="phone" type="tel" defaultValue={member.phone} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-bio">Bio</Label>
-            <Textarea id="edit-bio" rows={3} defaultValue={member.bio} />
+            <Textarea id="edit-bio" name="bio" rows={3} defaultValue={member.bio} />
           </div>
           <DialogFooter className="mt-2">
-            <Button type="submit" className="font-heading">
-              Save changes
+            <Button type="submit" disabled={pending} className="font-heading">
+              {pending ? "Saving…" : "Save changes"}
             </Button>
           </DialogFooter>
         </form>
