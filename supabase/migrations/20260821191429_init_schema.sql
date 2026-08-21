@@ -171,6 +171,7 @@ create table news_posts (
 );
 
 create index news_posts_source_published_idx on news_posts (source, published_at desc);
+create index news_posts_author_member_id_idx on news_posts (author_member_id);
 
 create trigger news_posts_set_updated_at
   before update on news_posts
@@ -182,13 +183,15 @@ alter table news_posts enable row level security;
 -- Permission helpers, mirroring lib/mock-data.ts
 -- ---------------------------------------------------------------------------
 
+-- auth.uid() is wrapped in a select so the planner evaluates it once per
+-- statement rather than once per row (Supabase's RLS initplan guidance).
 create or replace function current_member_id()
 returns uuid
 language sql
 stable
 set search_path = public
 as $$
-  select id from members where user_id = auth.uid();
+  select id from members where user_id = (select auth.uid());
 $$;
 
 -- canPostNews(): any board member (officers + every committee director).
@@ -273,43 +276,45 @@ $$;
 -- matter before the UI-layer check is trusted.
 create policy "members_select" on members for select to authenticated using (true);
 create policy "members_insert" on members for insert to authenticated
-  with check (runs_the_club() or user_id = auth.uid());
+  with check (runs_the_club() or user_id = (select auth.uid()));
 create policy "members_update" on members for update to authenticated
   using (id = current_member_id() or runs_the_club())
   with check (id = current_member_id() or runs_the_club());
 
 -- Committees: structure is visible to everyone signed in; only the people
--- who run the club edit it (fixed six committees are seeded below).
+-- who run the club edit it (fixed six committees are seeded below). Insert/
+-- update/delete are split out (rather than a single "for all" policy) so
+-- they don't also apply — and double-evaluate — on plain SELECT queries.
 create policy "committees_select" on committees for select to authenticated using (true);
-create policy "committees_write" on committees for all to authenticated
-  using (runs_the_club())
-  with check (runs_the_club());
+create policy "committees_insert" on committees for insert to authenticated with check (runs_the_club());
+create policy "committees_update" on committees for update to authenticated using (runs_the_club()) with check (runs_the_club());
+create policy "committees_delete" on committees for delete to authenticated using (runs_the_club());
 
 -- Committee rosters: readable by all; editable by that committee's director
 -- or an officer overriding, matching committeeManageRight() exactly.
 create policy "committee_members_select" on committee_members for select to authenticated using (true);
-create policy "committee_members_write" on committee_members for all to authenticated
-  using (can_manage_committee(committee_id))
-  with check (can_manage_committee(committee_id));
+create policy "committee_members_insert" on committee_members for insert to authenticated with check (can_manage_committee(committee_id));
+create policy "committee_members_update" on committee_members for update to authenticated using (can_manage_committee(committee_id)) with check (can_manage_committee(committee_id));
+create policy "committee_members_delete" on committee_members for delete to authenticated using (can_manage_committee(committee_id));
 
 -- Events: visible to all; managed by whoever runs the meetings.
 create policy "events_select" on events for select to authenticated using (true);
-create policy "events_write" on events for all to authenticated
-  using (runs_the_club())
-  with check (runs_the_club());
+create policy "events_insert" on events for insert to authenticated with check (runs_the_club());
+create policy "events_update" on events for update to authenticated using (runs_the_club()) with check (runs_the_club());
+create policy "events_delete" on events for delete to authenticated using (runs_the_club());
 
 -- RSVPs: visible to all (for headcounts); each member manages only their own.
 create policy "event_rsvps_select" on event_rsvps for select to authenticated using (true);
-create policy "event_rsvps_write" on event_rsvps for all to authenticated
-  using (member_id = current_member_id())
-  with check (member_id = current_member_id());
+create policy "event_rsvps_insert" on event_rsvps for insert to authenticated with check (member_id = current_member_id());
+create policy "event_rsvps_update" on event_rsvps for update to authenticated using (member_id = current_member_id()) with check (member_id = current_member_id());
+create policy "event_rsvps_delete" on event_rsvps for delete to authenticated using (member_id = current_member_id());
 
 -- News: visible to all; club posts are written and corrected by board
 -- members only (canPostNews's rationale — a wrong post is a board post).
 create policy "news_posts_select" on news_posts for select to authenticated using (true);
-create policy "news_posts_write" on news_posts for all to authenticated
-  using (is_board_member())
-  with check (is_board_member());
+create policy "news_posts_insert" on news_posts for insert to authenticated with check (is_board_member());
+create policy "news_posts_update" on news_posts for update to authenticated using (is_board_member()) with check (is_board_member());
+create policy "news_posts_delete" on news_posts for delete to authenticated using (is_board_member());
 
 -- ---------------------------------------------------------------------------
 -- Seed: the club's fixed standing committees (structure, not member data —

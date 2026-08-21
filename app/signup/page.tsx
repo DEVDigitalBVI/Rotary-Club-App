@@ -1,13 +1,8 @@
+import Link from "next/link";
 import { AuthHeader } from "@/components/auth/auth-header";
-import { LoginForm } from "@/components/auth/login-form";
+import { SignupForm } from "@/components/auth/signup-form";
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const params = await searchParams;
-
+export default function SignupPage() {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-muted/40">
       <AuthHeader label="Member Portal" />
@@ -16,19 +11,22 @@ export default async function LoginPage({
         <div className="w-full max-w-sm">
           <div className="rounded-xl bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
             <h2 className="font-heading text-lg font-semibold text-foreground">
-              Sign in
+              Create your account
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              This app is for club members only. Use the email your club has
-              on file.
+              Your secretary adds new members to the roster first — once
+              you&apos;re on it, set a password here to sign in.
             </p>
 
-            <LoginForm checkEmail={params["check-email"] === "1"} />
-          </div>
+            <SignupForm />
 
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            Trouble signing in? Contact your club secretary.
-          </p>
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              Already have an account?{" "}
+              <Link href="/login" className="font-medium text-primary hover:underline">
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

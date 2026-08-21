@@ -1,18 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronsUpDown, LogOut, User, Settings } from "lucide-react";
 import { MemberAvatar } from "@/components/member-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuLinkItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import { positionLabel, type Member } from "@/lib/mock-data";
 
 export function UserMenu({
@@ -22,6 +25,15 @@ export function UserMenu({
   member: Member;
   variant?: "compact" | "expanded";
 }) {
+  const router = useRouter();
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
   const avatar = (
     <MemberAvatar
       member={member}
@@ -72,10 +84,10 @@ export function UserMenu({
           Account settings
         </DropdownMenuLinkItem>
         <DropdownMenuSeparator />
-        <DropdownMenuLinkItem variant="destructive" render={<Link href="/login" />}>
+        <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
           <LogOut />
           Sign out
-        </DropdownMenuLinkItem>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
