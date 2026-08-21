@@ -37,7 +37,11 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  const publicRoutes = ["/login", "/signup"];
+  // /auth (route handlers for emailed links — e.g. password reset) is
+  // public because the visitor has no session yet; the handler itself is
+  // what establishes one via verifyOtp. /update-password is deliberately
+  // NOT public — it requires the session that /auth/confirm just set.
+  const publicRoutes = ["/login", "/signup", "/forgot-password", "/auth"];
   const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );

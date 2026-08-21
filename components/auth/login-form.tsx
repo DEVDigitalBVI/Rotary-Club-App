@@ -7,7 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn, type AuthFormState } from "@/app/login/actions";
 
-export function LoginForm({ checkEmail = false }: { checkEmail?: boolean }) {
+export function LoginForm({
+  checkEmail,
+}: {
+  checkEmail?: "signup" | "reset";
+}) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(
     signIn,
     undefined
@@ -15,9 +19,15 @@ export function LoginForm({ checkEmail = false }: { checkEmail?: boolean }) {
 
   return (
     <form action={action} className="mt-6 flex flex-col gap-4">
-      {checkEmail && (
+      {checkEmail === "signup" && (
         <p className="rounded-lg bg-muted p-3 text-sm text-foreground">
           Account created — check your email to confirm it, then sign in below.
+        </p>
+      )}
+      {checkEmail === "reset" && (
+        <p className="rounded-lg bg-muted p-3 text-sm text-foreground">
+          If that email is on our roster, we&apos;ve sent a link to reset your
+          password.
         </p>
       )}
       {state?.error && (
@@ -37,7 +47,15 @@ export function LoginForm({ checkEmail = false }: { checkEmail?: boolean }) {
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">Password</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Password</Label>
+          <Link
+            href="/forgot-password"
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <Input
           id="password"
           name="password"

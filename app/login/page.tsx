@@ -23,7 +23,15 @@ export default async function LoginPage({
               on file.
             </p>
 
-            <LoginForm checkEmail={params["check-email"] === "1"} />
+            <LoginForm
+              checkEmail={
+                params["check-email"] === "1"
+                  ? "signup"
+                  : params["check-email"] === "reset"
+                    ? "reset"
+                    : undefined
+              }
+            />
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
