@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { NewsFeed } from "@/components/news/news-feed";
 import { PostAnnouncementDialog } from "@/components/news/post-announcement-dialog";
-import { newsPosts, currentMember, canPostNews } from "@/lib/mock-data";
+import { visibleNewsPosts, currentMember, canPostNews } from "@/lib/mock-data";
 
 export default function NewsPage() {
   return (
@@ -12,7 +12,7 @@ export default function NewsPage() {
         actions={canPostNews(currentMember) ? <PostAnnouncementDialog /> : undefined}
       />
       <div className="p-4 sm:mx-auto sm:max-w-2xl sm:p-8">
-        <NewsFeed posts={newsPosts} />
+        <NewsFeed posts={visibleNewsPosts()} />
       </div>
     </div>
   );

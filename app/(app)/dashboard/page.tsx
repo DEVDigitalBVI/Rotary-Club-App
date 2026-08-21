@@ -12,7 +12,7 @@ import {
   events,
   channels,
   members,
-  newsPosts,
+  visibleNewsPosts,
   balanceForMember,
   overdueBalanceForMember,
   TODAY,
@@ -33,7 +33,7 @@ export default function DashboardPage() {
     .sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
     .slice(0, 3);
 
-  const latestNews = newsPosts.slice(0, 3);
+  const latestNews = visibleNewsPosts().slice(0, 3);
 
   const firstName = currentMember.name.split(" ")[0];
 

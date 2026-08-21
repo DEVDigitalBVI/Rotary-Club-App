@@ -906,7 +906,7 @@ export const newsFeeds: Record<
 > = {
   district: {
     name: "District 7020",
-    homeUrl: "https://rotary7020.org/",
+    homeUrl: "https://7020.org/",
     lastSyncedAt: new Date(Date.now() - 26 * 60 * 1000).toISOString(),
   },
   ri: {
@@ -917,6 +917,57 @@ export const newsFeeds: Record<
 };
 
 export const newsPosts: NewsPost[] = [
+  // --- Rotary International -------------------------------------------------
+  // Pulled live from rotary.org/en/news-features on 21 Aug 2026. Headlines and
+  // article URLs are the real ones; the summaries are written here rather than
+  // copied, which is what a feed reader should do anyway.
+  {
+    id: "n-ri-1",
+    title: "A safe transition beyond the wire",
+    body: "A Rotary club in Kansas is helping women rebuild their lives after leaving prison, working on the housing, work and support that make a release stick.",
+    source: "ri",
+    date: "2026-08-20",
+    author: "Rotary International",
+    sourceUrl:
+      "https://www.rotary.org/en/articles/2026/08/a-safe-transition-beyond-the-wire",
+  },
+  {
+    id: "n-ri-2",
+    title: "Rotary projects around the globe – August 2026",
+    body: "This month's round-up of club service projects, with work featured from the United States, Canada, the United Kingdom and Thailand.",
+    source: "ri",
+    date: "2026-08-20",
+    author: "Rotary International",
+    sourceUrl:
+      "https://www.rotary.org/en/articles/2026/08/rotary-projects-around-globe-august-2026",
+  },
+
+  // --- District 7020 --------------------------------------------------------
+  // 7020.org returns 403 to automated requests, so these two headlines and
+  // their URLs came from search rather than from the site itself. The DATES
+  // BELOW ARE PLACEHOLDERS — the source did not expose them, and the real
+  // integration will carry the true publication dates.
+  {
+    id: "n-d7020-1",
+    title: "District 7020 Annual Conference 2026",
+    body: "The district conference brought club leaders from across the Caribbean together in Kingston, Jamaica for keynotes, leadership seminars and networking.",
+    source: "district",
+    date: "2026-08-14",
+    author: "District 7020",
+    sourceUrl: "https://7020.org/stories/district-7020-annual-conference-2026",
+  },
+  {
+    id: "n-d7020-2",
+    title: "District 7020 — It's Time to Gather in Jamaica!",
+    body: "The district's call for clubs to register and join fellow Rotarians from across the eleven territories that make up District 7020.",
+    source: "district",
+    date: "2026-08-05",
+    author: "District 7020",
+    sourceUrl:
+      "https://7020.org/stories/%F0%9F%8C%9F-district-7020-%E2%80%94-it%E2%80%99s-time-to-gather-in-jamaica-%F0%9F%87%AF%F0%9F%87%B2",
+  },
+
+  // --- The club's own announcements ----------------------------------------
   {
     id: "n-1",
     title: "New meeting time starting September",
@@ -924,24 +975,6 @@ export const newsPosts: NewsPost[] = [
     source: "club",
     date: "2026-08-16",
     author: "Althea Francis",
-  },
-  {
-    id: "n-2",
-    title: "District Conference registration now open",
-    body: "Registration for the 2026 District 7020 Conference in Tortola is now open. Early-bird pricing ends September 30th. Contact the club secretary for the group registration code.",
-    source: "district",
-    date: "2026-08-12",
-    author: "District 7020",
-    sourceUrl: "https://rotary7020.org/",
-  },
-  {
-    id: "n-3",
-    title: "Rotary Foundation surpasses $4 billion in global giving",
-    body: "The Rotary Foundation announced this week that cumulative giving has surpassed $4 billion since its founding, funding polio eradication, clean water, and literacy programs worldwide.",
-    source: "ri",
-    date: "2026-08-10",
-    author: "Rotary International",
-    sourceUrl: "https://www.rotary.org/en/news-features",
   },
   {
     id: "n-4",
@@ -955,16 +988,27 @@ export const newsPosts: NewsPost[] = [
       alt: "Volunteers needed for the Cane Garden Bay reef cleanup",
     },
   },
-  {
-    id: "n-5",
-    title: "Applications open for Global Grant scholarships",
-    body: "Rotary International is now accepting applications for 2027 Global Grant scholarships in peace and conflict resolution, disease prevention, and economic development.",
-    source: "ri",
-    date: "2026-08-01",
-    author: "Rotary International",
-    sourceUrl: "https://www.rotary.org/en/news-features",
-  },
 ];
+
+/** How many items each external feed contributes to the news list. */
+export const FEED_POST_LIMIT = 2;
+
+/**
+ * Every club announcement shows, but each external feed contributes only its
+ * two most recent items. Without a cap, a busy RI feed would bury the club's
+ * own news — which is the reason a member opens this screen at all.
+ */
+export function visibleNewsPosts(posts: NewsPost[] = newsPosts) {
+  const seen: Record<string, number> = { district: 0, ri: 0 };
+  return [...posts]
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+    .filter((post) => {
+      if (post.source === "club") return true;
+      seen[post.source] += 1;
+      return seen[post.source] <= FEED_POST_LIMIT;
+    });
+}
+
 
 // ---------------------------------------------------------------------------
 // Chat
