@@ -1,19 +1,32 @@
 import { PageHeader } from "@/components/page-header";
 import { MemberDirectory } from "@/components/directory/member-directory";
-import { members, committees, currentMember } from "@/lib/mock-data";
+import { getMembers, getCurrentMember } from "@/lib/data/members";
+import { getCommittees } from "@/lib/data/committees";
 
-export default function DirectoryPage() {
+export default async function DirectoryPage() {
+  const [members, committees, currentMember] = await Promise.all([
+    getMembers(),
+    getCommittees(),
+    getCurrentMember(),
+  ]);
+
   return (
     <div>
       <PageHeader
         title="Directory"
         description="Find fellow members and see who's on which committee."
       />
-      <MemberDirectory
-        members={members}
-        committees={committees}
-        currentMember={currentMember}
-      />
+      {currentMember ? (
+        <MemberDirectory
+          members={members}
+          committees={committees}
+          currentMember={currentMember}
+        />
+      ) : (
+        <p className="p-4 text-sm text-muted-foreground sm:p-8">
+          Your account isn&apos;t linked to a member profile yet.
+        </p>
+      )}
     </div>
   );
 }

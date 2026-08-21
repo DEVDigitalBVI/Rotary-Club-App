@@ -68,14 +68,9 @@ export function MemberDirectory({
   // PolioPlus Society" — which a per-profile view can't answer.
   const [recognitionFilter, setRecognitionFilter] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
-
-  // Committee rosters live in state so a director's edits show up immediately
-  // on the cards and on the member badges — the same design-preview treatment
-  // the chat screen gives new messages.
-  const [roster, setRoster] = useState(committees);
   const [managing, setManaging] = useState<Committee | null>(null);
 
-  const mayAddMembers = canAddMembers(currentMember, roster);
+  const mayAddMembers = canAddMembers(currentMember, committees);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -86,7 +81,7 @@ export function MemberDirectory({
         member.classification.toLowerCase().includes(q);
       const matchesCommittee =
         committeeFilter === "all" ||
-        roster.some(
+        committees.some(
           (committee) =>
             committee.id === committeeFilter &&
             committee.memberIds.includes(member.id)
@@ -97,10 +92,10 @@ export function MemberDirectory({
         matchesRecognition(member, recognitionFilter)
       );
     });
-  }, [members, query, committeeFilter, recognitionFilter, roster]);
+  }, [members, query, committeeFilter, recognitionFilter, committees]);
 
   const committeeFilterLabel = (value: string) =>
-    roster.find((committee) => committee.id === value)?.name ??
+    committees.find((committee) => committee.id === value)?.name ??
     "All committees";
 
   const recognitionFilterLabel = (value: string) => {
@@ -121,7 +116,7 @@ export function MemberDirectory({
         <TabsList>
           <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
           <TabsTrigger value="committees">
-            Committees ({roster.length})
+            Committees ({committees.length})
           </TabsTrigger>
         </TabsList>
 
@@ -158,7 +153,7 @@ export function MemberDirectory({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All committees</SelectItem>
-                    {roster.map((committee) => (
+                    {committees.map((committee) => (
                       <SelectItem key={committee.id} value={committee.id}>
                         {committee.name}
                       </SelectItem>
@@ -234,7 +229,7 @@ export function MemberDirectory({
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtered.map((member) => {
-              const memberCommittees = committeesForMember(member.id, roster);
+              const memberCommittees = committeesForMember(member.id, committees);
               const office = positionLabel(member.position);
               // Compact here; the profile carries the full recognition detail.
               const recognition = foundationRecognition(member);
@@ -292,14 +287,16 @@ export function MemberDirectory({
                         ))}
                       </div>
                     )}
-                    <p className="mt-3 text-xs text-muted-foreground">
-                      Member since{" "}
-                      {formatDate(member.joinDate, {
-                        year: "numeric",
-                        month: "long",
-                        day: undefined,
-                      })}
-                    </p>
+                    {member.joinDate && (
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        Member since{" "}
+                        {formatDate(member.joinDate, {
+                          year: "numeric",
+                          month: "long",
+                          day: undefined,
+                        })}
+                      </p>
+                    )}
                   </Card>
                 </Link>
               );
@@ -319,7 +316,7 @@ export function MemberDirectory({
             and Secretary can step in on any of them.
           </p>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {roster.map((committee) => (
+            {committees.map((committee) => (
               <CommitteeCard
                 key={committee.id}
                 committee={committee}
@@ -343,15 +340,6 @@ export function MemberDirectory({
         open={managing !== null}
         onOpenChange={(next) => {
           if (!next) setManaging(null);
-        }}
-        onSave={(memberIds) => {
-          setRoster((prev) =>
-            prev.map((committee) =>
-              committee.id === managing?.id
-                ? { ...committee, memberIds }
-                : committee
-            )
-          );
         }}
       />
     </div>

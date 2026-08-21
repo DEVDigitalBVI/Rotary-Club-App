@@ -8,13 +8,13 @@ import { EditProfileDialog } from "@/components/directory/edit-profile-dialog";
 import { MemberAdminMenu } from "@/components/directory/member-admin-menu";
 import { RecognitionCard } from "@/components/directory/recognition-card";
 import {
-  members,
-  currentMember,
   committeesForMember,
   positionLabel,
   foundationRecognition,
   canEditRecognition,
 } from "@/lib/mock-data";
+import { getMemberById, getCurrentMember } from "@/lib/data/members";
+import { getCommittees } from "@/lib/data/committees";
 import { formatDate } from "@/lib/format";
 
 export default async function MemberProfilePage({
@@ -23,13 +23,17 @@ export default async function MemberProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const member = members.find((m) => m.id === id);
+  const [member, currentMember, committees] = await Promise.all([
+    getMemberById(id),
+    getCurrentMember(),
+    getCommittees(),
+  ]);
   if (!member) notFound();
 
-  const isSelf = member.id === currentMember.id;
-  const memberCommittees = committeesForMember(member.id);
+  const isSelf = currentMember?.id === member.id;
+  const memberCommittees = committeesForMember(member.id, committees);
   const office = positionLabel(member.position);
-  const isAdmin = currentMember.role === "admin";
+  const isAdmin = currentMember?.role === "admin";
 
   return (
     <div className="p-4 sm:p-8">
@@ -104,17 +108,19 @@ export default async function MemberProfilePage({
               <Phone className="size-4 text-muted-foreground" />
               {member.phone}
             </a>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="size-4" />
-              Member since {formatDate(member.joinDate, { year: "numeric", month: "long", day: undefined })}
-            </div>
+            {member.joinDate && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="size-4" />
+                Member since {formatDate(member.joinDate, { year: "numeric", month: "long", day: undefined })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <RecognitionCard
           member={member}
           recognition={foundationRecognition(member)}
-          canEdit={canEditRecognition(currentMember)}
+          canEdit={currentMember ? canEditRecognition(currentMember, committees) : false}
         />
 
         {member.bio && (

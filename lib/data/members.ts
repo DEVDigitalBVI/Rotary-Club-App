@@ -60,6 +60,17 @@ export async function getCurrentMember(): Promise<Member | null> {
   return data ? toMember(data) : null;
 }
 
+export async function getMemberById(id: string): Promise<Member | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("members")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle<MemberRow>();
+
+  return data ? toMember(data) : null;
+}
+
 export async function getMembers(): Promise<Member[]> {
   const supabase = await createClient();
   const { data } = await supabase
