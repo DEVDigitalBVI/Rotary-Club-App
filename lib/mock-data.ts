@@ -219,7 +219,7 @@ export const members: Member[] = [
   },
 ];
 
-export const currentMember = members[0];
+export const currentMember = members.find((m) => m.id === "m-james")!;
 
 // ---------------------------------------------------------------------------
 // Committees
