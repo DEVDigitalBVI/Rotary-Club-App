@@ -161,22 +161,22 @@ export function CreateEventDialog() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <Label>Agenda</Label>
-                <input
-                  ref={agendaRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx,application/pdf"
-                  className="hidden"
-                  onChange={(e) =>
-                    setAgendaName(e.target.files?.[0]?.name ?? null)
-                  }
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="font-heading justify-start"
-                  onClick={() => agendaRef.current?.click()}
-                >
+              <Label>Agenda</Label>
+              <input
+                ref={agendaRef}
+                type="file"
+                accept=".pdf,.doc,.docx,application/pdf"
+                className="hidden"
+                onChange={(e) =>
+                  setAgendaName(e.target.files?.[0]?.name ?? null)
+                }
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="font-heading justify-start"
+                onClick={() => agendaRef.current?.click()}
+              >
                 <FileText />
                 <span className="truncate">{agendaName ?? "Add agenda"}</span>
               </Button>
