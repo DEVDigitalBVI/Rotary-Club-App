@@ -2,30 +2,21 @@ import { cn } from "@/lib/utils";
 
 type Tone = "grass" | "cardinal" | "gold" | "sky" | "violet" | "neutral";
 
+// Each tone resolves through a pair of tokens defined in globals.css, which
+// is what lets the badge follow the theme: an inline `style` cannot carry a
+// `.dark` variant, so the light/dark values have to live in CSS.
 const toneStyle: Record<Tone, React.CSSProperties> = {
-  grass: {
-    backgroundColor: "color-mix(in oklch, var(--rotary-grass) 14%, white)",
-    color: "color-mix(in oklch, var(--rotary-grass) 80%, black)",
-  },
+  grass: { backgroundColor: "var(--tone-grass-bg)", color: "var(--tone-grass-fg)" },
   cardinal: {
-    backgroundColor: "color-mix(in oklch, var(--rotary-cardinal) 12%, white)",
-    color: "color-mix(in oklch, var(--rotary-cardinal) 75%, black)",
+    backgroundColor: "var(--tone-cardinal-bg)",
+    color: "var(--tone-cardinal-fg)",
   },
-  gold: {
-    backgroundColor: "color-mix(in oklch, var(--rotary-gold) 20%, white)",
-    color: "color-mix(in oklch, var(--rotary-orange) 75%, black)",
-  },
-  sky: {
-    backgroundColor: "color-mix(in oklch, var(--rotary-sky) 14%, white)",
-    color: "color-mix(in oklch, var(--rotary-azure) 80%, black)",
-  },
-  violet: {
-    backgroundColor: "color-mix(in oklch, var(--rotary-violet) 12%, white)",
-    color: "color-mix(in oklch, var(--rotary-violet) 75%, black)",
-  },
+  gold: { backgroundColor: "var(--tone-gold-bg)", color: "var(--tone-gold-fg)" },
+  sky: { backgroundColor: "var(--tone-sky-bg)", color: "var(--tone-sky-fg)" },
+  violet: { backgroundColor: "var(--tone-violet-bg)", color: "var(--tone-violet-fg)" },
   neutral: {
-    backgroundColor: "var(--muted)",
-    color: "var(--muted-foreground)",
+    backgroundColor: "var(--tone-neutral-bg)",
+    color: "var(--tone-neutral-fg)",
   },
 };
 

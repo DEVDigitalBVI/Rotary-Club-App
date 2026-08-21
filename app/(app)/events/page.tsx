@@ -2,9 +2,7 @@ import { PageHeader } from "@/components/page-header";
 import { EventCard } from "@/components/events/event-card";
 import { CreateEventDialog } from "@/components/events/create-event-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { events, currentMember } from "@/lib/mock-data";
-
-const TODAY = "2026-08-17";
+import { events, currentMember, TODAY } from "@/lib/mock-data";
 
 export default function EventsPage() {
   const upcoming = [...events]

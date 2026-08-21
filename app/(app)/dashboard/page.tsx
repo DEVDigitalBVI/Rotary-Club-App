@@ -14,12 +14,13 @@ import {
   members,
   newsPosts,
   balanceForMember,
+  TODAY,
 } from "@/lib/mock-data";
-import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 
 export default function DashboardPage() {
   const upcoming = events
-    .filter((e) => new Date(e.date) >= new Date("2026-08-17"))
+    .filter((e) => e.date >= TODAY)
     .sort((a, b) => (a.date < b.date ? -1 : 1))
     .slice(0, 3);
 
@@ -69,7 +70,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Upcoming events */}
-        <Card className="sm:col-span-2 sm:row-span-2">
+        <Card className="lg:col-span-2 lg:row-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-muted-foreground">
               <CalendarDays className="size-4" />
@@ -193,7 +194,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2">
                   <NewsSourceBadge source={post.source} />
                   <span className="text-xs text-muted-foreground">
-                    {formatDateTime(post.date)}
+                    {formatDate(post.date)}
                   </span>
                 </div>
                 <p className="font-heading mt-1 text-sm font-medium text-foreground">

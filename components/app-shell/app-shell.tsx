@@ -8,7 +8,7 @@ import { currentMember } from "@/lib/mock-data";
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-full min-w-0 flex-1">
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex print:hidden">
         <div
           className="flex h-20 items-center justify-between px-4"
           style={{ backgroundColor: "var(--rotary-blue)" }}
@@ -24,7 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-h-full min-w-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-30 flex h-20 items-center justify-between px-4 md:hidden"
+          className="sticky top-0 z-30 flex h-20 items-center justify-between px-4 md:hidden print:hidden"
           style={{ backgroundColor: "var(--rotary-blue)" }}
         >
           <BrandLockup />
@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-x-hidden pb-20 md:pb-0">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden pb-20 md:pb-0 print:pb-0">{children}</main>
 
         <MobileBottomNav />
       </div>

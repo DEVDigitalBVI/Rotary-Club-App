@@ -12,10 +12,12 @@ import {
   feeSettings,
   ledgerForMember,
   balanceForMember,
+  TODAY,
+  daysBefore,
 } from "@/lib/mock-data";
 import { formatCurrency } from "@/lib/format";
 
-const THIRTY_DAYS_AGO = "2026-07-18";
+const THIRTY_DAYS_AGO = daysBefore(TODAY, 30);
 
 export default function AccountPage() {
   const isAdmin = currentMember.role === "admin";

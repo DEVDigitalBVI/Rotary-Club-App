@@ -71,7 +71,7 @@ export function ChatApp({
   }
 
   return (
-    <div className="flex h-[75vh] min-h-[420px] overflow-hidden rounded-xl bg-card shadow-[var(--shadow-card)]">
+    <div className="flex h-[75dvh] min-h-[420px] overflow-hidden rounded-xl bg-card shadow-[var(--shadow-card)]">
       {/* Channel / DM list */}
       <aside
         className={cn(

@@ -106,6 +106,25 @@
   --sidebar-accent-foreground: oklch(0.225 0.03 262);
   --sidebar-border: oklch(0.9 0.012 246);
   --sidebar-ring: var(--rotary-blue);
+
+  /* Badge tones (StatusBadge). Defined as tokens rather than inline in the
+     component because the component sets them via the `style` attribute,
+     which cannot carry a `.dark` variant. The light values mix each brand
+     colour toward white for the fill and toward black for the text; that
+     recipe inverted badly in dark mode, painting a near-white pill on a
+     dark card, so the dark block below restates them against --card. */
+  --tone-grass-bg: color-mix(in oklch, var(--rotary-grass) 14%, white);
+  --tone-grass-fg: color-mix(in oklch, var(--rotary-grass) 80%, black);
+  --tone-cardinal-bg: color-mix(in oklch, var(--rotary-cardinal) 12%, white);
+  --tone-cardinal-fg: color-mix(in oklch, var(--rotary-cardinal) 75%, black);
+  --tone-gold-bg: color-mix(in oklch, var(--rotary-gold) 20%, white);
+  --tone-gold-fg: color-mix(in oklch, var(--rotary-orange) 75%, black);
+  --tone-sky-bg: color-mix(in oklch, var(--rotary-sky) 14%, white);
+  --tone-sky-fg: color-mix(in oklch, var(--rotary-azure) 80%, black);
+  --tone-violet-bg: color-mix(in oklch, var(--rotary-violet) 12%, white);
+  --tone-violet-fg: color-mix(in oklch, var(--rotary-violet) 75%, black);
+  --tone-neutral-bg: var(--muted);
+  --tone-neutral-fg: var(--muted-foreground);
 }
 
 .dark {
@@ -143,6 +162,23 @@
   --sidebar-accent-foreground: oklch(0.94 0.006 262);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: var(--rotary-sky);
+
+  /* Badge tones, restated for the dark ground: the fill is mixed toward
+     --card so a badge always reads as a tint of the surface it sits on
+     rather than a light hole punched in it, and the text is mixed toward
+     white instead of black. */
+  --tone-grass-bg: color-mix(in oklch, var(--rotary-grass) 30%, var(--card));
+  --tone-grass-fg: color-mix(in oklch, var(--rotary-grass) 55%, white);
+  --tone-cardinal-bg: color-mix(in oklch, var(--rotary-cardinal) 30%, var(--card));
+  --tone-cardinal-fg: color-mix(in oklch, var(--rotary-cardinal) 55%, white);
+  --tone-gold-bg: color-mix(in oklch, var(--rotary-gold) 30%, var(--card));
+  --tone-gold-fg: color-mix(in oklch, var(--rotary-gold) 55%, white);
+  --tone-sky-bg: color-mix(in oklch, var(--rotary-sky) 30%, var(--card));
+  --tone-sky-fg: color-mix(in oklch, var(--rotary-sky) 55%, white);
+  --tone-violet-bg: color-mix(in oklch, var(--rotary-violet) 34%, var(--card));
+  --tone-violet-fg: color-mix(in oklch, var(--rotary-violet) 45%, white);
+  --tone-neutral-bg: var(--muted);
+  --tone-neutral-fg: var(--muted-foreground);
 }
 
 @layer base {

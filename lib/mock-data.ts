@@ -1,6 +1,24 @@
 // Placeholder data for UI/UX scaffolding only. Replace with Supabase queries
 // once the directory, events, dues, news, and chat backends are wired up.
 
+// The demo data is frozen around this date, so "upcoming vs. past" has to be
+// measured against it rather than the real clock — otherwise every event
+// silently ages into the past. It lives here, next to the data it describes,
+// because three separate pages were each carrying their own copy of it.
+// Delete it along with the mock data once real queries land.
+export const TODAY = "2026-08-17";
+
+/**
+ * Shifts a YYYY-MM-DD string back by `days`, returning the same format.
+ * Done entirely in UTC: parsing as local time and formatting back through
+ * toISOString() lands on the previous day for anyone east of UTC.
+ */
+export function daysBefore(iso: string, days: number) {
+  const date = new Date(`${iso}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
 export type MembershipStatus = "active" | "inactive" | "honorary";
 export type MemberRole = "member" | "admin";
 
