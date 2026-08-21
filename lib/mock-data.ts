@@ -358,6 +358,19 @@ export function canAddMembers(member: Member, roster = committees) {
 }
 
 /**
+ * Any board member may post a club announcement. Deliberately wider than
+ * runsTheClub(): the Board includes every committee director, and a director
+ * needs to be able to tell the club about their own committee's work without
+ * routing it through an officer.
+ */
+export function canPostNews(member: Member, roster = committees) {
+  return roster.some(
+    (committee) =>
+      committee.id === "board" && committee.memberIds.includes(member.id)
+  );
+}
+
+/**
  * Posting meeting materials — flyers and agendas — falls to whoever runs the
  * meetings, which is Club Administration's stated remit.
  */
@@ -866,6 +879,41 @@ export type NewsPost = {
   source: NewsSource;
   date: string;
   author: string;
+  /** A photo or graphic attached to a club announcement. */
+  image?: { url: string; alt: string };
+  /**
+   * Where a syndicated item came from. Only club announcements are written in
+   * this app — district items are pulled from the District 7020 site and RI
+   * items from Rotary International's news feed, so those carry a link back to
+   * the original and are never editable here.
+   */
+  sourceUrl?: string;
+};
+
+/** True for anything the club did not write itself. */
+export function isSyndicated(post: NewsPost) {
+  return post.source !== "club";
+}
+
+/**
+ * Where the two external feeds come from, and when they were last read. Mirrors
+ * the QuickBooks provenance treatment: the app owns none of this content, so a
+ * reader should be able to see where it came from and how fresh it is.
+ */
+export const newsFeeds: Record<
+  Exclude<NewsSource, "club">,
+  { name: string; homeUrl: string; lastSyncedAt: string }
+> = {
+  district: {
+    name: "District 7020",
+    homeUrl: "https://rotary7020.org/",
+    lastSyncedAt: new Date(Date.now() - 26 * 60 * 1000).toISOString(),
+  },
+  ri: {
+    name: "Rotary International",
+    homeUrl: "https://www.rotary.org/en/news-features",
+    lastSyncedAt: new Date(Date.now() - 26 * 60 * 1000).toISOString(),
+  },
 };
 
 export const newsPosts: NewsPost[] = [
@@ -884,6 +932,7 @@ export const newsPosts: NewsPost[] = [
     source: "district",
     date: "2026-08-12",
     author: "District 7020",
+    sourceUrl: "https://rotary7020.org/",
   },
   {
     id: "n-3",
@@ -892,6 +941,7 @@ export const newsPosts: NewsPost[] = [
     source: "ri",
     date: "2026-08-10",
     author: "Rotary International",
+    sourceUrl: "https://www.rotary.org/en/news-features",
   },
   {
     id: "n-4",
@@ -900,6 +950,10 @@ export const newsPosts: NewsPost[] = [
     source: "club",
     date: "2026-08-08",
     author: "Marcus Pemberton",
+    image: {
+      url: "/news/reef-cleanup.svg",
+      alt: "Volunteers needed for the Cane Garden Bay reef cleanup",
+    },
   },
   {
     id: "n-5",
@@ -908,6 +962,7 @@ export const newsPosts: NewsPost[] = [
     source: "ri",
     date: "2026-08-01",
     author: "Rotary International",
+    sourceUrl: "https://www.rotary.org/en/news-features",
   },
 ];
 

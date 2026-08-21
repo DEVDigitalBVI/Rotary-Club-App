@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-label="Reef cleanup">
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#00a2e0"/><stop offset="1" stop-color="#00575f"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7a81b"/><stop offset="1" stop-color="#ff7600"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#sea)"/>
+  <circle cx="648" cy="104" r="52" fill="url(#sun)" opacity="0.9"/>
+  <path d="M0 300 Q 130 262 260 300 T 520 300 T 800 300 V450 H0 Z" fill="#00adbb" opacity="0.42"/>
+  <path d="M0 342 Q 150 306 300 342 T 600 342 T 800 342 V450 H0 Z" fill="#17458f" opacity="0.45"/>
+  <path d="M96 400 q -22 -62 8 -104 q 26 40 12 104 Z" fill="#009739" opacity="0.75"/>
+  <path d="M140 402 q -16 -48 6 -82 q 20 32 10 82 Z" fill="#009739" opacity="0.6"/>
+  <path d="M690 404 q -20 -56 8 -94 q 24 36 10 94 Z" fill="#009739" opacity="0.65"/>
+  <g fill="#ffffff" opacity="0.92">
+    <circle cx="352" cy="214" r="21"/><rect x="336" y="242" width="32" height="62" rx="14"/>
+    <circle cx="424" cy="200" r="21"/><rect x="408" y="228" width="32" height="76" rx="14"/>
+    <circle cx="496" cy="216" r="21"/><rect x="480" y="244" width="32" height="60" rx="14"/>
+  </g>
+  <rect x="404" y="250" width="52" height="38" rx="6" fill="#f7a81b"/>
+  <text x="48" y="72" fill="#ffffff" font-family="Poppins,Segoe UI,sans-serif" font-size="21" font-weight="700" letter-spacing="3">CANE GARDEN BAY</text>
+  <text x="48" y="120" fill="#ffffff" font-family="Poppins,Segoe UI,sans-serif" font-size="42" font-weight="700">REEF CLEANUP</text>
+</svg>

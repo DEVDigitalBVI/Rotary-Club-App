@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { NewsSourceBadge } from "@/components/news-source-badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDate } from "@/lib/format";
-import type { NewsPost, NewsSource } from "@/lib/mock-data";
+import {
+  isSyndicated,
+  newsFeeds,
+  type NewsPost,
+  type NewsSource,
+} from "@/lib/mock-data";
 
 export function NewsFeed({ posts }: { posts: NewsPost[] }) {
   const [filter, setFilter] = useState<NewsSource | "all">("all");
@@ -23,9 +29,24 @@ export function NewsFeed({ posts }: { posts: NewsPost[] }) {
         </TabsList>
       </Tabs>
 
+      {filter !== "all" && filter !== "club" && (
+        <p className="text-xs text-muted-foreground">
+          Pulled from {newsFeeds[filter].name}. The club doesn&apos;t edit these
+          — they link back to the original.
+        </p>
+      )}
+
       <div className="flex flex-col gap-4">
         {filtered.map((post) => (
-          <Card key={post.id}>
+          <Card key={post.id} className="overflow-hidden">
+            {post.image && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={post.image.url}
+                alt={post.image.alt}
+                className="aspect-[16/9] w-full object-cover"
+              />
+            )}
             <CardContent>
               <div className="flex items-center gap-2">
                 <NewsSourceBadge source={post.source} />
@@ -39,7 +60,24 @@ export function NewsFeed({ posts }: { posts: NewsPost[] }) {
               <p className="font-body mt-1.5 text-sm leading-relaxed text-foreground">
                 {post.body}
               </p>
-              <p className="mt-3 text-xs text-muted-foreground">By {post.author}</p>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">
+                  {isSyndicated(post) ? post.author : `By ${post.author}`}
+                </p>
+                {/* Syndicated items are summaries of someone else's article, so
+                    they always offer the way back to the original. */}
+                {post.sourceUrl && (
+                  <a
+                    href={post.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                  >
+                    Read the full story
+                    <ExternalLink className="size-3" />
+                  </a>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}
