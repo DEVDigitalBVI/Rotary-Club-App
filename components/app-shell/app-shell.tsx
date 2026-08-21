@@ -10,7 +10,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-full min-w-0 flex-1">
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
         <div
-          className="flex h-16 items-center justify-between px-4"
+          className="flex h-20 items-center justify-between px-4"
           style={{ backgroundColor: "var(--rotary-blue)" }}
         >
           <BrandLockup />
@@ -24,7 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-h-full min-w-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-30 flex h-16 items-center justify-between px-4 md:hidden"
+          className="sticky top-0 z-30 flex h-20 items-center justify-between px-4 md:hidden"
           style={{ backgroundColor: "var(--rotary-blue)" }}
         >
           <BrandLockup />
