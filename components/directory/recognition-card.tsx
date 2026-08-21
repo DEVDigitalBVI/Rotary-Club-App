@@ -17,16 +17,13 @@ export function RecognitionCard({
   recognition: FoundationRecognition;
   canEdit: boolean;
 }) {
-  // Local state so an edit shows up immediately in the preview; a real build
-  // would refetch the member instead.
-  const [current, setCurrent] = useState(recognition);
   const [open, setOpen] = useState(false);
 
-  const paulHarris = paulHarrisLabel(current.paulHarrisCount);
+  const paulHarris = paulHarrisLabel(recognition.paulHarrisCount);
   const hasAny =
-    current.paulHarrisCount > 0 ||
-    current.polioPlusSociety ||
-    current.actionGroups.length > 0;
+    recognition.paulHarrisCount > 0 ||
+    recognition.polioPlusSociety ||
+    recognition.actionGroups.length > 0;
 
   return (
     <Card>
@@ -53,16 +50,16 @@ export function RecognitionCard({
           <>
             <div className="flex flex-wrap gap-1.5">
               {paulHarris && <StatusBadge tone="gold">{paulHarris}</StatusBadge>}
-              {current.polioPlusSociety && (
+              {recognition.polioPlusSociety && (
                 <StatusBadge tone="cardinal">PolioPlus Society</StatusBadge>
               )}
             </div>
 
-            {current.actionGroups.length > 0 && (
+            {recognition.actionGroups.length > 0 && (
               <div>
                 <p className="text-xs text-muted-foreground">Action groups</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {current.actionGroups.map((group) => (
+                  {recognition.actionGroups.map((group) => (
                     <StatusBadge key={group} tone="violet">
                       {group}
                     </StatusBadge>
@@ -81,10 +78,9 @@ export function RecognitionCard({
       {canEdit && (
         <EditRecognitionDialog
           member={member}
-          recognition={current}
+          recognition={recognition}
           open={open}
           onOpenChange={setOpen}
-          onSave={setCurrent}
         />
       )}
     </Card>
