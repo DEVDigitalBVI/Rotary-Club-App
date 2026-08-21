@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentMember } from "@/lib/data/members";
 import type { RsvpStatus } from "@/lib/mock-data";
 
 export type EventFormState = { error?: string; success?: boolean } | undefined;
@@ -223,13 +224,7 @@ export async function saveEventAttendanceAction(
   const toAdd = nextAttendeeIds.filter((id) => !currentAttendeeIds.includes(id));
   const toRemove = currentAttendeeIds.filter((id) => !nextAttendeeIds.includes(id));
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const { data: caller } = user
-    ? await supabase.from("members").select("id").eq("user_id", user.id).maybeSingle()
-    : { data: null };
+  const [caller, supabase] = await Promise.all([getCurrentMember(), createClient()]);
 
   if (toAdd.length > 0) {
     const { error } = await supabase.from("event_attendance").insert(
