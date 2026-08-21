@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { NewsSourceBadge } from "@/components/news-source-badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EditNewsDialog } from "@/components/news/edit-news-dialog";
 import { formatDate } from "@/lib/format";
 import {
   isSyndicated,
@@ -13,10 +15,21 @@ import {
   type NewsSource,
 } from "@/lib/mock-data";
 
-export function NewsFeed({ posts }: { posts: NewsPost[] }) {
+export function NewsFeed({
+  posts,
+  canEdit = false,
+}: {
+  posts: NewsPost[];
+  /** Officers and committee directors can correct their own club's posts. */
+  canEdit?: boolean;
+}) {
   const [filter, setFilter] = useState<NewsSource | "all">("all");
+  const [editing, setEditing] = useState<NewsPost | null>(null);
+  // Mirrors the incoming posts, but edits land here so a correction shows up
+  // immediately without a backend to round-trip through.
+  const [items, setItems] = useState(posts);
 
-  const filtered = posts.filter((p) => filter === "all" || p.source === filter);
+  const filtered = items.filter((p) => filter === "all" || p.source === filter);
 
   return (
     <div className="flex flex-col gap-4">
@@ -48,11 +61,25 @@ export function NewsFeed({ posts }: { posts: NewsPost[] }) {
               />
             )}
             <CardContent>
-              <div className="flex items-center gap-2">
-                <NewsSourceBadge source={post.source} />
-                <span className="text-xs text-muted-foreground">
-                  {formatDate(post.date)}
-                </span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <NewsSourceBadge source={post.source} />
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(post.date)}
+                  </span>
+                </div>
+                {canEdit && !isSyndicated(post) && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Edit post"
+                    className="text-muted-foreground"
+                    onClick={() => setEditing(post)}
+                  >
+                    <Pencil />
+                  </Button>
+                )}
               </div>
               <h2 className="font-heading mt-2 text-base font-semibold text-foreground">
                 {post.title}
@@ -87,6 +114,30 @@ export function NewsFeed({ posts }: { posts: NewsPost[] }) {
           </p>
         )}
       </div>
+
+      <EditNewsDialog
+        post={editing}
+        open={editing !== null}
+        onOpenChange={(next) => {
+          if (!next) setEditing(null);
+        }}
+        onSave={(updates) => {
+          setItems((prev) =>
+            prev.map((item) =>
+              item.id === editing?.id
+                ? {
+                    ...item,
+                    title: updates.title,
+                    body: updates.body,
+                    image: updates.photo
+                      ? { url: updates.photo.url, alt: updates.photo.name }
+                      : undefined,
+                  }
+                : item
+            )
+          );
+        }}
+      />
     </div>
   );
 }

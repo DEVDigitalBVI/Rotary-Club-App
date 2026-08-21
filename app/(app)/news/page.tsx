@@ -12,7 +12,7 @@ export default function NewsPage() {
         actions={canPostNews(currentMember) ? <PostAnnouncementDialog /> : undefined}
       />
       <div className="p-4 sm:mx-auto sm:max-w-2xl sm:p-8">
-        <NewsFeed posts={visibleNewsPosts()} />
+        <NewsFeed posts={visibleNewsPosts()} canEdit={canPostNews(currentMember)} />
       </div>
     </div>
   );
