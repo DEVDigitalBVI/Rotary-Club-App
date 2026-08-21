@@ -28,7 +28,7 @@ export default function LoginPage() {
           <img
             src="/rotary-club-logo.png"
             alt="Rotary Club of Road Town"
-            className="h-[4.55rem] w-auto drop-shadow-sm sm:h-[5.2rem]"
+            className="h-[5.5rem] w-auto drop-shadow-sm sm:h-[6.5rem]"
           />
           <p className="font-heading text-[1.14rem] text-white/90 drop-shadow-sm sm:text-[1.3rem]">
             Member Portal

@@ -10,21 +10,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-full min-w-0 flex-1">
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex print:hidden">
         <div
-          className="flex h-20 items-center justify-between px-4"
+          className="flex h-28 items-center px-4"
           style={{ backgroundColor: "var(--rotary-blue)" }}
         >
-          <BrandLockup />
-          <ThemeToggle className="text-white hover:bg-white/15 hover:text-white" />
+          <BrandLockup logoClassName="h-20" />
         </div>
         <SidebarNav />
-        <div className="border-t border-sidebar-border p-3">
-          <UserMenu member={currentMember} variant="expanded" />
+        <div className="flex items-center gap-2 border-t border-sidebar-border p-3">
+          <div className="min-w-0 flex-1">
+            <UserMenu member={currentMember} variant="expanded" />
+          </div>
+          <ThemeToggle className="shrink-0" />
         </div>
       </aside>
 
       <div className="flex min-h-full min-w-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-30 flex h-20 items-center justify-between px-4 md:hidden print:hidden"
+          className="sticky top-0 z-30 flex h-24 items-center justify-between px-4 md:hidden print:hidden"
           style={{ backgroundColor: "var(--rotary-blue)" }}
         >
           <BrandLockup />

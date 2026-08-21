@@ -13,7 +13,7 @@ export function BrandLockup({
       <img
         src="/rotary-club-logo.png"
         alt="Rotary Club of Road Town"
-        className={cn("h-14 w-auto", logoClassName)}
+        className={cn("h-16 w-auto", logoClassName)}
       />
     </div>
   );
