@@ -130,6 +130,17 @@ export default async function AccountPage() {
           </CardContent>
         </Card>
 
+        {attendanceSummary && realMember && (
+          <>
+            <div className="mt-2">
+              <h2 className="font-heading text-lg font-semibold text-foreground">
+                Attendance
+              </h2>
+            </div>
+            <AttendanceSummaryCard memberId={realMember.id} summary={attendanceSummary} />
+          </>
+        )}
+
         {isAdmin && (
           <>
             <div className="mt-2">
@@ -152,17 +163,6 @@ export default async function AccountPage() {
                 </div>
               </CardContent>
             </Card>
-          </>
-        )}
-
-        {attendanceSummary && realMember && (
-          <>
-            <div className="mt-2">
-              <h2 className="font-heading text-lg font-semibold text-foreground">
-                Attendance
-              </h2>
-            </div>
-            <AttendanceSummaryCard memberId={realMember.id} summary={attendanceSummary} />
           </>
         )}
 
