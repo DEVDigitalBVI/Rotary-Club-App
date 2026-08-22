@@ -2,11 +2,17 @@ import { BrandLockup } from "@/components/brand/rotary-mark";
 import { SidebarNav } from "./sidebar-nav";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { UserMenu } from "./user-menu";
+import { NotificationBell } from "./notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getCurrentMember } from "@/lib/data/members";
+import { getNotifications, getUnreadNotificationCount } from "@/lib/data/notifications";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
-  const currentMember = await getCurrentMember();
+  const [currentMember, notifications, unreadCount] = await Promise.all([
+    getCurrentMember(),
+    getNotifications(),
+    getUnreadNotificationCount(),
+  ]);
 
   return (
     <div className="flex min-h-full min-w-0 flex-1">
@@ -28,6 +34,13 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               </p>
             )}
           </div>
+          {currentMember && (
+            <NotificationBell
+              notifications={notifications}
+              unreadCount={unreadCount}
+              className="shrink-0 text-sidebar-foreground hover:bg-sidebar-accent"
+            />
+          )}
           <ThemeToggle className="shrink-0" />
         </div>
       </aside>
@@ -39,6 +52,13 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         >
           <BrandLockup logoClassName="h-18" />
           <div className="flex items-center gap-1">
+            {currentMember && (
+              <NotificationBell
+                notifications={notifications}
+                unreadCount={unreadCount}
+                className="text-white hover:bg-white/15"
+              />
+            )}
             <ThemeToggle className="text-white hover:bg-white/15 hover:text-white" />
             {currentMember && <UserMenu member={currentMember} variant="compact" />}
           </div>
