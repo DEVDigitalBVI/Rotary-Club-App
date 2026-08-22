@@ -47,7 +47,11 @@ export function PendingMakeups({ makeups }: { makeups: MakeupEntry[] }) {
                   variant="outline"
                   className="font-heading shrink-0"
                   disabled={pending}
-                  onClick={() => startTransition(() => markMakeupClubrunnerLoggedAction(m.id))}
+                  onClick={() =>
+                    startTransition(async () => {
+                      await markMakeupClubrunnerLoggedAction(m.id);
+                    })
+                  }
                 >
                   <Check />
                   Logged

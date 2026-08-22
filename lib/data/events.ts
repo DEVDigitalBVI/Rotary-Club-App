@@ -10,6 +10,7 @@ type EventRow = {
   ends_at: string | null;
   location: string | null;
   is_virtual: boolean;
+  counts_toward_attendance: boolean;
   description: string | null;
   speaker_name: string | null;
   speaker_topic: string | null;
@@ -44,6 +45,7 @@ function toEventItem(
       : formatTime(row.starts_at),
     location: row.location ?? "",
     isVirtual: row.is_virtual,
+    countsTowardAttendance: row.counts_toward_attendance,
     description: row.description ?? "",
     speaker: row.speaker_name
       ? { name: row.speaker_name, topic: row.speaker_topic ?? "" }

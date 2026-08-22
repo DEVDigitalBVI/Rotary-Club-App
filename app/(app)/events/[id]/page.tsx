@@ -5,10 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MemberAvatar } from "@/components/member-avatar";
 import { RsvpControl } from "@/components/events/rsvp-control";
 import { EventMaterials } from "@/components/events/event-materials";
+import { TakeAttendanceDialog } from "@/components/events/take-attendance-dialog";
 import { getEventById } from "@/lib/data/events";
 import { getCurrentMember, getMembers } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
-import { canManageEvents } from "@/lib/mock-data";
+import { getEventAttendeeIds } from "@/lib/data/attendance";
+import { canManageEvents, canAssignRoles } from "@/lib/mock-data";
 import { formatDate, todayDateString } from "@/lib/format";
 
 export default async function EventDetailPage({
@@ -17,19 +19,26 @@ export default async function EventDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [event, members, currentMember, committees] = await Promise.all([
+  const [event, members, currentMember, committees, realAttendeeIds] = await Promise.all([
     getEventById(id),
     getMembers(),
     getCurrentMember(),
     getCommittees(),
+    getEventAttendeeIds(id),
   ]);
   if (!event) notFound();
 
   const isAdmin = currentMember?.role === "admin";
   const mayManage = currentMember ? canManageEvents(currentMember, committees) : false;
+  const mayTakeAttendance = currentMember ? canAssignRoles(currentMember) : false;
   const isUpcoming = event.date >= todayDateString();
-  const attendees = event.attendeeIds
-    ?.map((mid) => members.find((m) => m.id === mid))
+
+  // Real attendance (once taken) supersedes the RSVP-based "who's coming"
+  // guess it's derived from before the meeting happens.
+  const attendanceTaken = realAttendeeIds.length > 0;
+  const attendeeIdsToShow = attendanceTaken ? realAttendeeIds : (event.attendeeIds ?? []);
+  const attendees = attendeeIdsToShow
+    .map((mid) => members.find((m) => m.id === mid))
     .filter((m): m is NonNullable<typeof m> => Boolean(m));
 
   return (
@@ -141,12 +150,24 @@ export default async function EventDetailPage({
             </CardContent>
           </Card>
 
-          {isAdmin && attendees && attendees.length > 0 && (
+          {mayTakeAttendance && event.countsTowardAttendance && (
+            <Card>
+              <CardContent>
+                <TakeAttendanceDialog
+                  eventId={event.id}
+                  members={members}
+                  attendeeIds={realAttendeeIds}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {isAdmin && attendees.length > 0 && (
             <Card>
               <CardContent>
                 <div className="flex items-center justify-between">
                   <h2 className="font-heading text-sm font-semibold text-foreground">
-                    {event.attendance ? "Attendees" : "Confirmed so far"}
+                    {attendanceTaken ? "Attendees" : "Confirmed so far"}
                   </h2>
                   <span className="text-xs text-muted-foreground">
                     {attendees.length}

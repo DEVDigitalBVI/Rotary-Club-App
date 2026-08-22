@@ -112,6 +112,16 @@ export function CreateEventDialog() {
             <Textarea id="event-description" name="description" rows={3} />
           </div>
 
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              name="countsTowardAttendance"
+              defaultChecked
+              className="size-4 rounded border-border accent-primary"
+            />
+            Counts toward the 50% attendance requirement
+          </label>
+
           <div className="flex flex-col gap-1.5">
             <Label>Flyer</Label>
             <input

@@ -592,6 +592,8 @@ export type EventItem = {
   myRsvp: RsvpStatus;
   attendance?: { present: number; total: number };
   attendeeIds?: string[];
+  /** Whether this event counts toward the bylaws' 50%-of-meetings requirement. */
+  countsTowardAttendance: boolean;
   flyer?: EventFlyer;
   agenda?: EventAgenda;
 };
@@ -622,6 +624,7 @@ export const events: EventItem[] = [
       "m-pemberton",
       "m-outten",
     ],
+    countsTowardAttendance: true,
   },
   {
     id: "e-2",
@@ -634,6 +637,7 @@ export const events: EventItem[] = [
       "Community service morning with the Marine Conservation Society. Bring reef-safe sunscreen and a reusable water bottle.",
     rsvps: { yes: 15, no: 1, maybe: 4 },
     myRsvp: "maybe",
+    countsTowardAttendance: false,
   },
   {
     id: "e-3",
@@ -647,6 +651,7 @@ export const events: EventItem[] = [
     rsvpDeadline: "2026-08-26",
     rsvps: { yes: 11, no: 0, maybe: 1 },
     myRsvp: "none",
+    countsTowardAttendance: true,
   },
   {
     id: "e-4",
@@ -658,6 +663,7 @@ export const events: EventItem[] = [
     description: "Monthly board meeting. Board members and committee chairs only.",
     rsvps: { yes: 6, no: 0, maybe: 0 },
     myRsvp: "yes",
+    countsTowardAttendance: false,
   },
   {
     id: "e-5",
@@ -680,6 +686,7 @@ export const events: EventItem[] = [
       "m-defreitas",
       "m-outten",
     ],
+    countsTowardAttendance: true,
   },
   {
     id: "e-6",
@@ -692,6 +699,7 @@ export const events: EventItem[] = [
     rsvps: { yes: 32, no: 4, maybe: 0 },
     myRsvp: "yes",
     attendance: { present: 30, total: 36 },
+    countsTowardAttendance: false,
   },
 ];
 
