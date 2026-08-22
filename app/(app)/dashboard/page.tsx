@@ -13,18 +13,19 @@ import {
   events,
   channels,
   members,
-  visibleNewsPosts,
   balanceForMember,
   overdueBalanceForMember,
   TODAY,
 } from "@/lib/mock-data";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getCurrentMember, getTodaysBirthdays } from "@/lib/data/members";
+import { getVisibleNewsPosts } from "@/lib/data/news";
 
 export default async function DashboardPage() {
-  const [viewer, birthdaysToday] = await Promise.all([
+  const [viewer, birthdaysToday, newsPosts] = await Promise.all([
     getCurrentMember(),
     getTodaysBirthdays(),
+    getVisibleNewsPosts(),
   ]);
 
   const upcoming = events
@@ -40,7 +41,7 @@ export default async function DashboardPage() {
     .sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
     .slice(0, 3);
 
-  const latestNews = visibleNewsPosts().slice(0, 3);
+  const latestNews = newsPosts.slice(0, 3);
 
   const firstName = currentMember.name.split(" ")[0];
 
