@@ -6,6 +6,8 @@ import { formatDate } from "@/lib/format";
 import type { EventItem } from "@/lib/mock-data";
 
 export function EventCard({ event }: { event: EventItem }) {
+  const peopleGoing = event.rsvps.yes + (event.rsvps.guests ?? 0);
+
   return (
     <Link href={`/events/${event.id}`}>
       <Card className="h-full transition-shadow hover:shadow-[var(--shadow-card-hover)]">
@@ -52,7 +54,7 @@ export function EventCard({ event }: { event: EventItem }) {
             <Users className="size-3.5" />
             {event.attendance
               ? `${event.attendance.present} attended`
-              : `${event.rsvps.yes} going · ${event.rsvps.maybe} maybe`}
+              : `${peopleGoing} going · ${event.rsvps.maybe} maybe`}
           </div>
         </CardContent>
       </Card>
