@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
 import { visibleNewsPosts, type NewsPost, type NewsSource } from "@/lib/mock-data";
+import { getLatestRotaryNews } from "@/lib/data/rotary-news";
 
 type NewsPostRow = {
   id: string;
@@ -45,7 +46,7 @@ export async function getVisibleNewsPosts(): Promise<NewsPost[]> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const [{ data, error }, memberResult] = await Promise.all([
+  const [{ data, error }, memberResult, latestRotaryNews] = await Promise.all([
     supabase
     .from("news_posts")
     .select("id, source, title, body, author, published_at, image_url, image_alt, source_url, audience_type, audience_id, priority, is_pinned, expires_at, requires_acknowledgement")
@@ -54,6 +55,7 @@ export async function getVisibleNewsPosts(): Promise<NewsPost[]> {
     user
       ? supabase.from("members").select("id").eq("user_id", user.id).maybeSingle<{ id: string }>()
       : Promise.resolve({ data: null, error: null }),
+    getLatestRotaryNews(),
   ]);
   throwOnSupabaseError(error, "Unable to load news posts");
 
@@ -73,11 +75,14 @@ export async function getVisibleNewsPosts(): Promise<NewsPost[]> {
   const today = new Date().toISOString().slice(0, 10);
   const priorityRank = { urgent: 0, important: 1, normal: 2 } as const;
 
-  return visibleNewsPosts(
-    (data ?? [])
+  const storedRows = (data ?? [])
       .filter((row) => !row.expires_at || row.expires_at >= today)
-      .map((row) => toNewsPost(row, acknowledged.get(row.id)))
-  ).sort((a, b) => {
+      .map((row) => toNewsPost(row, acknowledged.get(row.id)));
+  const posts = latestRotaryNews.length === 2
+    ? [...storedRows.filter((post) => post.source !== "ri"), ...latestRotaryNews]
+    : storedRows;
+
+  return visibleNewsPosts(posts).sort((a, b) => {
     if (Boolean(a.isPinned) !== Boolean(b.isPinned)) return a.isPinned ? -1 : 1;
     const priorityDifference = priorityRank[a.priority ?? "normal"] - priorityRank[b.priority ?? "normal"];
     if (priorityDifference !== 0) return priorityDifference;
