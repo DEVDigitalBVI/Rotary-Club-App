@@ -3,10 +3,11 @@ import { ArrowUpRight, CalendarDays, ChevronRight, Clock3, MapPin, MessageCircle
 import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/member-avatar";
 import { BirthdayBanner } from "@/components/dashboard/birthday-banner";
-import { currentMember, events, channels, members, balanceForMember, overdueBalanceForMember, TODAY } from "@/lib/mock-data";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { currentMember, channels, members, balanceForMember, overdueBalanceForMember } from "@/lib/mock-data";
+import { formatCurrency, formatDate, todayDateString } from "@/lib/format";
 import { getCurrentMember, getTodaysBirthdays } from "@/lib/data/members";
 import { getVisibleNewsPosts } from "@/lib/data/news";
+import { getEvents } from "@/lib/data/events";
 
 function eventDateParts(date: string) {
   const value = new Date(`${date}T12:00:00Z`);
@@ -17,12 +18,14 @@ function eventDateParts(date: string) {
 }
 
 export default async function DashboardPage() {
-  const [viewer, birthdaysToday, newsPosts] = await Promise.all([
+  const [viewer, birthdaysToday, newsPosts, events] = await Promise.all([
     getCurrentMember(),
     getTodaysBirthdays(),
     getVisibleNewsPosts(),
+    getEvents(),
   ]);
-  const upcoming = events.filter((event) => event.date >= TODAY).sort((a, b) => (a.date < b.date ? -1 : 1));
+  const today = todayDateString();
+  const upcoming = events.filter((event) => event.date >= today).sort((a, b) => (a.date < b.date ? -1 : 1));
   const nextEvent = upcoming[0];
   const laterEvents = upcoming.slice(1, 4);
   const balance = balanceForMember(currentMember.id);

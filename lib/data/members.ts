@@ -52,7 +52,11 @@ export async function getCurrentMember(): Promise<Member | null> {
   const {
     data: { user }, error: authError,
   } = await supabase.auth.getUser();
-  throwOnSupabaseError(authError, "Unable to verify the current user");
+  // A missing session is an expected signed-out state, not a data-layer
+  // failure. Callers can redirect or render signed-out UI from the null.
+  if (authError?.name !== "AuthSessionMissingError") {
+    throwOnSupabaseError(authError, "Unable to verify the current user");
+  }
   if (!user) return null;
 
   const { data, error } = await supabase

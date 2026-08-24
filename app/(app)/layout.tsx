@@ -8,7 +8,10 @@ export default async function AuthenticatedLayout({
   children: React.ReactNode;
 }) {
   const member = await getCurrentMember();
-  if (!member || member.status === "inactive") {
+  if (!member) {
+    redirect("/login");
+  }
+  if (member.status === "inactive") {
     redirect("/access-denied");
   }
 
