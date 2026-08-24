@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, ExternalLink, Pencil, Pin } from "lucide-react";
+import { AlertTriangle, Pencil, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { NewsSourceBadge } from "@/components/news-source-badge";
@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditNewsDialog } from "@/components/news/edit-news-dialog";
 import { formatDate } from "@/lib/format";
 import { NoticeAcknowledgement } from "@/components/news/notice-acknowledgement";
+import { ArticleReaderDialog } from "@/components/news/article-reader-dialog";
 import {
   isSyndicated,
   newsFeeds,
@@ -114,15 +115,7 @@ export function NewsFeed({
                 {/* Syndicated items are summaries of someone else's article, so
                     they always offer the way back to the original. */}
                 {post.sourceUrl && (
-                  <a
-                    href={post.sourceUrl}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                  >
-                    Read the full story
-                    <ExternalLink className="size-3" />
-                  </a>
+                  <ArticleReaderDialog title={post.title} url={post.sourceUrl} />
                 )}
               </div>
             </CardContent>
