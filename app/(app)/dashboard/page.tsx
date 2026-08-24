@@ -33,11 +33,12 @@ export default async function DashboardPage() {
   const nextEventAttending = nextEvent
     ? nextEvent.rsvps.yes + (nextEvent.rsvps.guests ?? 0)
     : 0;
-  const laterEvents = upcoming.slice(1, 4);
   const balance = balanceForMember(currentMember.id);
   const overdue = overdueBalanceForMember(currentMember.id);
   const latestMessages = channels.flatMap((channel) => channel.messages.map((message) => ({ ...message, channel: channel.name }))).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)).slice(0, 2);
   const latestNews = newsPosts.slice(0, 2);
+  const clubNotices = newsPosts.filter((post) => post.source === "club");
+  const latestNotices = (clubNotices.length > 0 ? clubNotices : newsPosts).slice(0, 3);
   const firstName = currentMember.name.split(" ")[0];
   const date = nextEvent ? eventDateParts(nextEvent.date) : null;
   const onboarding = viewer ? await getCompletedOnboarding(viewer.id) : [];
@@ -62,24 +63,24 @@ export default async function DashboardPage() {
 
       <div className="grid gap-5 px-4 sm:px-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(19rem,.75fr)] lg:px-10">
         {nextEvent && date && (
-          <section className="rise-in rise-in-delay-1 relative min-h-[28rem] overflow-hidden rounded-[1.75rem] bg-[#123b67] text-white shadow-[0_30px_70px_-38px_rgba(13,49,91,.8)]">
+          <section className="rise-in rise-in-delay-1 relative min-h-[23rem] overflow-hidden rounded-[1.75rem] bg-[#123b67] text-white shadow-[0_30px_70px_-38px_rgba(13,49,91,.8)]">
             <div className="absolute -right-24 -top-20 size-80 rounded-full border-[70px] border-white/[0.035]" />
             <div className="absolute -bottom-24 right-1/4 size-64 rounded-full bg-[var(--rotary-gold)]/10 blur-2xl" />
-            <div className="relative flex h-full min-h-[28rem] flex-col p-6 sm:p-9">
+            <div className="relative flex h-full min-h-[23rem] flex-col p-6 sm:p-8">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-xs font-semibold backdrop-blur"><Sparkles className="size-3.5 text-[var(--rotary-gold)]" />Next gathering</div>
                 <div className="min-w-16 rounded-2xl bg-[var(--rotary-gold)] px-3 py-2 text-center text-[#183453] shadow-lg"><span className="font-label block text-[0.58rem]">{date.month}</span><span className="font-heading block text-3xl font-bold leading-none">{date.day}</span></div>
               </div>
-              <div className={`mt-8 grid flex-1 items-end gap-9 ${nextEvent.flyer ? "lg:grid-cols-[minmax(0,1fr)_13.5rem]" : ""}`}>
+              <div className={`mt-6 grid flex-1 items-end gap-7 ${nextEvent.flyer ? "lg:grid-cols-[minmax(0,1fr)_9.75rem]" : ""}`}>
                 <div className="max-w-2xl">
                   <p className="font-label mb-3 text-[0.62rem] text-white/50">Club programme</p>
-                  <h2 className="font-heading text-4xl font-semibold leading-[1.02] sm:text-6xl">{nextEvent.title}</h2>
+                  <h2 className="font-heading text-4xl font-semibold leading-[1.02] sm:text-5xl">{nextEvent.title}</h2>
                   {nextEvent.speaker && <p className="mt-4 max-w-xl text-sm leading-6 text-white/65 sm:text-base"><span className="text-white">{nextEvent.speaker.name}</span> on {nextEvent.speaker.topic}.</p>}
-                  <div className="mt-7 flex flex-col gap-3 border-t border-white/15 pt-5 text-sm text-white/72 sm:flex-row sm:items-center sm:gap-7">
+                  <div className="mt-5 flex flex-col gap-3 border-t border-white/15 pt-4 text-sm text-white/72 sm:flex-row sm:items-center sm:gap-7">
                     <span className="flex items-center gap-2"><Clock3 className="size-4 text-[var(--rotary-gold)]" />{nextEvent.time}</span>
                     <span className="flex items-center gap-2"><MapPin className="size-4 text-[var(--rotary-gold)]" />{nextEvent.location}</span>
                   </div>
-                  <div className="mt-7 flex flex-wrap items-center gap-3">
+                  <div className="mt-5 flex flex-wrap items-center gap-3">
                     <Button className="h-11 rounded-full bg-white px-5 font-semibold text-[#123b67] hover:bg-[var(--rotary-gold)]" nativeButton={false} render={<Link href={`/events/${nextEvent.id}`} />}>View gathering <ArrowUpRight className="size-4" /></Button>
                     <p className="text-xs text-white/50">{nextEventAttending} {nextEventAttending === 1 ? "person" : "people"} attending</p>
                   </div>
@@ -91,14 +92,25 @@ export default async function DashboardPage() {
         )}
 
         <aside className="rise-in rise-in-delay-2 flex flex-col overflow-hidden rounded-[1.75rem] border border-border bg-card">
-          <div className="border-b border-border p-6"><p className="font-label text-[0.62rem] text-primary/60">On the calendar</p><h2 className="font-heading mt-2 text-3xl font-semibold">Coming up</h2></div>
-          <div className="flex-1 divide-y divide-border px-6">
-            {laterEvents.map((event) => {
-              const parts = eventDateParts(event.date);
-              return <Link key={event.id} href={`/events/${event.id}`} className="group grid grid-cols-[2.75rem_1fr_auto] items-center gap-3 py-5"><span className="text-center"><span className="font-label block text-[0.52rem] text-primary/60">{parts.month}</span><span className="font-heading block text-2xl font-semibold leading-none">{parts.day}</span></span><span className="min-w-0"><strong className="block text-sm font-semibold leading-snug">{event.title}</strong><span className="mt-1 block truncate text-xs text-muted-foreground">{event.time}</span></span><ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" /></Link>;
-            })}
+          <div className="border-b border-border bg-primary/[0.035] p-6">
+            <div className="flex items-center gap-2 text-primary"><Newspaper className="size-4" /><p className="font-label text-[0.62rem]">Club communications</p></div>
+            <h2 className="font-heading mt-2 text-3xl font-semibold">Latest notices</h2>
+            <p className="mt-1.5 text-xs leading-5 text-muted-foreground">Important updates from around the club.</p>
           </div>
-          <Link href="/events" className="flex items-center justify-between bg-[#e6a51c] p-6 text-sm font-bold text-[#183453] transition-colors hover:bg-[var(--rotary-gold)]">Explore all events <ArrowUpRight className="size-4" /></Link>
+          <div className="flex-1 divide-y divide-border px-6">
+            {latestNotices.map((notice, index) => (
+              <Link key={notice.id} href="/news" className="group block py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-label text-[0.52rem] text-primary/65">{index === 0 ? "Newest" : formatDate(notice.date)}</span>
+                  <ArrowUpRight className="size-3.5 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
+                </div>
+                <strong className="mt-1.5 block text-sm font-semibold leading-snug text-foreground">{notice.title}</strong>
+                <span className="mt-1 line-clamp-2 block text-xs leading-5 text-muted-foreground">{notice.body}</span>
+              </Link>
+            ))}
+            {latestNotices.length === 0 && <p className="py-8 text-sm text-muted-foreground">No club notices have been posted yet.</p>}
+          </div>
+          <Link href="/news" className="flex items-center justify-between bg-[#e6a51c] p-5 text-sm font-bold text-[#183453] transition-colors hover:bg-[var(--rotary-gold)]">Read all notices <ArrowUpRight className="size-4" /></Link>
         </aside>
       </div>
 

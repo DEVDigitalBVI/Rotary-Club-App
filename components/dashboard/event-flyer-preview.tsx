@@ -21,7 +21,7 @@ export function EventFlyerPreview({
   return (
     <Dialog>
       <DialogTrigger
-        className="group relative mx-auto block w-full max-w-[17rem] cursor-zoom-in text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rotary-gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-[#123b67] lg:max-w-none"
+        className="group relative mx-auto block w-full max-w-[14.5rem] cursor-zoom-in text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rotary-gold)] focus-visible:ring-offset-4 focus-visible:ring-offset-[#123b67] lg:max-w-none"
         aria-label={`Enlarge flyer for ${eventTitle}`}
       >
         <span className="absolute -inset-2 rotate-2 rounded-[1.35rem] border border-white/10 bg-white/8 shadow-2xl transition-transform duration-300 group-hover:rotate-3 group-hover:scale-[1.02]" />
