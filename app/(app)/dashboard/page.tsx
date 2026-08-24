@@ -1,25 +1,20 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, MapPin, Users, Wallet } from "lucide-react";
-import { PageHeader } from "@/components/page-header";
-import { StatusBadge } from "@/components/status-badge";
-import { RsvpStatusBadge } from "@/components/rsvp-badge";
-import { NewsSourceBadge } from "@/components/news-source-badge";
+import { ArrowUpRight, CalendarDays, ChevronRight, Clock3, MapPin, MessageCircle, Newspaper, Sparkles, Users, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MemberAvatar } from "@/components/member-avatar";
 import { BirthdayBanner } from "@/components/dashboard/birthday-banner";
-import {
-  currentMember,
-  events,
-  channels,
-  members,
-  balanceForMember,
-  overdueBalanceForMember,
-  TODAY,
-} from "@/lib/mock-data";
+import { currentMember, events, channels, members, balanceForMember, overdueBalanceForMember, TODAY } from "@/lib/mock-data";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getCurrentMember, getTodaysBirthdays } from "@/lib/data/members";
 import { getVisibleNewsPosts } from "@/lib/data/news";
+
+function eventDateParts(date: string) {
+  const value = new Date(`${date}T12:00:00Z`);
+  return {
+    month: value.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }),
+    day: value.toLocaleDateString("en-US", { day: "2-digit", timeZone: "UTC" }),
+  };
+}
 
 export default async function DashboardPage() {
   const [viewer, birthdaysToday, newsPosts] = await Promise.all([
@@ -27,222 +22,108 @@ export default async function DashboardPage() {
     getTodaysBirthdays(),
     getVisibleNewsPosts(),
   ]);
-
-  const upcoming = events
-    .filter((e) => e.date >= TODAY)
-    .sort((a, b) => (a.date < b.date ? -1 : 1))
-    .slice(0, 3);
-
+  const upcoming = events.filter((event) => event.date >= TODAY).sort((a, b) => (a.date < b.date ? -1 : 1));
+  const nextEvent = upcoming[0];
+  const laterEvents = upcoming.slice(1, 4);
   const balance = balanceForMember(currentMember.id);
   const overdue = overdueBalanceForMember(currentMember.id);
-
-  const latestMessages = channels
-    .flatMap((c) => c.messages.map((m) => ({ ...m, channel: c.name })))
-    .sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
-    .slice(0, 3);
-
-  const latestNews = newsPosts.slice(0, 3);
-
+  const latestMessages = channels.flatMap((channel) => channel.messages.map((message) => ({ ...message, channel: channel.name }))).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)).slice(0, 2);
+  const latestNews = newsPosts.slice(0, 2);
   const firstName = currentMember.name.split(" ")[0];
+  const date = nextEvent ? eventDateParts(nextEvent.date) : null;
 
   return (
-    <div>
-      <PageHeader
-        title={`Welcome back, ${firstName}`}
-        description="Here's what's happening in the club."
-      />
+    <div className="mx-auto w-full max-w-[1500px] pb-10">
+      <header className="rise-in px-4 pb-6 pt-8 sm:px-8 sm:pb-8 sm:pt-12 lg:px-10">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="font-label mb-3 text-[0.63rem] text-primary/65">Monday · Road Town, Tortola</p>
+            <h1 className="font-heading max-w-3xl text-[2.6rem] font-semibold leading-[0.95] text-foreground sm:text-6xl">
+              Good to see you, <span className="text-primary">{firstName}.</span>
+            </h1>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">Here’s what’s bringing the club together this week.</p>
+          </div>
+          <div className="hidden items-center gap-3 pb-1 lg:flex">
+            <div className="flex -space-x-2.5">{members.slice(0, 5).map((member) => <MemberAvatar key={member.id} member={member} className="size-9 border-2 border-background" />)}</div>
+            <p className="text-xs leading-4 text-muted-foreground"><strong className="block text-foreground">{members.length} members</strong>serving the BVI</p>
+          </div>
+        </div>
+      </header>
 
       <BirthdayBanner viewerId={viewer?.id} birthdays={birthdaysToday} />
 
-      <div className="grid gap-4 p-4 sm:grid-cols-2 sm:p-8 lg:grid-cols-3">
-        {/* Balance */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-muted-foreground">
-              <Wallet className="size-4" />
-              My Account
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-heading text-3xl font-semibold text-foreground">
-              {formatCurrency(balance)}
-            </p>
-            <StatusBadge
-              tone={overdue > 0 ? "cardinal" : balance > 0 ? "gold" : "grass"}
-              className="mt-2"
-            >
-              {overdue > 0
-                ? `${formatCurrency(overdue)} overdue`
-                : balance > 0
-                  ? "Balance owed"
-                  : "Paid up"}
-            </StatusBadge>
-            <Button
-              variant="link"
-              className="mt-2 h-auto p-0 font-heading"
-              nativeButton={false}
-              render={<Link href="/account" />}
-            >
-              View account <ArrowRight className="size-3.5" />
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Upcoming events */}
-        <Card className="lg:col-span-2 lg:row-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-muted-foreground">
-              <CalendarDays className="size-4" />
-              Upcoming events
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col divide-y divide-border">
-            {upcoming.map((event) => (
-              <Link
-                key={event.id}
-                href={`/events/${event.id}`}
-                className="flex items-start justify-between gap-3 rounded-lg py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/60"
-              >
-                {/* Same thumbnail treatment as the events list, so a meeting
-                    is recognisable by its poster wherever it appears. */}
-                {event.flyer && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={event.flyer.url}
-                    alt=""
-                    aria-hidden="true"
-                    className="aspect-[3/4] w-14 shrink-0 rounded-md border border-border object-cover"
-                  />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="font-heading truncate text-sm font-medium text-foreground">
-                    {event.title}
-                  </p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span>{formatDate(event.date)}</span>
-                    <span>·</span>
-                    <span className="truncate">{event.time}</span>
-                  </p>
-                  <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                    <MapPin className="size-3" />
-                    <span className="truncate">{event.location}</span>
-                  </p>
-                </div>
-                <RsvpStatusBadge status={event.myRsvp} />
-              </Link>
-            ))}
-            <Button
-              variant="link"
-              className="mt-1 h-auto justify-start p-0 font-heading"
-              nativeButton={false}
-              render={<Link href="/events" />}
-            >
-              View all events <ArrowRight className="size-3.5" />
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Directory quick link */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-muted-foreground">
-              <Users className="size-4" />
-              Directory
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex -space-x-2">
-              {members.slice(0, 6).map((m) => (
-                <MemberAvatar
-                  key={m.id}
-                  member={m}
-                  className="size-8 border-2 border-card"
-                  fallbackClassName="text-[0.65rem]"
-                />
-              ))}
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {members.length} members in the club
-            </p>
-            <Button
-              variant="link"
-              className="mt-1 h-auto p-0 font-heading"
-              nativeButton={false}
-              render={<Link href="/directory" />}
-            >
-              Browse directory <ArrowRight className="size-3.5" />
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Latest chat */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-muted-foreground">Recent messages</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            {latestMessages.map((m) => {
-              const sender = members.find((mem) => mem.id === m.senderId);
-              return (
-                <div key={m.id} className="flex items-start gap-2">
-                  <MemberAvatar
-                    member={sender}
-                    className="size-7 shrink-0"
-                    fallbackClassName="text-[0.6rem]"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-foreground">
-                      {sender?.name}{" "}
-                      <span className="font-normal text-muted-foreground">
-                        in {m.channel}
-                      </span>
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">{m.body}</p>
-                  </div>
-                </div>
-              );
-            })}
-            <Button
-              variant="link"
-              className="h-auto justify-start p-0 font-heading"
-              nativeButton={false}
-              render={<Link href="/chat" />}
-            >
-              Open chat <ArrowRight className="size-3.5" />
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Latest news */}
-        <Card className="sm:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-muted-foreground">Latest news</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col divide-y divide-border">
-            {latestNews.map((post) => (
-              <div key={post.id} className="py-3 first:pt-0 last:pb-0">
-                <div className="flex items-center gap-2">
-                  <NewsSourceBadge source={post.source} />
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(post.date)}
-                  </span>
-                </div>
-                <p className="font-heading mt-1 text-sm font-medium text-foreground">
-                  {post.title}
-                </p>
+      <div className="grid gap-5 px-4 sm:px-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(19rem,.75fr)] lg:px-10">
+        {nextEvent && date && (
+          <section className="rise-in rise-in-delay-1 relative min-h-[28rem] overflow-hidden rounded-[1.75rem] bg-[#123b67] text-white shadow-[0_30px_70px_-38px_rgba(13,49,91,.8)]">
+            <div className="absolute -right-24 -top-20 size-80 rounded-full border-[70px] border-white/[0.035]" />
+            <div className="absolute -bottom-24 right-1/4 size-64 rounded-full bg-[var(--rotary-gold)]/10 blur-2xl" />
+            <div className="relative flex h-full min-h-[28rem] flex-col justify-between p-6 sm:p-9">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-xs font-semibold backdrop-blur"><Sparkles className="size-3.5 text-[var(--rotary-gold)]" />Next gathering</div>
+                <div className="min-w-16 rounded-2xl bg-[var(--rotary-gold)] px-3 py-2 text-center text-[#183453] shadow-lg"><span className="font-label block text-[0.58rem]">{date.month}</span><span className="font-heading block text-3xl font-bold leading-none">{date.day}</span></div>
               </div>
-            ))}
-            <Button
-              variant="link"
-              className="mt-1 h-auto justify-start p-0 font-heading"
-              nativeButton={false}
-              render={<Link href="/news" />}
-            >
-              View all news <ArrowRight className="size-3.5" />
-            </Button>
-          </CardContent>
-        </Card>
+              <div className="max-w-2xl">
+                <p className="font-label mb-3 text-[0.62rem] text-white/50">Club programme</p>
+                <h2 className="font-heading text-4xl font-semibold leading-[1.02] sm:text-6xl">{nextEvent.title}</h2>
+                {nextEvent.speaker && <p className="mt-4 max-w-xl text-sm leading-6 text-white/65 sm:text-base"><span className="text-white">{nextEvent.speaker.name}</span> on {nextEvent.speaker.topic}.</p>}
+                <div className="mt-7 flex flex-col gap-3 border-t border-white/15 pt-5 text-sm text-white/72 sm:flex-row sm:items-center sm:gap-7">
+                  <span className="flex items-center gap-2"><Clock3 className="size-4 text-[var(--rotary-gold)]" />{nextEvent.time}</span>
+                  <span className="flex items-center gap-2"><MapPin className="size-4 text-[var(--rotary-gold)]" />{nextEvent.location}</span>
+                </div>
+                <div className="mt-7 flex flex-wrap items-center gap-3">
+                  <Button className="h-11 rounded-full bg-white px-5 font-semibold text-[#123b67] hover:bg-[var(--rotary-gold)]" nativeButton={false} render={<Link href={`/events/${nextEvent.id}`} />}>View gathering <ArrowUpRight className="size-4" /></Button>
+                  <p className="text-xs text-white/50">{nextEvent.rsvps.yes} members attending</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <aside className="rise-in rise-in-delay-2 flex flex-col overflow-hidden rounded-[1.75rem] border border-border bg-card">
+          <div className="border-b border-border p-6"><p className="font-label text-[0.62rem] text-primary/60">At a glance</p><h2 className="font-heading mt-2 text-3xl font-semibold">Your club life</h2></div>
+          <Link href="/account" className="group flex items-center gap-4 border-b border-border p-6 transition-colors hover:bg-muted/45">
+            <span className="flex size-11 items-center justify-center rounded-full bg-primary/8 text-primary"><Wallet className="size-5" /></span>
+            <span className="min-w-0 flex-1"><span className="block text-xs text-muted-foreground">Account balance</span><strong className="font-heading mt-0.5 block text-2xl font-semibold">{formatCurrency(balance)}</strong><span className={`mt-1 block text-xs ${overdue > 0 ? "text-destructive" : "text-muted-foreground"}`}>{overdue > 0 ? `${formatCurrency(overdue)} overdue` : "You’re all paid up"}</span></span>
+            <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+          </Link>
+          <Link href="/directory" className="group flex items-center gap-4 border-b border-border p-6 transition-colors hover:bg-muted/45">
+            <span className="flex size-11 items-center justify-center rounded-full bg-[var(--rotary-gold)]/15 text-[#996000]"><Users className="size-5" /></span>
+            <span className="min-w-0 flex-1"><span className="block text-xs text-muted-foreground">Club directory</span><strong className="font-heading mt-0.5 block text-2xl font-semibold">{members.length} people</strong><span className="mt-1 block text-xs text-muted-foreground">One shared purpose</span></span>
+            <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+          </Link>
+          <div className="mt-auto bg-[#e6a51c] p-6 text-[#183453]"><p className="font-heading text-xl font-semibold leading-tight">Service above self.</p><p className="mt-1 text-xs font-medium opacity-65">Small actions, lasting change.</p></div>
+        </aside>
       </div>
+
+      <div className="mt-5 grid gap-5 px-4 sm:px-8 lg:grid-cols-[.85fr_1.15fr] lg:px-10">
+        <section className="rounded-[1.5rem] border border-border bg-card p-6 sm:p-7">
+          <div className="mb-5 flex items-end justify-between"><div><p className="font-label text-[0.6rem] text-primary/60">The calendar</p><h2 className="font-heading mt-1 text-3xl font-semibold">Coming up</h2></div><Link href="/events" className="text-xs font-bold text-primary hover:underline">All events</Link></div>
+          <div className="divide-y divide-border">
+            {laterEvents.map((event) => {
+              const parts = eventDateParts(event.date);
+              return <Link key={event.id} href={`/events/${event.id}`} className="group grid grid-cols-[3rem_1fr_auto] items-center gap-4 py-4 first:pt-0 last:pb-0"><span className="text-center"><span className="font-label block text-[0.55rem] text-primary/60">{parts.month}</span><span className="font-heading block text-2xl font-semibold leading-none">{parts.day}</span></span><span className="min-w-0"><strong className="block truncate text-sm font-semibold">{event.title}</strong><span className="mt-1 block truncate text-xs text-muted-foreground">{event.time} · {event.location}</span></span><ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" /></Link>;
+            })}
+          </div>
+        </section>
+
+        <section className="rounded-[1.5rem] border border-border bg-card p-6 sm:p-7">
+          <div className="mb-5"><p className="font-label text-[0.6rem] text-primary/60">From around the club</p><h2 className="font-heading mt-1 text-3xl font-semibold">Club pulse</h2></div>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div>
+              <div className="mb-3 flex items-center gap-2 text-xs font-bold text-muted-foreground"><MessageCircle className="size-4" />Recent conversation</div>
+              <div className="space-y-4">{latestMessages.map((message) => { const sender = members.find((member) => member.id === message.senderId); return <div key={message.id} className="flex gap-3"><MemberAvatar member={sender} className="size-8 shrink-0" /><div className="min-w-0"><p className="text-xs font-semibold">{sender?.name} <span className="font-normal text-muted-foreground">in {message.channel}</span></p><p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">{message.body}</p></div></div>; })}</div>
+              <Link href="/chat" className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">Join the conversation <ArrowUpRight className="size-3" /></Link>
+            </div>
+            <div className="border-t border-border pt-5 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
+              <div className="mb-3 flex items-center gap-2 text-xs font-bold text-muted-foreground"><Newspaper className="size-4" />Latest notices</div>
+              <div className="space-y-4">{latestNews.map((post) => <div key={post.id}><p className="text-xs text-muted-foreground">{formatDate(post.date)}</p><p className="font-heading mt-1 text-lg font-semibold leading-snug">{post.title}</p></div>)}</div>
+              <Link href="/news" className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">Read all notices <ArrowUpRight className="size-3" /></Link>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div className="mt-5 flex items-center justify-between px-4 text-xs text-muted-foreground sm:px-8 lg:px-10"><span className="flex items-center gap-2"><CalendarDays className="size-3.5" />Rotary year 2026–27</span><span>Road Town · British Virgin Islands</span></div>
     </div>
   );
 }

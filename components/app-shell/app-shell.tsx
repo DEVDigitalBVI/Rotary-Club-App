@@ -16,15 +16,13 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-full min-w-0 flex-1">
-      <aside className="sticky top-0 hidden h-dvh w-72 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex print:hidden">
-        <div
-          className="flex h-32 items-center px-4"
-          style={{ backgroundColor: "var(--rotary-blue)" }}
-        >
-          <BrandLockup logoClassName="h-24" />
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex print:hidden">
+        <div className="flex h-28 items-center px-6">
+          <BrandLockup logoClassName="h-[4.5rem]" />
         </div>
+        <p className="font-label px-6 pb-5 text-[0.62rem] text-white/45">Member house · Road Town</p>
         <SidebarNav />
-        <div className="flex items-center gap-2 border-t border-sidebar-border p-3">
+        <div className="flex items-center gap-2 border-t border-sidebar-border p-4">
           <div className="min-w-0 flex-1">
             {currentMember ? (
               <UserMenu member={currentMember} variant="expanded" />
@@ -47,10 +45,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-h-full min-w-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-30 flex h-24 items-center justify-between px-4 md:hidden print:hidden"
-          style={{ backgroundColor: "var(--rotary-blue)" }}
+          className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-white/10 bg-sidebar px-4 md:hidden print:hidden"
         >
-          <BrandLockup logoClassName="h-18" />
+          <BrandLockup logoClassName="h-14" />
           <div className="flex items-center gap-1">
             {currentMember && (
               <NotificationBell

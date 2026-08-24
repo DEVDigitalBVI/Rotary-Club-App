@@ -66,16 +66,13 @@
   --rotary-violet: #901f93;
   --rotary-grass: #009739;
 
-  /* Inter (body) + Poppins (nav/headings, all-caps/bold) + Georgia
-     (body/captions), per the brand PRD's free-alternative pairing for
-     Frutiger/Sentinel. */
-  --font-sans: var(--font-inter), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-poppins), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
-  --font-body: Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans: var(--font-dm-sans), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-playfair), Georgia, serif;
+  --font-body: var(--font-dm-sans), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 
-  --background: oklch(0.955 0.021 246);
+  --background: #f3f0e9;
   --foreground: oklch(0.225 0.03 262);
-  --card: oklch(1 0 0);
+  --card: #fffdf8;
   --card-foreground: oklch(0.225 0.03 262);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.225 0.03 262);
@@ -83,14 +80,14 @@
   --primary-foreground: oklch(0.985 0 0);
   --secondary: var(--rotary-gold);
   --secondary-foreground: oklch(0.24 0.03 262);
-  --muted: oklch(0.93 0.014 246);
+  --muted: #e8e4da;
   --muted-foreground: oklch(0.48 0.02 262);
   --accent: color-mix(in oklch, var(--rotary-sky) 12%, white);
   --accent-foreground: oklch(0.225 0.03 262);
   --destructive: var(--rotary-cardinal);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.9 0.012 246);
-  --input: oklch(0.9 0.012 246);
+  --border: #dcd6c9;
+  --input: #dcd6c9;
   --ring: var(--rotary-blue);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -98,15 +95,15 @@
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --shadow-card: 0 2px 6px oklch(0.5 0.09 246 / 0.06), 0 20px 40px -18px oklch(0.5 0.14 246 / 0.22);
-  --shadow-card-hover: 0 4px 10px oklch(0.5 0.09 246 / 0.08), 0 26px 52px -16px oklch(0.5 0.16 246 / 0.3);
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.225 0.03 262);
+  --shadow-card: 0 1px 1px rgb(20 45 70 / 0.04), 0 12px 32px -24px rgb(20 45 70 / 0.32);
+  --shadow-card-hover: 0 2px 2px rgb(20 45 70 / 0.05), 0 18px 38px -22px rgb(20 45 70 / 0.38);
+  --sidebar: #0d315b;
+  --sidebar-foreground: #f9f5eb;
   --sidebar-primary: var(--rotary-blue);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: color-mix(in oklch, var(--rotary-sky) 12%, white);
-  --sidebar-accent-foreground: oklch(0.225 0.03 262);
-  --sidebar-border: oklch(0.9 0.012 246);
+  --sidebar-accent: rgb(255 255 255 / 0.09);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.12);
   --sidebar-ring: var(--rotary-blue);
 
   /* Badge tones (StatusBadge). Defined as tokens rather than inline in the
@@ -193,6 +190,8 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    background-image: radial-gradient(circle at 85% 5%, rgb(247 168 27 / 0.09), transparent 26rem);
+    background-attachment: fixed;
   }
   html {
     font-family: var(--font-sans);
@@ -204,9 +203,8 @@
   h5,
   h6 {
     font-family: var(--font-heading);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.01em;
+    font-weight: 600;
+    letter-spacing: -0.025em;
   }
 }
 
@@ -214,16 +212,27 @@
   .font-body {
     font-family: var(--font-body);
   }
-  /* Every "header" element in the app (h1-h6, buttons, form labels, nav
-     items) opts into the heading typeface via this class. Weight and case
-     are forced so the all-caps/bold rule holds everywhere, even where a
-     usage also sets font-medium/font-semibold. */
   .font-heading {
     font-family: var(--font-heading);
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.01em;
+    letter-spacing: -0.02em;
   }
+  .font-label {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rise-in { animation: rise-in 560ms cubic-bezier(.2,.7,.2,1) both; }
+  .rise-in-delay-1 { animation-delay: 80ms; }
+  .rise-in-delay-2 { animation-delay: 160ms; }
 }
 /* Bottom-edge photo fade (login header).
 
