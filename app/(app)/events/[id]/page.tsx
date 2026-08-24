@@ -9,7 +9,7 @@ import { TakeAttendanceDialog } from "@/components/events/take-attendance-dialog
 import { getEventById } from "@/lib/data/events";
 import { getCurrentMember, getMembers } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
-import { getEventAttendeeIds } from "@/lib/data/attendance";
+import { getEventAttendance } from "@/lib/data/attendance";
 import { canManageEvents, canAssignRoles } from "@/lib/mock-data";
 import { formatDate, todayDateString } from "@/lib/format";
 
@@ -19,12 +19,12 @@ export default async function EventDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [event, members, currentMember, committees, realAttendeeIds] = await Promise.all([
+  const [event, members, currentMember, committees, attendanceRecord] = await Promise.all([
     getEventById(id),
     getMembers(),
     getCurrentMember(),
     getCommittees(),
-    getEventAttendeeIds(id),
+    getEventAttendance(id),
   ]);
   if (!event) notFound();
 
@@ -35,8 +35,10 @@ export default async function EventDetailPage({
 
   // Real attendance (once taken) supersedes the RSVP-based "who's coming"
   // guess it's derived from before the meeting happens.
-  const attendanceTaken = realAttendeeIds.length > 0;
-  const attendeeIdsToShow = attendanceTaken ? realAttendeeIds : (event.attendeeIds ?? []);
+  const attendanceTaken = attendanceRecord.finalized;
+  const attendeeIdsToShow = attendanceTaken
+    ? attendanceRecord.attendeeIds
+    : (event.attendeeIds ?? []);
   const attendees = attendeeIdsToShow
     .map((mid) => members.find((m) => m.id === mid))
     .filter((m): m is NonNullable<typeof m> => Boolean(m));
@@ -156,7 +158,7 @@ export default async function EventDetailPage({
                 <TakeAttendanceDialog
                   eventId={event.id}
                   members={members}
-                  attendeeIds={realAttendeeIds}
+                  attendeeIds={attendanceRecord.attendeeIds}
                 />
               </CardContent>
             </Card>

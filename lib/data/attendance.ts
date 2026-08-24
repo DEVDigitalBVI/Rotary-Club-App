@@ -71,6 +71,7 @@ export async function getMemberAttendanceSummary(memberId: string): Promise<Atte
         .from("events")
         .select("id, starts_at")
         .eq("counts_toward_attendance", true)
+        .not("attendance_taken_at", "is", null)
         .gte("starts_at", window.startInstant)
         .lt("starts_at", window.endInstant)
         .returns<{ id: string; starts_at: string }[]>(),
@@ -125,13 +126,29 @@ export async function getPendingMakeups(): Promise<MakeupEntry[]> {
   return (data ?? []).map(toMakeupEntry);
 }
 
-export async function getEventAttendeeIds(eventId: string): Promise<string[]> {
+export async function getEventAttendance(eventId: string): Promise<{
+  attendeeIds: string[];
+  finalized: boolean;
+}> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("event_attendance")
-    .select("member_id")
-    .eq("event_id", eventId)
-    .returns<{ member_id: string }[]>();
+  const [{ data, error }, { data: event, error: eventError }] = await Promise.all([
+    supabase
+      .from("event_attendance")
+      .select("member_id")
+      .eq("event_id", eventId)
+      .returns<{ member_id: string }[]>(),
+    supabase
+      .from("events")
+      .select("attendance_taken_at")
+      .eq("id", eventId)
+      .maybeSingle<{ attendance_taken_at: string | null }>(),
+  ]);
 
-  return (data ?? []).map((r) => r.member_id);
+  if (error) throw new Error("Unable to load event attendance", { cause: error });
+  if (eventError) throw new Error("Unable to load attendance status", { cause: eventError });
+
+  return {
+    attendeeIds: (data ?? []).map((r) => r.member_id),
+    finalized: event?.attendance_taken_at != null,
+  };
 }

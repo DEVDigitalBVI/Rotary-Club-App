@@ -80,32 +80,15 @@ export async function updateProfileAction(
  */
 export async function updateCommitteeRosterAction(
   committeeId: string,
-  currentMemberIds: string[],
   nextMemberIds: string[]
 ): Promise<DirectoryFormState> {
-  const toAdd = nextMemberIds.filter((id) => !currentMemberIds.includes(id));
-  const toRemove = currentMemberIds.filter((id) => !nextMemberIds.includes(id));
-
   const supabase = await createClient();
-
-  if (toAdd.length > 0) {
-    const { error } = await supabase
-      .from("committee_members")
-      .insert(toAdd.map((memberId) => ({ committee_id: committeeId, member_id: memberId })));
-    if (error) {
-      return { error: "Couldn't save — you may not have permission to manage this committee." };
-    }
-  }
-
-  if (toRemove.length > 0) {
-    const { error } = await supabase
-      .from("committee_members")
-      .delete()
-      .eq("committee_id", committeeId)
-      .in("member_id", toRemove);
-    if (error) {
-      return { error: "Couldn't save — you may not have permission to manage this committee." };
-    }
+  const { error } = await supabase.rpc("set_committee_roster", {
+    target_committee_id: committeeId,
+    member_ids: [...new Set(nextMemberIds)],
+  });
+  if (error) {
+    return { error: "Couldn't save — you may not have permission to manage this committee." };
   }
 
   revalidatePath("/directory");

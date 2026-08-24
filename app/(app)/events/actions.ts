@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentMember } from "@/lib/data/members";
 import type { RsvpStatus } from "@/lib/mock-data";
 
 export type EventFormState = { error?: string; success?: boolean } | undefined;
@@ -218,37 +217,14 @@ export async function removeEventAgendaAction(eventId: string): Promise<EventFor
  */
 export async function saveEventAttendanceAction(
   eventId: string,
-  currentAttendeeIds: string[],
   nextAttendeeIds: string[]
 ): Promise<EventFormState> {
-  const toAdd = nextAttendeeIds.filter((id) => !currentAttendeeIds.includes(id));
-  const toRemove = currentAttendeeIds.filter((id) => !nextAttendeeIds.includes(id));
-
-  const [caller, supabase] = await Promise.all([getCurrentMember(), createClient()]);
-
-  if (toAdd.length > 0) {
-    const { error } = await supabase.from("event_attendance").insert(
-      toAdd.map((memberId) => ({
-        event_id: eventId,
-        member_id: memberId,
-        marked_by: caller?.id ?? null,
-      }))
-    );
-    if (error) {
-      return { error: "Couldn't save attendance — you may not have permission." };
-    }
-  }
-
-  if (toRemove.length > 0) {
-    const { error } = await supabase
-      .from("event_attendance")
-      .delete()
-      .eq("event_id", eventId)
-      .in("member_id", toRemove);
-    if (error) {
-      return { error: "Couldn't save attendance — you may not have permission." };
-    }
-  }
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_event_attendance", {
+    target_event_id: eventId,
+    attendee_ids: [...new Set(nextAttendeeIds)],
+  });
+  if (error) return { error: "Couldn't save attendance — you may not have permission." };
 
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/account");

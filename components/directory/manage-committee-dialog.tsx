@@ -202,7 +202,6 @@ export function ManageCommitteeDialog({
               startTransition(async () => {
                 const result = await updateCommitteeRosterAction(
                   committee.id,
-                  committee.memberIds,
                   selected
                 );
                 if (result?.error) {

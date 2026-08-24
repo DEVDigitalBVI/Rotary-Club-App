@@ -118,7 +118,6 @@ export function TakeAttendanceDialog({
               startTransition(async () => {
                 const result = await saveEventAttendanceAction(
                   eventId,
-                  attendeeIds,
                   selected
                 );
                 if (result?.error) {
