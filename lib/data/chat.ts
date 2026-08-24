@@ -1,0 +1,125 @@
+import { createClient } from "@/lib/supabase/server";
+import { throwOnSupabaseError } from "@/lib/supabase/errors";
+
+export type ChatChannelKind = "club" | "committee" | "event" | "project" | "dm";
+
+export type ChatReaction = {
+  messageId: string;
+  memberId: string;
+  emoji: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  channelId: string;
+  senderId: string;
+  body: string;
+  replyToId?: string;
+  editedAt?: string;
+  deletedAt?: string;
+  createdAt: string;
+  reactions: ChatReaction[];
+};
+
+export type ChatChannel = {
+  id: string;
+  name: string;
+  kind: ChatChannelKind;
+  contextId?: string;
+  memberIds: string[];
+  lastReadAt?: string;
+  messages: ChatMessage[];
+};
+
+type ChannelRow = {
+  id: string;
+  name: string;
+  kind: ChatChannelKind;
+  context_id: string | null;
+};
+type MessageRow = {
+  id: string;
+  channel_id: string;
+  sender_id: string;
+  body: string;
+  reply_to_id: string | null;
+  edited_at: string | null;
+  deleted_at: string | null;
+  created_at: string;
+};
+type ReactionRow = { message_id: string; member_id: string; emoji: string };
+
+function toMessage(row: MessageRow, reactions: ReactionRow[]): ChatMessage {
+  return {
+    id: row.id,
+    channelId: row.channel_id,
+    senderId: row.sender_id,
+    body: row.body,
+    replyToId: row.reply_to_id ?? undefined,
+    editedAt: row.edited_at ?? undefined,
+    deletedAt: row.deleted_at ?? undefined,
+    createdAt: row.created_at,
+    reactions: reactions
+      .filter((reaction) => reaction.message_id === row.id)
+      .map((reaction) => ({
+        messageId: reaction.message_id,
+        memberId: reaction.member_id,
+        emoji: reaction.emoji,
+      })),
+  };
+}
+
+export async function getChatChannels(memberId: string): Promise<ChatChannel[]> {
+  const supabase = await createClient();
+  const [channelsResult, messagesResult, membersResult, readsResult, reactionsResult] =
+    await Promise.all([
+      supabase.from("chat_channels").select("id, name, kind, context_id").is("archived_at", null),
+      supabase
+        .from("chat_messages")
+        .select("id, channel_id, sender_id, body, reply_to_id, edited_at, deleted_at, created_at")
+        .order("created_at", { ascending: true })
+        .limit(600),
+      supabase.from("chat_channel_members").select("channel_id, member_id"),
+      supabase.from("chat_channel_reads").select("channel_id, last_read_at").eq("member_id", memberId),
+      supabase.from("chat_reactions").select("message_id, member_id, emoji"),
+    ]);
+
+  throwOnSupabaseError(channelsResult.error, "Unable to load chat channels");
+  throwOnSupabaseError(messagesResult.error, "Unable to load chat messages");
+  throwOnSupabaseError(membersResult.error, "Unable to load direct-message members");
+  throwOnSupabaseError(readsResult.error, "Unable to load chat read state");
+  throwOnSupabaseError(reactionsResult.error, "Unable to load chat reactions");
+
+  const messages = (messagesResult.data ?? []) as MessageRow[];
+  const reactions = (reactionsResult.data ?? []) as ReactionRow[];
+  const memberships = (membersResult.data ?? []) as { channel_id: string; member_id: string }[];
+  const reads = new Map(
+    ((readsResult.data ?? []) as { channel_id: string; last_read_at: string }[]).map((row) => [
+      row.channel_id,
+      row.last_read_at,
+    ])
+  );
+
+  return ((channelsResult.data ?? []) as ChannelRow[])
+    .map((channel) => ({
+      id: channel.id,
+      name: channel.name,
+      kind: channel.kind,
+      contextId: channel.context_id ?? undefined,
+      memberIds: memberships
+        .filter((membership) => membership.channel_id === channel.id)
+        .map((membership) => membership.member_id),
+      lastReadAt: reads.get(channel.id),
+      messages: messages
+        .filter((message) => message.channel_id === channel.id)
+        .map((message) => toMessage(message, reactions)),
+    }))
+    .sort((a, b) => {
+      if (a.kind === "club") return -1;
+      if (b.kind === "club") return 1;
+      const aLast = a.messages.at(-1)?.createdAt ?? "";
+      const bLast = b.messages.at(-1)?.createdAt ?? "";
+      return bLast.localeCompare(aLast) || a.name.localeCompare(b.name);
+    });
+}
+
