@@ -34,8 +34,11 @@ export async function updateSession(request: NextRequest) {
   //
   // getClaims() validates the JWT signature locally on every request, unlike
   // getSession(), which is not safe to trust in server code.
-  const { data } = await supabase.auth.getClaims();
-  const user = data?.claims;
+  const { data, error: claimsError } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  const issuedAt = typeof claims?.iat === "number" ? claims.iat : null;
+  const issuedInFuture = issuedAt !== null && issuedAt > Math.floor(Date.now() / 1000) + 30;
+  const user = claimsError || issuedInFuture ? null : claims;
 
   // /auth (route handlers for emailed links — e.g. password reset) is
   // public because the visitor has no session yet; the handler itself is
@@ -45,6 +48,20 @@ export async function updateSession(request: NextRequest) {
   const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
+
+  // A corrupt, expired, or future-issued token must be removed before the
+  // redirect. Otherwise /login sees the same cookie on the next request and
+  // can bounce the visitor straight back into the authenticated app.
+  if ((claimsError || issuedInFuture) && !isPublicRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    const response = NextResponse.redirect(url);
+    request.cookies
+      .getAll()
+      .filter(({ name }) => name.startsWith("sb-"))
+      .forEach(({ name }) => response.cookies.set(name, "", { maxAge: 0, path: "/" }));
+    return response;
+  }
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
