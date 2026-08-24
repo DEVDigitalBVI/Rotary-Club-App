@@ -82,7 +82,7 @@ export async function getMemberAttendanceSummary(memberId: string): Promise<Atte
         .returns<{ event_id: string }[]>(),
       supabase
         .from("makeups")
-        .select("*, members(name)")
+        .select("*, members!makeups_member_id_fkey(name)")
         .eq("member_id", memberId)
         .gte("attended_on", window.startDate)
         .lt("attended_on", window.endDate)
@@ -125,7 +125,7 @@ export async function getPendingMakeups(): Promise<MakeupEntry[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("makeups")
-    .select("*, members(name)")
+    .select("*, members!makeups_member_id_fkey(name)")
     .eq("clubrunner_logged", false)
     .order("attended_on", { ascending: false })
     .returns<MakeupRow[]>();
