@@ -10,6 +10,7 @@ import { getVisibleNewsPosts } from "@/lib/data/news";
 import { getEvents } from "@/lib/data/events";
 import { getCompletedOnboarding } from "@/lib/data/onboarding";
 import { OnboardingCard } from "@/components/dashboard/onboarding-card";
+import { EventFlyerPreview } from "@/components/dashboard/event-flyer-preview";
 
 function eventDateParts(date: string) {
   const value = new Date(`${date}T12:00:00Z`);
@@ -61,23 +62,26 @@ export default async function DashboardPage() {
           <section className="rise-in rise-in-delay-1 relative min-h-[28rem] overflow-hidden rounded-[1.75rem] bg-[#123b67] text-white shadow-[0_30px_70px_-38px_rgba(13,49,91,.8)]">
             <div className="absolute -right-24 -top-20 size-80 rounded-full border-[70px] border-white/[0.035]" />
             <div className="absolute -bottom-24 right-1/4 size-64 rounded-full bg-[var(--rotary-gold)]/10 blur-2xl" />
-            <div className="relative flex h-full min-h-[28rem] flex-col justify-between p-6 sm:p-9">
+            <div className="relative flex h-full min-h-[28rem] flex-col p-6 sm:p-9">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-xs font-semibold backdrop-blur"><Sparkles className="size-3.5 text-[var(--rotary-gold)]" />Next gathering</div>
                 <div className="min-w-16 rounded-2xl bg-[var(--rotary-gold)] px-3 py-2 text-center text-[#183453] shadow-lg"><span className="font-label block text-[0.58rem]">{date.month}</span><span className="font-heading block text-3xl font-bold leading-none">{date.day}</span></div>
               </div>
-              <div className="max-w-2xl">
-                <p className="font-label mb-3 text-[0.62rem] text-white/50">Club programme</p>
-                <h2 className="font-heading text-4xl font-semibold leading-[1.02] sm:text-6xl">{nextEvent.title}</h2>
-                {nextEvent.speaker && <p className="mt-4 max-w-xl text-sm leading-6 text-white/65 sm:text-base"><span className="text-white">{nextEvent.speaker.name}</span> on {nextEvent.speaker.topic}.</p>}
-                <div className="mt-7 flex flex-col gap-3 border-t border-white/15 pt-5 text-sm text-white/72 sm:flex-row sm:items-center sm:gap-7">
-                  <span className="flex items-center gap-2"><Clock3 className="size-4 text-[var(--rotary-gold)]" />{nextEvent.time}</span>
-                  <span className="flex items-center gap-2"><MapPin className="size-4 text-[var(--rotary-gold)]" />{nextEvent.location}</span>
+              <div className={`mt-8 grid flex-1 items-end gap-9 ${nextEvent.flyer ? "lg:grid-cols-[minmax(0,1fr)_13.5rem]" : ""}`}>
+                <div className="max-w-2xl">
+                  <p className="font-label mb-3 text-[0.62rem] text-white/50">Club programme</p>
+                  <h2 className="font-heading text-4xl font-semibold leading-[1.02] sm:text-6xl">{nextEvent.title}</h2>
+                  {nextEvent.speaker && <p className="mt-4 max-w-xl text-sm leading-6 text-white/65 sm:text-base"><span className="text-white">{nextEvent.speaker.name}</span> on {nextEvent.speaker.topic}.</p>}
+                  <div className="mt-7 flex flex-col gap-3 border-t border-white/15 pt-5 text-sm text-white/72 sm:flex-row sm:items-center sm:gap-7">
+                    <span className="flex items-center gap-2"><Clock3 className="size-4 text-[var(--rotary-gold)]" />{nextEvent.time}</span>
+                    <span className="flex items-center gap-2"><MapPin className="size-4 text-[var(--rotary-gold)]" />{nextEvent.location}</span>
+                  </div>
+                  <div className="mt-7 flex flex-wrap items-center gap-3">
+                    <Button className="h-11 rounded-full bg-white px-5 font-semibold text-[#123b67] hover:bg-[var(--rotary-gold)]" nativeButton={false} render={<Link href={`/events/${nextEvent.id}`} />}>View gathering <ArrowUpRight className="size-4" /></Button>
+                    <p className="text-xs text-white/50">{nextEvent.rsvps.yes} members attending</p>
+                  </div>
                 </div>
-                <div className="mt-7 flex flex-wrap items-center gap-3">
-                  <Button className="h-11 rounded-full bg-white px-5 font-semibold text-[#123b67] hover:bg-[var(--rotary-gold)]" nativeButton={false} render={<Link href={`/events/${nextEvent.id}`} />}>View gathering <ArrowUpRight className="size-4" /></Button>
-                  <p className="text-xs text-white/50">{nextEvent.rsvps.yes} members attending</p>
-                </div>
+                {nextEvent.flyer && <EventFlyerPreview flyer={nextEvent.flyer} eventTitle={nextEvent.title} />}
               </div>
             </div>
           </section>
