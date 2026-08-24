@@ -72,12 +72,8 @@ export async function updateProfileAction(
   return { success: true };
 }
 
-/**
- * Diffs against the committee's current roster rather than replacing it
- * wholesale, so RLS (can_manage_committee) evaluates each add/remove as its
- * own insert/delete — matching how ManageCommitteeDialog already scopes the
- * director-only edit right per committee.
- */
+/** Replaces the complete committee roster atomically. The RPC checks the
+ * caller's committee-specific authority and preserves the assigned director. */
 export async function updateCommitteeRosterAction(
   committeeId: string,
   nextMemberIds: string[]

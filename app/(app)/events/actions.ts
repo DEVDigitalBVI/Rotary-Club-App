@@ -2,21 +2,40 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import {
+  EVENT_MATERIALS_BUCKET,
+  eventMaterialExtension,
+  eventMaterialStoragePath,
+  validateEventMaterial,
+} from "@/lib/event-materials";
 import type { RsvpStatus } from "@/lib/mock-data";
 
 export type EventFormState = { error?: string; success?: boolean } | undefined;
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
-const EVENT_MATERIALS_BUCKET = "event-materials";
-
-function extensionFromName(name: string) {
-  const dot = name.lastIndexOf(".");
-  return dot === -1 ? "" : name.slice(dot).toLowerCase();
+async function removeStoredMaterial(
+  supabase: SupabaseServerClient,
+  publicUrl: string | null | undefined
+) {
+  const path = eventMaterialStoragePath(publicUrl);
+  if (path) await supabase.storage.from(EVENT_MATERIALS_BUCKET).remove([path]);
 }
 
 async function uploadFlyer(supabase: SupabaseServerClient, eventId: string, file: File) {
-  const path = `${eventId}/flyer-${Date.now()}${extensionFromName(file.name)}`;
+  const validationError = validateEventMaterial(file, "flyer");
+  if (validationError) return { error: validationError };
+
+  const { data: event, error: eventError } = await supabase
+    .from("events")
+    .select("flyer_url")
+    .eq("id", eventId)
+    .maybeSingle<{ flyer_url: string | null }>();
+  if (eventError || !event) {
+    return { error: "Couldn't upload the flyer — event not found or permission denied." };
+  }
+
+  const path = `${eventId}/flyer-${Date.now()}${eventMaterialExtension(file.type)}`;
   const { error: uploadError } = await supabase.storage
     .from(EVENT_MATERIALS_BUCKET)
     .upload(path, file, { upsert: true, contentType: file.type || undefined });
@@ -30,13 +49,30 @@ async function uploadFlyer(supabase: SupabaseServerClient, eventId: string, file
     .from("events")
     .update({ flyer_url: publicUrl, flyer_alt: file.name })
     .eq("id", eventId);
-  if (updateError) return { error: "Couldn't save the flyer — you may not have permission." };
+  if (updateError) {
+    await supabase.storage.from(EVENT_MATERIALS_BUCKET).remove([path]);
+    return { error: "Couldn't save the flyer — you may not have permission." };
+  }
+
+  await removeStoredMaterial(supabase, event.flyer_url);
 
   return { success: true as const };
 }
 
 async function uploadAgenda(supabase: SupabaseServerClient, eventId: string, file: File) {
-  const path = `${eventId}/agenda-${Date.now()}${extensionFromName(file.name)}`;
+  const validationError = validateEventMaterial(file, "agenda");
+  if (validationError) return { error: validationError };
+
+  const { data: event, error: eventError } = await supabase
+    .from("events")
+    .select("agenda_url")
+    .eq("id", eventId)
+    .maybeSingle<{ agenda_url: string | null }>();
+  if (eventError || !event) {
+    return { error: "Couldn't upload the agenda — event not found or permission denied." };
+  }
+
+  const path = `${eventId}/agenda-${Date.now()}${eventMaterialExtension(file.type)}`;
   const { error: uploadError } = await supabase.storage
     .from(EVENT_MATERIALS_BUCKET)
     .upload(path, file, { upsert: true, contentType: file.type || undefined });
@@ -55,7 +91,12 @@ async function uploadAgenda(supabase: SupabaseServerClient, eventId: string, fil
       agenda_size_label: `${Math.max(1, Math.round(file.size / 1024))} KB`,
     })
     .eq("id", eventId);
-  if (updateError) return { error: "Couldn't save the agenda — you may not have permission." };
+  if (updateError) {
+    await supabase.storage.from(EVENT_MATERIALS_BUCKET).remove([path]);
+    return { error: "Couldn't save the agenda — you may not have permission." };
+  }
+
+  await removeStoredMaterial(supabase, event.agenda_url);
 
   return { success: true as const };
 }
@@ -162,12 +203,19 @@ export async function uploadEventFlyerAction(
 
 export async function removeEventFlyerAction(eventId: string): Promise<EventFormState> {
   const supabase = await createClient();
+  const { data: event } = await supabase
+    .from("events")
+    .select("flyer_url")
+    .eq("id", eventId)
+    .maybeSingle<{ flyer_url: string | null }>();
   const { error } = await supabase
     .from("events")
     .update({ flyer_url: null, flyer_alt: null })
     .eq("id", eventId);
 
   if (error) return { error: "Couldn't remove the flyer — you may not have permission." };
+
+  await removeStoredMaterial(supabase, event?.flyer_url);
 
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/events");
@@ -193,6 +241,11 @@ export async function uploadEventAgendaAction(
 
 export async function removeEventAgendaAction(eventId: string): Promise<EventFormState> {
   const supabase = await createClient();
+  const { data: event } = await supabase
+    .from("events")
+    .select("agenda_url")
+    .eq("id", eventId)
+    .maybeSingle<{ agenda_url: string | null }>();
   const { error } = await supabase
     .from("events")
     .update({
@@ -205,16 +258,15 @@ export async function removeEventAgendaAction(eventId: string): Promise<EventFor
 
   if (error) return { error: "Couldn't remove the agenda — you may not have permission." };
 
+  await removeStoredMaterial(supabase, event?.agenda_url);
+
   revalidatePath(`/events/${eventId}`);
   return { success: true };
 }
 
-/**
- * Diffs against who's currently marked present rather than replacing the
- * roster wholesale, matching updateCommitteeRosterAction's approach — each
- * add/remove is its own insert/delete, so RLS (can_assign_roles()) applies
- * per row.
- */
+/** Replaces the complete attendance roster atomically. Authorization and the
+ * existing state are resolved inside set_event_attendance, not trusted from
+ * the browser. Saving an empty roster still marks attendance as finalized. */
 export async function saveEventAttendanceAction(
   eventId: string,
   nextAttendeeIds: string[]
