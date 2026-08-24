@@ -112,6 +112,17 @@ export function CreateEventDialog() {
             <Textarea id="event-description" name="description" rows={3} />
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="event-capacity">Capacity</Label>
+            <Input id="event-capacity" name="capacity" type="number" min="1" placeholder="Leave blank for unlimited" />
+          </div>
+
+          <div className="grid gap-2 rounded-lg border border-border p-3 text-sm">
+            <label className="flex items-center gap-2"><input type="checkbox" name="allowGuests" className="size-4 accent-primary" />Allow guests</label>
+            <label className="flex items-center gap-2"><input type="checkbox" name="waitlistEnabled" className="size-4 accent-primary" />Enable waitlist when capacity is reached</label>
+            <label className="flex items-center gap-2"><input type="checkbox" name="dietaryNotesEnabled" className="size-4 accent-primary" />Collect dietary requirements</label>
+          </div>
+
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentMember } from "@/lib/data/members";
 import {
   EVENT_MATERIALS_BUCKET,
   eventMaterialExtension,
@@ -121,6 +122,10 @@ export async function createEventAction(
   const location = String(formData.get("location") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
   const countsTowardAttendance = formData.get("countsTowardAttendance") === "on";
+  const capacity = Number(formData.get("capacity")) || null;
+  const allowGuests = formData.get("allowGuests") === "on";
+  const waitlistEnabled = formData.get("waitlistEnabled") === "on";
+  const dietaryNotesEnabled = formData.get("dietaryNotesEnabled") === "on";
   const flyer = formData.get("flyer");
   const agenda = formData.get("agenda");
 
@@ -142,6 +147,10 @@ export async function createEventAction(
       location: location || null,
       description: description || null,
       counts_toward_attendance: countsTowardAttendance,
+      capacity,
+      allow_guests: allowGuests,
+      waitlist_enabled: waitlistEnabled,
+      dietary_notes_enabled: dietaryNotesEnabled,
     })
     .select("id")
     .single();
@@ -165,14 +174,21 @@ export async function createEventAction(
 
 export async function updateRsvpAction(
   eventId: string,
-  memberId: string,
-  status: Exclude<RsvpStatus, "none">
+  status: Exclude<RsvpStatus, "none">,
+  details?: { guestCount?: number; dietaryNotes?: string }
 ): Promise<EventFormState> {
+  const member = await getCurrentMember();
+  if (!member) return { error: "You must be signed in." };
   const supabase = await createClient();
+  const guestCount = Math.max(0, Math.min(10, Math.floor(details?.guestCount ?? 0)));
+  const { data: event } = await supabase.from("events").select("capacity, waitlist_enabled").eq("id", eventId).maybeSingle<{ capacity: number | null; waitlist_enabled: boolean }>();
+  const { data: registrations } = await supabase.from("event_rsvps").select("member_id, guest_count, status, registration_status").eq("event_id", eventId).eq("status", "yes");
+  const occupied = (registrations ?? []).filter((row) => row.member_id !== member.id && row.registration_status === "registered").reduce((sum, row) => sum + 1 + Number(row.guest_count), 0);
+  const shouldWaitlist = status === "yes" && Boolean(event?.waitlist_enabled && event.capacity && occupied + 1 + guestCount > event.capacity);
   const { error } = await supabase
     .from("event_rsvps")
     .upsert(
-      { event_id: eventId, member_id: memberId, status },
+      { event_id: eventId, member_id: member.id, status, guest_count: status === "yes" ? guestCount : 0, dietary_notes: details?.dietaryNotes?.trim() || null, registration_status: shouldWaitlist ? "waitlisted" : "registered" },
       { onConflict: "event_id,member_id" }
     );
 

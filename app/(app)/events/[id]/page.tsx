@@ -103,8 +103,12 @@ export default async function EventDetailPage({
               <CardContent>
                 <RsvpControl
                   eventId={event.id}
-                  memberId={currentMember.id}
                   initial={event.myRsvp}
+                  allowGuests={event.allowGuests}
+                  dietaryNotesEnabled={event.dietaryNotesEnabled}
+                  initialGuestCount={event.registration?.guestCount}
+                  initialDietaryNotes={event.registration?.dietaryNotes}
+                  registrationStatus={event.registration?.status}
                 />
               </CardContent>
             </Card>

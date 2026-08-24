@@ -590,6 +590,15 @@ export type EventItem = {
   rsvpDeadline?: string;
   rsvps: { yes: number; no: number; maybe: number };
   myRsvp: RsvpStatus;
+  registration?: {
+    guestCount: number;
+    dietaryNotes: string;
+    status: "registered" | "waitlisted";
+  };
+  capacity?: number;
+  allowGuests?: boolean;
+  waitlistEnabled?: boolean;
+  dietaryNotesEnabled?: boolean;
   attendance?: { present: number; total: number };
   attendeeIds?: string[];
   /** Whether this event counts toward the bylaws' 50%-of-meetings requirement. */
@@ -925,6 +934,7 @@ export type NewsPost = {
   source: NewsSource;
   date: string;
   author: string;
+  audience?: { type: "all" | "board" | "committee" | "event"; id?: string };
   /** A photo or graphic attached to a club announcement. */
   image?: { url: string; alt: string };
   /**

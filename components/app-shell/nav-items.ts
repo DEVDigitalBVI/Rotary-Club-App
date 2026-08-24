@@ -5,6 +5,7 @@ import {
   Wallet,
   Newspaper,
   MessageSquare,
+  HandHeart,
   type LucideIcon,
 } from "lucide-react";
 
@@ -19,6 +20,7 @@ export const navItems: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/directory", label: "Directory", icon: Users },
   { href: "/events", label: "Events", icon: CalendarDays },
+  { href: "/projects", label: "Service", icon: HandHeart },
   { href: "/account", label: "My Account", mobileLabel: "Account", icon: Wallet },
   { href: "/news", label: "News", icon: Newspaper },
   { href: "/chat", label: "Chat", icon: MessageSquare },

@@ -8,6 +8,8 @@ import { formatCurrency, formatDate, todayDateString } from "@/lib/format";
 import { getCurrentMember, getTodaysBirthdays } from "@/lib/data/members";
 import { getVisibleNewsPosts } from "@/lib/data/news";
 import { getEvents } from "@/lib/data/events";
+import { getCompletedOnboarding } from "@/lib/data/onboarding";
+import { OnboardingCard } from "@/components/dashboard/onboarding-card";
 
 function eventDateParts(date: string) {
   const value = new Date(`${date}T12:00:00Z`);
@@ -34,6 +36,7 @@ export default async function DashboardPage() {
   const latestNews = newsPosts.slice(0, 2);
   const firstName = currentMember.name.split(" ")[0];
   const date = nextEvent ? eventDateParts(nextEvent.date) : null;
+  const onboarding = viewer ? await getCompletedOnboarding(viewer.id) : [];
 
   return (
     <div className="mx-auto w-full max-w-[1500px] pb-10">
@@ -98,6 +101,8 @@ export default async function DashboardPage() {
         <div><p className="font-label text-[0.58rem] text-primary/60">Your member house</p><h2 className="font-heading mt-1 text-2xl font-semibold">Good to see you, {firstName}.</h2></div>
         <p className="text-sm text-muted-foreground">Here’s the rest of your club at a glance.</p>
       </div>
+
+      <OnboardingCard completed={onboarding} />
 
       <div className="mt-5 grid gap-5 px-4 sm:px-8 lg:grid-cols-[.85fr_1.15fr] lg:px-10">
         <section className="overflow-hidden rounded-[1.5rem] border border-border bg-card">

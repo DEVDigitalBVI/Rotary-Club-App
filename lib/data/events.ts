@@ -24,9 +24,13 @@ type EventRow = {
   agenda_url: string | null;
   agenda_uploaded_at: string | null;
   agenda_size_label: string | null;
+  capacity: number | null;
+  allow_guests: boolean;
+  waitlist_enabled: boolean;
+  dietary_notes_enabled: boolean;
 };
 
-type RsvpRow = { event_id: string; member_id: string; status: "yes" | "no" | "maybe" };
+type RsvpRow = { event_id: string; member_id: string; status: "yes" | "no" | "maybe"; guest_count: number; dietary_notes: string | null; registration_status: "registered" | "waitlisted" };
 
 function toEventItem(
   row: EventRow,
@@ -54,6 +58,11 @@ function toEventItem(
     rsvpDeadline: row.rsvp_deadline ?? undefined,
     rsvps: counts,
     myRsvp: own?.status ?? "none",
+    registration: own ? { guestCount: own.guest_count, dietaryNotes: own.dietary_notes ?? "", status: own.registration_status } : undefined,
+    capacity: row.capacity ?? undefined,
+    allowGuests: row.allow_guests,
+    waitlistEnabled: row.waitlist_enabled,
+    dietaryNotesEnabled: row.dietary_notes_enabled,
     attendance:
       row.attendance_present != null && row.attendance_total != null
         ? { present: row.attendance_present, total: row.attendance_total }
@@ -87,7 +96,7 @@ export async function getEvents(): Promise<EventItem[]> {
   const supabase = await createClient();
   const [eventsResult, rsvpsResult, currentMember] = await Promise.all([
     supabase.from("events").select("*").order("starts_at").returns<EventRow[]>(),
-    supabase.from("event_rsvps").select("event_id, member_id, status").returns<RsvpRow[]>(),
+    supabase.from("event_rsvps").select("event_id, member_id, status, guest_count, dietary_notes, registration_status").returns<RsvpRow[]>(),
     getCurrentMember(),
   ]);
   throwOnSupabaseError(eventsResult.error, "Unable to load events");
@@ -105,7 +114,7 @@ export async function getEventById(id: string): Promise<EventItem | null> {
     supabase.from("events").select("*").eq("id", id).maybeSingle<EventRow>(),
     supabase
       .from("event_rsvps")
-      .select("event_id, member_id, status")
+      .select("event_id, member_id, status, guest_count, dietary_notes, registration_status")
       .eq("event_id", id)
       .returns<RsvpRow[]>(),
     getCurrentMember(),

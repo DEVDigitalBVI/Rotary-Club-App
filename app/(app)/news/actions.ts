@@ -11,6 +11,8 @@ export async function postNewsAction(
 ): Promise<NewsFormState> {
   const title = String(formData.get("title") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
+  const audienceType = String(formData.get("audienceType") ?? "all");
+  const audienceId = String(formData.get("audienceId") ?? "").trim() || null;
   if (!title || !body) {
     return { error: "Title and message are required." };
   }
@@ -37,6 +39,8 @@ export async function postNewsAction(
     author: member.name,
     author_member_id: member.id,
     published_at: new Date().toISOString().slice(0, 10),
+    audience_type: audienceType,
+    audience_id: audienceType === "all" || audienceType === "board" ? null : audienceId,
   });
 
   if (error) {

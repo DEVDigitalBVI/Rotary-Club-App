@@ -15,23 +15,33 @@ const options: { value: Exclude<RsvpStatus, "none">; label: string; icon: typeof
 
 export function RsvpControl({
   eventId,
-  memberId,
   initial,
+  allowGuests = false,
+  dietaryNotesEnabled = false,
+  initialGuestCount = 0,
+  initialDietaryNotes = "",
+  registrationStatus,
 }: {
   eventId: string;
-  memberId: string;
   initial: RsvpStatus;
+  allowGuests?: boolean;
+  dietaryNotesEnabled?: boolean;
+  initialGuestCount?: number;
+  initialDietaryNotes?: string;
+  registrationStatus?: "registered" | "waitlisted";
 }) {
   const [status, setStatus] = useState<RsvpStatus>(initial);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [guestCount, setGuestCount] = useState(initialGuestCount);
+  const [dietaryNotes, setDietaryNotes] = useState(initialDietaryNotes);
 
   function choose(value: Exclude<RsvpStatus, "none">) {
     const previous = status;
     setStatus(value);
     setError(null);
     startTransition(async () => {
-      const result = await updateRsvpAction(eventId, memberId, value);
+      const result = await updateRsvpAction(eventId, value, { guestCount, dietaryNotes });
       if (result?.error) {
         setStatus(previous);
         setError(result.error);
@@ -61,6 +71,14 @@ export function RsvpControl({
         })}
       </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
+      {status === "yes" && registrationStatus === "waitlisted" && <p className="rounded-lg bg-secondary/20 p-2 text-xs text-foreground">You’re currently on the waitlist.</p>}
+      {status === "yes" && (allowGuests || dietaryNotesEnabled) && (
+        <div className="mt-2 grid gap-3 rounded-xl border border-border bg-muted/25 p-4 sm:grid-cols-2">
+          {allowGuests && <label className="text-xs font-medium text-muted-foreground">Guests<input type="number" min="0" max="10" value={guestCount} onChange={(event) => setGuestCount(Number(event.target.value))} className="mt-1.5 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground" /></label>}
+          {dietaryNotesEnabled && <label className="text-xs font-medium text-muted-foreground">Dietary requirements<input value={dietaryNotes} onChange={(event) => setDietaryNotes(event.target.value)} placeholder="Optional" className="mt-1.5 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground" /></label>}
+          <Button type="button" variant="secondary" disabled={pending} className="sm:col-span-2" onClick={() => choose("yes")}>Save registration details</Button>
+        </div>
+      )}
     </div>
   );
 }
