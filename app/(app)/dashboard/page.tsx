@@ -37,14 +37,14 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1500px] pb-10">
-      <header className="rise-in px-4 pb-6 pt-8 sm:px-8 sm:pb-8 sm:pt-12 lg:px-10">
+      <header className="rise-in px-4 pb-6 pt-8 sm:px-8 sm:pb-8 sm:pt-10 lg:px-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="font-label mb-3 text-[0.63rem] text-primary/65">Monday · Road Town, Tortola</p>
+            <p className="font-label mb-3 text-[0.63rem] text-primary/65">What’s happening · Road Town</p>
             <h1 className="font-heading max-w-3xl text-[2.6rem] font-semibold leading-[0.95] text-foreground sm:text-6xl">
-              Good to see you, <span className="text-primary">{firstName}.</span>
+              Latest club <span className="text-primary">events.</span>
             </h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">Here’s what’s bringing the club together this week.</p>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">Meetings, service projects, and the moments bringing us together.</p>
           </div>
           <div className="hidden items-center gap-3 pb-1 lg:flex">
             <div className="flex -space-x-2.5">{members.slice(0, 5).map((member) => <MemberAvatar key={member.id} member={member} className="size-9 border-2 border-background" />)}</div>
@@ -52,8 +52,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       </header>
-
-      <BirthdayBanner viewerId={viewer?.id} birthdays={birthdaysToday} />
 
       <div className="grid gap-5 px-4 sm:px-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(19rem,.75fr)] lg:px-10">
         {nextEvent && date && (
@@ -83,30 +81,35 @@ export default async function DashboardPage() {
         )}
 
         <aside className="rise-in rise-in-delay-2 flex flex-col overflow-hidden rounded-[1.75rem] border border-border bg-card">
-          <div className="border-b border-border p-6"><p className="font-label text-[0.62rem] text-primary/60">At a glance</p><h2 className="font-heading mt-2 text-3xl font-semibold">Your club life</h2></div>
-          <Link href="/account" className="group flex items-center gap-4 border-b border-border p-6 transition-colors hover:bg-muted/45">
-            <span className="flex size-11 items-center justify-center rounded-full bg-primary/8 text-primary"><Wallet className="size-5" /></span>
-            <span className="min-w-0 flex-1"><span className="block text-xs text-muted-foreground">Account balance</span><strong className="font-heading mt-0.5 block text-2xl font-semibold">{formatCurrency(balance)}</strong><span className={`mt-1 block text-xs ${overdue > 0 ? "text-destructive" : "text-muted-foreground"}`}>{overdue > 0 ? `${formatCurrency(overdue)} overdue` : "You’re all paid up"}</span></span>
-            <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
-          </Link>
-          <Link href="/directory" className="group flex items-center gap-4 border-b border-border p-6 transition-colors hover:bg-muted/45">
-            <span className="flex size-11 items-center justify-center rounded-full bg-[var(--rotary-gold)]/15 text-[#996000]"><Users className="size-5" /></span>
-            <span className="min-w-0 flex-1"><span className="block text-xs text-muted-foreground">Club directory</span><strong className="font-heading mt-0.5 block text-2xl font-semibold">{members.length} people</strong><span className="mt-1 block text-xs text-muted-foreground">One shared purpose</span></span>
-            <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
-          </Link>
-          <div className="mt-auto bg-[#e6a51c] p-6 text-[#183453]"><p className="font-heading text-xl font-semibold leading-tight">Service above self.</p><p className="mt-1 text-xs font-medium opacity-65">Small actions, lasting change.</p></div>
+          <div className="border-b border-border p-6"><p className="font-label text-[0.62rem] text-primary/60">On the calendar</p><h2 className="font-heading mt-2 text-3xl font-semibold">Coming up</h2></div>
+          <div className="flex-1 divide-y divide-border px-6">
+            {laterEvents.map((event) => {
+              const parts = eventDateParts(event.date);
+              return <Link key={event.id} href={`/events/${event.id}`} className="group grid grid-cols-[2.75rem_1fr_auto] items-center gap-3 py-5"><span className="text-center"><span className="font-label block text-[0.52rem] text-primary/60">{parts.month}</span><span className="font-heading block text-2xl font-semibold leading-none">{parts.day}</span></span><span className="min-w-0"><strong className="block text-sm font-semibold leading-snug">{event.title}</strong><span className="mt-1 block truncate text-xs text-muted-foreground">{event.time}</span></span><ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" /></Link>;
+            })}
+          </div>
+          <Link href="/events" className="flex items-center justify-between bg-[#e6a51c] p-6 text-sm font-bold text-[#183453] transition-colors hover:bg-[var(--rotary-gold)]">Explore all events <ArrowUpRight className="size-4" /></Link>
         </aside>
       </div>
 
+      <BirthdayBanner viewerId={viewer?.id} birthdays={birthdaysToday} />
+
+      <div className="mx-4 mt-5 flex flex-col gap-2 border-y border-border py-5 sm:mx-8 sm:flex-row sm:items-center sm:justify-between lg:mx-10">
+        <div><p className="font-label text-[0.58rem] text-primary/60">Your member house</p><h2 className="font-heading mt-1 text-2xl font-semibold">Good to see you, {firstName}.</h2></div>
+        <p className="text-sm text-muted-foreground">Here’s the rest of your club at a glance.</p>
+      </div>
+
       <div className="mt-5 grid gap-5 px-4 sm:px-8 lg:grid-cols-[.85fr_1.15fr] lg:px-10">
-        <section className="rounded-[1.5rem] border border-border bg-card p-6 sm:p-7">
-          <div className="mb-5 flex items-end justify-between"><div><p className="font-label text-[0.6rem] text-primary/60">The calendar</p><h2 className="font-heading mt-1 text-3xl font-semibold">Coming up</h2></div><Link href="/events" className="text-xs font-bold text-primary hover:underline">All events</Link></div>
-          <div className="divide-y divide-border">
-            {laterEvents.map((event) => {
-              const parts = eventDateParts(event.date);
-              return <Link key={event.id} href={`/events/${event.id}`} className="group grid grid-cols-[3rem_1fr_auto] items-center gap-4 py-4 first:pt-0 last:pb-0"><span className="text-center"><span className="font-label block text-[0.55rem] text-primary/60">{parts.month}</span><span className="font-heading block text-2xl font-semibold leading-none">{parts.day}</span></span><span className="min-w-0"><strong className="block truncate text-sm font-semibold">{event.title}</strong><span className="mt-1 block truncate text-xs text-muted-foreground">{event.time} · {event.location}</span></span><ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" /></Link>;
-            })}
-          </div>
+        <section className="overflow-hidden rounded-[1.5rem] border border-border bg-card">
+          <div className="border-b border-border p-6 sm:p-7"><p className="font-label text-[0.6rem] text-primary/60">At a glance</p><h2 className="font-heading mt-1 text-3xl font-semibold">Your club life</h2></div>
+          <Link href="/account" className="group flex items-center gap-4 border-b border-border p-6 transition-colors hover:bg-muted/45">
+            <span className="flex size-11 items-center justify-center rounded-full bg-primary/8 text-primary"><Wallet className="size-5" /></span>
+            <span className="min-w-0 flex-1"><span className="block text-xs text-muted-foreground">Account balance</span><strong className="font-heading mt-0.5 block text-2xl font-semibold">{formatCurrency(balance)}</strong><span className={`mt-1 block text-xs ${overdue > 0 ? "text-destructive" : "text-muted-foreground"}`}>{overdue > 0 ? `${formatCurrency(overdue)} overdue` : "You’re all paid up"}</span></span><ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+          </Link>
+          <Link href="/directory" className="group flex items-center gap-4 p-6 transition-colors hover:bg-muted/45">
+            <span className="flex size-11 items-center justify-center rounded-full bg-[var(--rotary-gold)]/15 text-[#996000]"><Users className="size-5" /></span>
+            <span className="min-w-0 flex-1"><span className="block text-xs text-muted-foreground">Club directory</span><strong className="font-heading mt-0.5 block text-2xl font-semibold">{members.length} people</strong><span className="mt-1 block text-xs text-muted-foreground">One shared purpose</span></span><ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+          </Link>
         </section>
 
         <section className="rounded-[1.5rem] border border-border bg-card p-6 sm:p-7">
