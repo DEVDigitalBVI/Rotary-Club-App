@@ -27,11 +27,14 @@ export async function sendChatMessageAction(channelId: string, body: string, rep
 export async function deleteChatMessageAction(messageId: string) {
   await requireMember();
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("chat_messages")
     .update({ deleted_at: new Date().toISOString(), body: "Message removed" })
-    .eq("id", messageId);
-  if (error) throw new Error("Unable to remove that message.", { cause: error });
+    .eq("id", messageId)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+  if (error || !data) throw new Error("You do not have permission to remove that message.", { cause: error });
 }
 
 export async function toggleChatReactionAction(messageId: string, emoji: string) {

@@ -135,3 +135,13 @@ describe("board notice acknowledgement visibility migration", () => {
     expect(sql).toContain("on news_acknowledgements for select to authenticated");
   });
 });
+
+describe("board chat moderation migration", () => {
+  const sql = migration("20260824162000_board_chat_moderation.sql");
+
+  it("lets board members moderate only conversations they can access", () => {
+    expect(sql).toContain("sender_id = current_member_id() or is_board_member()");
+    expect(sql.match(/can_access_chat_channel\(channel_id\)/g)).toHaveLength(2);
+    expect(sql).toContain("on chat_messages for update to authenticated");
+  });
+});
