@@ -22,6 +22,7 @@ import {
 import { formatCurrency, formatDate, daysBetween } from "@/lib/format";
 import { getCurrentMember } from "@/lib/data/members";
 import { getMemberAttendanceSummary, getPendingMakeups } from "@/lib/data/attendance";
+import { PageContainer } from "@/components/page-container";
 
 export default async function AccountPage() {
   // Finance below is still QuickBooks-mock data (not wired to Supabase yet),
@@ -59,7 +60,7 @@ export default async function AccountPage() {
         }
       />
 
-      <div className="flex flex-col gap-6 p-4 sm:p-8">
+      <PageContainer className="flex flex-col gap-6">
         <Card>
           <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -181,7 +182,7 @@ export default async function AccountPage() {
             <PendingMakeups makeups={pendingMakeups} />
           </>
         )}
-      </div>
+      </PageContainer>
     </div>
   );
 }

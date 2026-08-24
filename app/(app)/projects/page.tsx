@@ -9,6 +9,7 @@ import { getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
 import { committeeManageRight } from "@/lib/mock-data";
 import { createProjectAction, joinProjectAction, leaveProjectAction, logVolunteerHoursAction } from "./actions";
+import { PageContainer } from "@/components/page-container";
 
 function dateLabel(value: string) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/Tortola" }).format(new Date(value));
@@ -22,7 +23,7 @@ export default async function ProjectsPage() {
   return (
     <div>
       <PageHeader title="Service projects" description="Put your time and talents to work across the BVI." />
-      <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-8">
+      <PageContainer className="max-w-6xl space-y-6">
         {canManage && (
           <details className="rounded-2xl border border-border bg-card p-5">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-bold text-primary"><Plus className="size-4" />Create a service project</summary>
@@ -76,7 +77,7 @@ export default async function ProjectsPage() {
             })}
           </div>
         )}
-      </div>
+      </PageContainer>
     </div>
   );
 }

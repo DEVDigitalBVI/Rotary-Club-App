@@ -56,7 +56,7 @@ export default async function EventDetailPage({
   );
 
   return (
-    <div className="p-4 sm:p-8">
+    <div className="mx-auto w-full max-w-[1400px] p-4 sm:p-8">
       <Link
         href="/events"
         className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"

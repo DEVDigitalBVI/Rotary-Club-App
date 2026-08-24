@@ -109,3 +109,29 @@ describe("member engagement migration", () => {
     expect(sql).toContain("with check (member_id = current_member_id())");
   });
 });
+
+describe("notice accountability migration", () => {
+  const sql = migration("20260824160000_notice_accountability.sql");
+
+  it("supports priority, pinning, expiry, and required acknowledgement", () => {
+    expect(sql).toContain("priority in ('normal', 'important', 'urgent')");
+    expect(sql).toContain("is_pinned boolean not null default false");
+    expect(sql).toContain("requires_acknowledgement boolean not null default false");
+    expect(sql).toContain("expires_at date");
+  });
+
+  it("lets members acknowledge only notices they are allowed to read", () => {
+    expect(sql).toContain("member_id = current_member_id()");
+    expect(sql).toContain("post.requires_acknowledgement");
+    expect(sql).toContain("can_read_news_post(post)");
+  });
+});
+
+describe("board notice acknowledgement visibility migration", () => {
+  const sql = migration("20260824161000_board_notice_ack_visibility.sql");
+
+  it("lets notice publishers audit acknowledgements without opening public access", () => {
+    expect(sql).toContain("member_id = current_member_id() or is_board_member()");
+    expect(sql).toContain("on news_acknowledgements for select to authenticated");
+  });
+});

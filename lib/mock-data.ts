@@ -935,6 +935,11 @@ export type NewsPost = {
   source: NewsSource;
   date: string;
   author: string;
+  priority?: "normal" | "important" | "urgent";
+  isPinned?: boolean;
+  expiresAt?: string;
+  requiresAcknowledgement?: boolean;
+  acknowledgedAt?: string;
   audience?: { type: "all" | "board" | "committee" | "event"; id?: string };
   /** A photo or graphic attached to a club announcement. */
   image?: { url: string; alt: string };

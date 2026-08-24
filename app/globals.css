@@ -66,6 +66,15 @@
   --rotary-violet: #901f93;
   --rotary-grass: #009739;
 
+  --nav-surface: #0d315b;
+  --feature-surface: #123b67;
+  --feature-foreground: #ffffff;
+  --action-gold: #e6a51c;
+  --action-gold-foreground: #183453;
+  --notice-important: #b66b00;
+  --notice-urgent: var(--rotary-cardinal);
+  --notice-success: #087a37;
+
   --font-sans: var(--font-dm-sans), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --font-heading: var(--font-playfair), Georgia, serif;
   --font-body: var(--font-dm-sans), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
@@ -163,6 +172,9 @@
   --sidebar-accent-foreground: oklch(0.94 0.006 262);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: var(--rotary-sky);
+  --notice-important: #ffc45b;
+  --notice-urgent: #ff7775;
+  --notice-success: #6edb94;
 
   /* Badge tones, restated for the dark ground: the fill is mixed toward
      --card so a badge always reads as a tint of the surface it sits on

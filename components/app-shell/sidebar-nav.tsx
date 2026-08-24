@@ -21,7 +21,7 @@ export function SidebarNav() {
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all",
               active
-                ? "bg-white text-[#0d315b] shadow-sm"
+                ? "bg-white text-[var(--nav-surface)] shadow-sm"
                 : "text-sidebar-foreground/68 hover:translate-x-0.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             )}
           >

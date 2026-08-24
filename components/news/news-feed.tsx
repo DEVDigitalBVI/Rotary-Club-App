@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { ExternalLink, Pencil } from "lucide-react";
+import { AlertTriangle, ExternalLink, Pencil, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { NewsSourceBadge } from "@/components/news-source-badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditNewsDialog } from "@/components/news/edit-news-dialog";
 import { formatDate } from "@/lib/format";
+import { NoticeAcknowledgement } from "@/components/news/notice-acknowledgement";
 import {
   isSyndicated,
   newsFeeds,
@@ -18,10 +19,12 @@ import {
 export function NewsFeed({
   posts,
   canEdit = false,
+  acknowledgementSummary = {},
 }: {
   posts: NewsPost[];
   /** Officers and committee directors can correct their own club's posts. */
   canEdit?: boolean;
+  acknowledgementSummary?: Record<string, string[]>;
 }) {
   const [filter, setFilter] = useState<NewsSource | "all">("all");
   const [editing, setEditing] = useState<NewsPost | null>(null);
@@ -48,7 +51,7 @@ export function NewsFeed({
 
       <div className="flex flex-col gap-4">
         {filtered.map((post) => (
-          <Card key={post.id} className="overflow-hidden">
+          <Card key={post.id} className={`overflow-hidden ${post.priority === "urgent" ? "border-[var(--notice-urgent)]" : post.priority === "important" ? "border-[var(--notice-important)]/50" : ""}`}>
             {post.image && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -61,6 +64,8 @@ export function NewsFeed({
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <NewsSourceBadge source={post.source} />
+                  {post.isPinned && <span className="inline-flex items-center gap-1 text-[0.65rem] font-bold uppercase tracking-wider text-primary"><Pin className="size-3" />Pinned</span>}
+                  {post.priority && post.priority !== "normal" && <span className={`inline-flex items-center gap-1 text-[0.65rem] font-bold uppercase tracking-wider ${post.priority === "urgent" ? "text-[var(--notice-urgent)]" : "text-[var(--notice-important)]"}`}><AlertTriangle className="size-3" />{post.priority}</span>}
                   <span className="text-xs text-muted-foreground">
                     {formatDate(post.date)}
                   </span>
@@ -84,6 +89,24 @@ export function NewsFeed({
               <p className="font-body mt-1.5 text-sm leading-relaxed text-foreground">
                 {post.body}
               </p>
+              {post.expiresAt && <p className="mt-2 text-xs font-medium text-muted-foreground">Visible through {formatDate(post.expiresAt)}</p>}
+              {post.requiresAcknowledgement && post.source === "club" && (
+                <div className="mt-4 border-t border-border pt-4">
+                  <NoticeAcknowledgement postId={post.id} acknowledgedAt={post.acknowledgedAt} />
+                  {canEdit && (
+                    <details className="mt-3 rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                      <summary className="cursor-pointer font-semibold text-foreground">
+                        {acknowledgementSummary[post.id]?.length ?? 0} acknowledged
+                      </summary>
+                      <div className="mt-2 text-muted-foreground">
+                        {acknowledgementSummary[post.id]?.length
+                          ? acknowledgementSummary[post.id].sort().join(", ")
+                          : "No acknowledgements yet."}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              )}
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">
                   {isSyndicated(post) ? post.author : `By ${post.author}`}

@@ -11,8 +11,8 @@ export default async function LoginPage({
 
   return (
     <main className="min-h-dvh bg-[#f3f0e9] text-[#172b3f] lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(28rem,.92fr)] dark:bg-background dark:text-foreground">
-      <section className="flex min-h-[27rem] flex-col overflow-hidden bg-[#0d315b] lg:sticky lg:top-0 lg:h-dvh">
-        <div className="rise-in flex h-24 shrink-0 items-center justify-between gap-5 bg-[#0d315b] px-5 sm:h-28 sm:px-8 lg:h-32 lg:px-12">
+      <section className="flex min-h-[27rem] flex-col overflow-hidden bg-[var(--nav-surface)] lg:sticky lg:top-0 lg:h-dvh">
+        <div className="rise-in flex h-24 shrink-0 items-center justify-between gap-5 bg-[var(--nav-surface)] px-5 sm:h-28 sm:px-8 lg:h-32 lg:px-12">
           {/* The mark sits on a dedicated solid brand field to preserve
               Rotary clear space and keep it separate from photography. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}

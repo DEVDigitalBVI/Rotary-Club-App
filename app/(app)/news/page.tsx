@@ -4,8 +4,9 @@ import { PostAnnouncementDialog } from "@/components/news/post-announcement-dial
 import { canPostNews } from "@/lib/mock-data";
 import { getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
-import { getVisibleNewsPosts } from "@/lib/data/news";
+import { getNoticeAcknowledgementSummary, getVisibleNewsPosts } from "@/lib/data/news";
 import { getEvents } from "@/lib/data/events";
+import { PageContainer } from "@/components/page-container";
 
 export default async function NewsPage() {
   const [currentMember, committees, posts, events] = await Promise.all([
@@ -16,6 +17,11 @@ export default async function NewsPage() {
   ]);
 
   const canEdit = currentMember ? canPostNews(currentMember, committees) : false;
+  const acknowledgementSummary = canEdit
+    ? await getNoticeAcknowledgementSummary(
+        posts.filter((post) => post.requiresAcknowledgement).map((post) => post.id)
+      )
+    : {};
 
   return (
     <div>
@@ -24,9 +30,9 @@ export default async function NewsPage() {
         description="Club announcements, plus updates from District 7020 and Rotary International."
         actions={canEdit ? <PostAnnouncementDialog committees={committees} events={events} /> : undefined}
       />
-      <div className="p-4 sm:mx-auto sm:max-w-2xl sm:p-8">
-        <NewsFeed posts={posts} canEdit={canEdit} />
-      </div>
+      <PageContainer className="max-w-3xl">
+        <NewsFeed posts={posts} canEdit={canEdit} acknowledgementSummary={acknowledgementSummary} />
+      </PageContainer>
     </div>
   );
 }

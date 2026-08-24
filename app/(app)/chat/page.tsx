@@ -3,6 +3,7 @@ import { ChatApp } from "@/components/chat/chat-app";
 import { getChatChannels } from "@/lib/data/chat";
 import { getCurrentMember, getMembers } from "@/lib/data/members";
 import { redirect } from "next/navigation";
+import { PageContainer } from "@/components/page-container";
 
 export default async function ChatPage({ searchParams }: { searchParams: Promise<{ channel?: string }> }) {
   const currentMember = await getCurrentMember();
@@ -15,7 +16,7 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
   return (
     <div>
       <PageHeader title="Chat" description="Message the club or a fellow member directly." />
-      <div className="p-4 sm:p-8">
+      <PageContainer>
         <ChatApp
           key={channel ?? "default"}
           channels={channels}
@@ -24,7 +25,7 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
           canModerate={currentMember.role === "admin"}
           initialChannelId={channel}
         />
-      </div>
+      </PageContainer>
     </div>
   );
 }

@@ -83,6 +83,22 @@ export function PostAnnouncementDialog({ committees, events }: { committees: { i
               <optgroup label="Event attendees">{events.map((event) => <option key={event.id} value={`event:${event.id}`}>{event.title}</option>)}</optgroup>
             </select>
           </div>
+          <div className="grid gap-3 rounded-xl border border-border bg-muted/30 p-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="news-priority">Priority</Label>
+              <select id="news-priority" name="priority" className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
+                <option value="normal">Normal</option>
+                <option value="important">Important</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="news-expires">Expires</Label>
+              <Input id="news-expires" name="expiresAt" type="date" />
+            </div>
+            <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" name="isPinned" className="size-4 accent-primary" />Pin to the top</label>
+            <label className="flex items-center gap-2 text-sm font-medium"><input type="checkbox" name="requiresAcknowledgement" className="size-4 accent-primary" />Require acknowledgement</label>
+          </div>
           <DialogFooter className="mt-2">
             <Button type="submit" disabled={pending} className="font-heading">
               {pending ? "Posting…" : "Post"}

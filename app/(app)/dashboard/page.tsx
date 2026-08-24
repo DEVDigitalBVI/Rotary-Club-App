@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, CalendarDays, ChevronRight, Clock3, MapPin, MessageCircle, Newspaper, Sparkles, Users, Wallet } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CalendarDays, ChevronRight, Clock3, HandHeart, MapPin, MessageCircle, Newspaper, Pin, Sparkles, Users, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/member-avatar";
 import { BirthdayBanner } from "@/components/dashboard/birthday-banner";
@@ -11,6 +11,8 @@ import { getEvents } from "@/lib/data/events";
 import { getCompletedOnboarding } from "@/lib/data/onboarding";
 import { OnboardingCard } from "@/components/dashboard/onboarding-card";
 import { EventFlyerPreview } from "@/components/dashboard/event-flyer-preview";
+import { NoticeAcknowledgement } from "@/components/news/notice-acknowledgement";
+import { getServiceProjects } from "@/lib/data/projects";
 
 function eventDateParts(date: string) {
   const value = new Date(`${date}T12:00:00Z`);
@@ -21,11 +23,12 @@ function eventDateParts(date: string) {
 }
 
 export default async function DashboardPage() {
-  const [viewer, birthdaysToday, newsPosts, events] = await Promise.all([
+  const [viewer, birthdaysToday, newsPosts, events, serviceProjects] = await Promise.all([
     getCurrentMember(),
     getTodaysBirthdays(),
     getVisibleNewsPosts(),
     getEvents(),
+    getServiceProjects(),
   ]);
   const today = todayDateString();
   const upcoming = events.filter((event) => event.date >= today).sort((a, b) => (a.date < b.date ? -1 : 1));
@@ -36,9 +39,9 @@ export default async function DashboardPage() {
   const balance = balanceForMember(currentMember.id);
   const overdue = overdueBalanceForMember(currentMember.id);
   const latestMessages = channels.flatMap((channel) => channel.messages.map((message) => ({ ...message, channel: channel.name }))).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)).slice(0, 2);
-  const latestNews = newsPosts.slice(0, 2);
   const clubNotices = newsPosts.filter((post) => post.source === "club");
   const latestNotices = (clubNotices.length > 0 ? clubNotices : newsPosts).slice(0, 3);
+  const openServiceProjects = serviceProjects.filter((project) => project.status === "open").slice(0, 2);
   const firstName = currentMember.name.split(" ")[0];
   const date = nextEvent ? eventDateParts(nextEvent.date) : null;
   const onboarding = viewer ? await getCompletedOnboarding(viewer.id) : [];
@@ -63,13 +66,13 @@ export default async function DashboardPage() {
 
       <div className="grid gap-5 px-4 sm:px-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(19rem,.75fr)] lg:px-10">
         {nextEvent && date && (
-          <section className="rise-in rise-in-delay-1 relative min-h-[23rem] overflow-hidden rounded-[1.75rem] bg-[#123b67] text-white shadow-[0_30px_70px_-38px_rgba(13,49,91,.8)]">
+          <section className="rise-in rise-in-delay-1 relative min-h-[23rem] overflow-hidden rounded-[1.75rem] bg-[var(--feature-surface)] text-[var(--feature-foreground)] shadow-[0_30px_70px_-38px_rgba(13,49,91,.8)]">
             <div className="absolute -right-24 -top-20 size-80 rounded-full border-[70px] border-white/[0.035]" />
             <div className="absolute -bottom-24 right-1/4 size-64 rounded-full bg-[var(--rotary-gold)]/10 blur-2xl" />
             <div className="relative flex h-full min-h-[23rem] flex-col p-6 sm:p-8">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-xs font-semibold backdrop-blur"><Sparkles className="size-3.5 text-[var(--rotary-gold)]" />Next gathering</div>
-                <div className="min-w-16 rounded-2xl bg-[var(--rotary-gold)] px-3 py-2 text-center text-[#183453] shadow-lg"><span className="font-label block text-[0.58rem]">{date.month}</span><span className="font-heading block text-3xl font-bold leading-none">{date.day}</span></div>
+                <div className="min-w-16 rounded-2xl bg-[var(--rotary-gold)] px-3 py-2 text-center text-[var(--action-gold-foreground)] shadow-lg"><span className="font-label block text-[0.58rem]">{date.month}</span><span className="font-heading block text-3xl font-bold leading-none">{date.day}</span></div>
               </div>
               <div className={`mt-6 grid flex-1 items-end gap-7 ${nextEvent.flyer ? "lg:grid-cols-[minmax(0,1fr)_9.75rem]" : ""}`}>
                 <div className="max-w-2xl">
@@ -81,7 +84,7 @@ export default async function DashboardPage() {
                     <span className="flex items-center gap-2"><MapPin className="size-4 text-[var(--rotary-gold)]" />{nextEvent.location}</span>
                   </div>
                   <div className="mt-5 flex flex-wrap items-center gap-3">
-                    <Button className="h-11 rounded-full bg-white px-5 font-semibold text-[#123b67] hover:bg-[var(--rotary-gold)]" nativeButton={false} render={<Link href={`/events/${nextEvent.id}`} />}>View gathering <ArrowUpRight className="size-4" /></Button>
+                    <Button className="h-11 rounded-full bg-white px-5 font-semibold text-[var(--feature-surface)] hover:bg-[var(--rotary-gold)]" nativeButton={false} render={<Link href={`/events/${nextEvent.id}`} />}>View gathering <ArrowUpRight className="size-4" /></Button>
                     <p className="text-xs text-white/50">{nextEventAttending} {nextEventAttending === 1 ? "person" : "people"} attending</p>
                   </div>
                 </div>
@@ -99,18 +102,23 @@ export default async function DashboardPage() {
           </div>
           <div className="flex-1 divide-y divide-border px-6">
             {latestNotices.map((notice, index) => (
-              <Link key={notice.id} href="/news" className="group block py-4">
+              <article key={notice.id} className="py-4">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-label text-[0.52rem] text-primary/65">{index === 0 ? "Newest" : formatDate(notice.date)}</span>
-                  <ArrowUpRight className="size-3.5 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
+                  <span className="flex items-center gap-2 font-label text-[0.52rem] text-primary/65">
+                    {notice.isPinned && <Pin className="size-3" />}
+                    {notice.priority === "urgent" && <AlertTriangle className="size-3 text-[var(--notice-urgent)]" />}
+                    {index === 0 ? "Newest" : formatDate(notice.date)}
+                  </span>
+                  <Link href="/news" aria-label={`Read ${notice.title}`}><ArrowUpRight className="size-3.5 text-muted-foreground transition-transform hover:-translate-y-0.5 hover:translate-x-0.5 hover:text-primary" /></Link>
                 </div>
-                <strong className="mt-1.5 block text-sm font-semibold leading-snug text-foreground">{notice.title}</strong>
+                <Link href="/news" className="mt-1.5 block text-sm font-semibold leading-snug text-foreground hover:text-primary">{notice.title}</Link>
                 <span className="mt-1 line-clamp-2 block text-xs leading-5 text-muted-foreground">{notice.body}</span>
-              </Link>
+                {notice.requiresAcknowledgement && notice.source === "club" && <div className="mt-3"><NoticeAcknowledgement postId={notice.id} acknowledgedAt={notice.acknowledgedAt} compact /></div>}
+              </article>
             ))}
             {latestNotices.length === 0 && <p className="py-8 text-sm text-muted-foreground">No club notices have been posted yet.</p>}
           </div>
-          <Link href="/news" className="flex items-center justify-between bg-[#e6a51c] p-5 text-sm font-bold text-[#183453] transition-colors hover:bg-[var(--rotary-gold)]">Read all notices <ArrowUpRight className="size-4" /></Link>
+          <Link href="/news" className="flex items-center justify-between bg-[var(--action-gold)] p-5 text-sm font-bold text-[var(--action-gold-foreground)] transition-colors hover:bg-[var(--rotary-gold)]">Read all notices <ArrowUpRight className="size-4" /></Link>
         </aside>
       </div>
 
@@ -145,9 +153,12 @@ export default async function DashboardPage() {
               <Link href="/chat" className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">Join the conversation <ArrowUpRight className="size-3" /></Link>
             </div>
             <div className="border-t border-border pt-5 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
-              <div className="mb-3 flex items-center gap-2 text-xs font-bold text-muted-foreground"><Newspaper className="size-4" />Latest notices</div>
-              <div className="space-y-4">{latestNews.map((post) => <div key={post.id}><p className="text-xs text-muted-foreground">{formatDate(post.date)}</p><p className="font-heading mt-1 text-lg font-semibold leading-snug">{post.title}</p></div>)}</div>
-              <Link href="/news" className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">Read all notices <ArrowUpRight className="size-3" /></Link>
+              <div className="mb-3 flex items-center gap-2 text-xs font-bold text-muted-foreground"><HandHeart className="size-4" />Service opportunities</div>
+              <div className="space-y-4">
+                {openServiceProjects.map((project) => <div key={project.id}><p className="text-xs text-muted-foreground">{formatDate(project.startsAt)}</p><p className="font-heading mt-1 text-lg font-semibold leading-snug">{project.title}</p><p className="mt-1 text-xs text-muted-foreground">{project.volunteerIds.length}{project.volunteerGoal ? ` of ${project.volunteerGoal}` : ""} volunteers</p></div>)}
+                {openServiceProjects.length === 0 && <p className="text-xs leading-5 text-muted-foreground">No open service projects right now.</p>}
+              </div>
+              <Link href="/projects" className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">Explore service <ArrowUpRight className="size-3" /></Link>
             </div>
           </div>
         </section>

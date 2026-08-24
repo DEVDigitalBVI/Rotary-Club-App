@@ -68,7 +68,7 @@ export function LoginForm({
         />
       </div>
 
-      <Button size="lg" type="submit" disabled={pending} className="mt-2 h-12 w-full rounded-full bg-[#0d315b] text-sm font-bold text-white shadow-[0_12px_30px_-16px_rgba(13,49,91,.85)] hover:bg-[#174d82] dark:bg-primary dark:text-primary-foreground">
+      <Button size="lg" type="submit" disabled={pending} className="mt-2 h-12 w-full rounded-full bg-[var(--nav-surface)] text-sm font-bold text-white shadow-[0_12px_30px_-16px_rgba(13,49,91,.85)] hover:bg-[var(--feature-surface)] dark:bg-primary dark:text-primary-foreground">
         {pending ? "Signing in…" : "Sign in"}
       </Button>
 

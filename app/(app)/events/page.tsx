@@ -7,6 +7,7 @@ import { getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
 import { canManageEvents } from "@/lib/mock-data";
 import { todayDateString } from "@/lib/format";
+import { PageContainer } from "@/components/page-container";
 
 export default async function EventsPage() {
   const [events, currentMember, committees] = await Promise.all([
@@ -32,7 +33,7 @@ export default async function EventsPage() {
         actions={mayManage ? <CreateEventDialog /> : undefined}
       />
 
-      <div className="p-4 sm:p-8">
+      <PageContainer>
         <Tabs defaultValue="upcoming">
           <TabsList>
             <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
@@ -53,7 +54,7 @@ export default async function EventsPage() {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
+      </PageContainer>
     </div>
   );
 }
