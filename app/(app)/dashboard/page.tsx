@@ -30,6 +30,9 @@ export default async function DashboardPage() {
   const today = todayDateString();
   const upcoming = events.filter((event) => event.date >= today).sort((a, b) => (a.date < b.date ? -1 : 1));
   const nextEvent = upcoming[0];
+  const nextEventAttending = nextEvent
+    ? nextEvent.rsvps.yes + (nextEvent.rsvps.guests ?? 0)
+    : 0;
   const laterEvents = upcoming.slice(1, 4);
   const balance = balanceForMember(currentMember.id);
   const overdue = overdueBalanceForMember(currentMember.id);
@@ -78,7 +81,7 @@ export default async function DashboardPage() {
                   </div>
                   <div className="mt-7 flex flex-wrap items-center gap-3">
                     <Button className="h-11 rounded-full bg-white px-5 font-semibold text-[#123b67] hover:bg-[var(--rotary-gold)]" nativeButton={false} render={<Link href={`/events/${nextEvent.id}`} />}>View gathering <ArrowUpRight className="size-4" /></Button>
-                    <p className="text-xs text-white/50">{nextEvent.rsvps.yes} members attending</p>
+                    <p className="text-xs text-white/50">{nextEventAttending} {nextEventAttending === 1 ? "person" : "people"} attending</p>
                   </div>
                 </div>
                 {nextEvent.flyer && <EventFlyerPreview flyer={nextEvent.flyer} eventTitle={nextEvent.title} />}
