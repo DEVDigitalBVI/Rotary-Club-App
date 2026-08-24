@@ -13,21 +13,23 @@ export default async function LoginPage({
   return (
     <main className="min-h-dvh bg-[#f3f0e9] text-[#172b3f] lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(28rem,.92fr)] dark:bg-background dark:text-foreground">
       <section className="relative min-h-[21rem] overflow-hidden bg-[#0d315b] lg:sticky lg:top-0 lg:h-dvh">
-        <Image
-          src="/login-header-photo.jpg"
-          alt=""
-          fill
-          priority
-          sizes="(min-width: 1024px) 55vw, 100vw"
-          className="object-cover object-[50%_18%] lg:object-[50%_28%]"
-        />
+        <div className="absolute inset-0">
+          <Image
+            src="/login-header-photo.jpg"
+            alt=""
+            fill
+            priority
+            sizes="(min-width: 1024px) 55vw, 100vw"
+            className="object-cover object-[50%_18%] lg:object-[50%_28%]"
+          />
+        </div>
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,30,55,.18)_5%,rgba(7,30,55,.08)_42%,rgba(7,30,55,.92)_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(0,103,200,.16),transparent_52%,rgba(247,168,27,.08))]" />
 
         <div className="relative flex h-full min-h-[21rem] flex-col justify-between p-5 sm:p-8 lg:p-12">
           <div className="rise-in flex items-start justify-between gap-5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/rotary-club-logo.png" alt="Rotary Club of Road Town" className="h-auto w-48 drop-shadow-md sm:w-60" />
+            <img src="/rotary-club-logo.png" alt="Rotary Club of Road Town" className="-ml-4 h-auto w-48 drop-shadow-md sm:-ml-6 sm:w-60" />
             <span className="font-label rounded-full border border-white/20 bg-[#0d315b]/25 px-3 py-1.5 text-[0.56rem] text-white/75 backdrop-blur-md">Member house</span>
           </div>
 

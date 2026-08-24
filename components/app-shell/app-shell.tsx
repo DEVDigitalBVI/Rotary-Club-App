@@ -18,7 +18,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-full min-w-0 flex-1">
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex print:hidden">
         <div className="flex h-28 items-center px-6">
-          <BrandLockup logoClassName="h-[4.5rem]" />
+          <BrandLockup className="-ml-3" logoClassName="h-[5.5rem]" />
         </div>
         <p className="font-label px-6 pb-5 text-[0.62rem] text-white/45">Member house · Road Town</p>
         <SidebarNav />
@@ -47,7 +47,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         <header
           className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-white/10 bg-sidebar px-4 md:hidden print:hidden"
         >
-          <BrandLockup logoClassName="h-14" />
+          <BrandLockup className="-ml-2" logoClassName="h-16" />
           <div className="flex items-center gap-1">
             {currentMember && (
               <NotificationBell
