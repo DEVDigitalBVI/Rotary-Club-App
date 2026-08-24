@@ -53,6 +53,8 @@
 }
 
 :root {
+  color-scheme: light;
+
   --rotary-blue: #17458f;
   --rotary-gold: #f7a81b;
   --rotary-azure: #0067c8;
@@ -128,6 +130,8 @@
 }
 
 .dark {
+  color-scheme: dark;
+
   --background: oklch(0.16 0.014 262);
   --foreground: oklch(0.94 0.006 262);
   --card: oklch(0.208 0.017 262);
