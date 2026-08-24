@@ -203,11 +203,14 @@ export async function uploadEventFlyerAction(
 
 export async function removeEventFlyerAction(eventId: string): Promise<EventFormState> {
   const supabase = await createClient();
-  const { data: event } = await supabase
+  const { data: event, error: eventError } = await supabase
     .from("events")
     .select("flyer_url")
     .eq("id", eventId)
     .maybeSingle<{ flyer_url: string | null }>();
+  if (eventError || !event) {
+    return { error: "Couldn't remove the flyer — event not found or permission denied." };
+  }
   const { error } = await supabase
     .from("events")
     .update({ flyer_url: null, flyer_alt: null })
@@ -215,7 +218,7 @@ export async function removeEventFlyerAction(eventId: string): Promise<EventForm
 
   if (error) return { error: "Couldn't remove the flyer — you may not have permission." };
 
-  await removeStoredMaterial(supabase, event?.flyer_url);
+  await removeStoredMaterial(supabase, event.flyer_url);
 
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/events");
@@ -241,11 +244,14 @@ export async function uploadEventAgendaAction(
 
 export async function removeEventAgendaAction(eventId: string): Promise<EventFormState> {
   const supabase = await createClient();
-  const { data: event } = await supabase
+  const { data: event, error: eventError } = await supabase
     .from("events")
     .select("agenda_url")
     .eq("id", eventId)
     .maybeSingle<{ agenda_url: string | null }>();
+  if (eventError || !event) {
+    return { error: "Couldn't remove the agenda — event not found or permission denied." };
+  }
   const { error } = await supabase
     .from("events")
     .update({
@@ -258,7 +264,7 @@ export async function removeEventAgendaAction(eventId: string): Promise<EventFor
 
   if (error) return { error: "Couldn't remove the agenda — you may not have permission." };
 
-  await removeStoredMaterial(supabase, event?.agenda_url);
+  await removeStoredMaterial(supabase, event.agenda_url);
 
   revalidatePath(`/events/${eventId}`);
   return { success: true };
