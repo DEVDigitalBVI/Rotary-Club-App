@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { throwOnSupabaseError } from "@/lib/supabase/errors";
 import { initialsFromName, todayMonthDay } from "@/lib/format";
 import type { Member } from "@/lib/mock-data";
 
@@ -49,37 +50,41 @@ function toMember(row: MemberRow): Member {
 export async function getCurrentMember(): Promise<Member | null> {
   const supabase = await createClient();
   const {
-    data: { user },
+    data: { user }, error: authError,
   } = await supabase.auth.getUser();
+  throwOnSupabaseError(authError, "Unable to verify the current user");
   if (!user) return null;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("members")
     .select("*")
     .eq("user_id", user.id)
     .maybeSingle<MemberRow>();
+  throwOnSupabaseError(error, "Unable to load the current member");
 
   return data ? toMember(data) : null;
 }
 
 export async function getMemberById(id: string): Promise<Member | null> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("members")
     .select("*")
     .eq("id", id)
     .maybeSingle<MemberRow>();
+  throwOnSupabaseError(error, "Unable to load the member");
 
   return data ? toMember(data) : null;
 }
 
 export async function getMembers(): Promise<Member[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("members")
     .select("*")
     .order("name")
     .returns<MemberRow[]>();
+  throwOnSupabaseError(error, "Unable to load members");
 
   return (data ?? []).map(toMember);
 }
@@ -92,12 +97,13 @@ export async function getMembers(): Promise<Member[]> {
  */
 export async function getTodaysBirthdays(): Promise<Member[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("members")
     .select("*")
     .not("date_of_birth", "is", null)
     .order("name")
     .returns<MemberRow[]>();
+  throwOnSupabaseError(error, "Unable to load member birthdays");
 
   const monthDay = todayMonthDay();
   return (data ?? [])

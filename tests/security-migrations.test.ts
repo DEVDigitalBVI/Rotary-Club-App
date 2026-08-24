@@ -58,6 +58,28 @@ describe("committee roster invariant migration", () => {
   });
 });
 
+describe("active signup and assigned-member integrity migration", () => {
+  const sql = migration("20260823103000_active_signup_and_director_integrity.sql");
+
+  it("limits new logins to unclaimed active or honorary roster records", () => {
+    expect(sql).toContain("lower(email) = lower(trim(target_email))");
+    expect(sql).toContain("user_id is null");
+    expect(sql).toContain("status in ('active', 'honorary')");
+  });
+
+  it("prevents deactivation while a member still holds responsibilities", () => {
+    expect(sql).toContain("before update of status on members");
+    expect(sql).toContain("old.position is not null");
+    expect(sql).toContain("exists (select 1 from committees where director_id = old.id)");
+  });
+
+  it("requires an assigned director to be included and eligible", () => {
+    expect(sql).toContain("committee director must remain on roster");
+    expect(sql).toContain("committee director must be active or honorary");
+    expect(sql).toContain("where id = assigned_director_id and status in ('active', 'honorary')");
+  });
+});
+
 describe("role assignment migration", () => {
   const sql = migration("20260821230000_role_assignment.sql");
 

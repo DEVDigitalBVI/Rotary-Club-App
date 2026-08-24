@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { throwOnSupabaseError } from "@/lib/supabase/errors";
 import type { Committee, CommitteeId } from "@/lib/mock-data";
 
 type CommitteeRow = {
@@ -17,10 +18,11 @@ type CommitteeRow = {
  */
 export async function getCommittees(): Promise<Committee[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("committees")
     .select("id, name, description, director_id, managed_by, committee_members(member_id)")
     .returns<CommitteeRow[]>();
+  throwOnSupabaseError(error, "Unable to load committees");
 
   return (data ?? []).map((row) => ({
     id: row.id as CommitteeId,

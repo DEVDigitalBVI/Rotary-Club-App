@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { throwOnSupabaseError } from "@/lib/supabase/errors";
 import { todayDateString } from "@/lib/format";
 
 const BYLAWS_THRESHOLD = 0.5;
@@ -65,8 +66,7 @@ export async function getMemberAttendanceSummary(memberId: string): Promise<Atte
   const window = rotaryYearWindow(todayDateString());
   const now = new Date();
 
-  const [{ data: meetingRows }, { data: attendanceRows }, { data: makeupRows }] =
-    await Promise.all([
+  const [meetingsResult, attendanceResult, makeupsResult] = await Promise.all([
       supabase
         .from("events")
         .select("id, starts_at")
@@ -88,7 +88,14 @@ export async function getMemberAttendanceSummary(memberId: string): Promise<Atte
         .lt("attended_on", window.endDate)
         .order("attended_on", { ascending: false })
         .returns<MakeupRow[]>(),
-    ]);
+  ]);
+  throwOnSupabaseError(meetingsResult.error, "Unable to load finalized meetings");
+  throwOnSupabaseError(attendanceResult.error, "Unable to load member attendance");
+  throwOnSupabaseError(makeupsResult.error, "Unable to load member makeups");
+
+  const meetingRows = meetingsResult.data;
+  const attendanceRows = attendanceResult.data;
+  const makeupRows = makeupsResult.data;
 
   const heldIds = new Set(
     (meetingRows ?? []).filter((r) => new Date(r.starts_at) <= now).map((r) => r.id)
@@ -116,12 +123,13 @@ export async function getMemberAttendanceSummary(memberId: string): Promise<Atte
 /** Every makeup still needing manual entry into ClubRunner, across all members. */
 export async function getPendingMakeups(): Promise<MakeupEntry[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("makeups")
     .select("*, members(name)")
     .eq("clubrunner_logged", false)
     .order("attended_on", { ascending: false })
     .returns<MakeupRow[]>();
+  throwOnSupabaseError(error, "Unable to load pending makeups");
 
   return (data ?? []).map(toMakeupEntry);
 }

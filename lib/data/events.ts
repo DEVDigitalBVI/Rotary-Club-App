@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { throwOnSupabaseError } from "@/lib/supabase/errors";
 import { getCurrentMember } from "@/lib/data/members";
 import { formatTime, toClubDateString } from "@/lib/format";
 import type { EventItem } from "@/lib/mock-data";
@@ -57,8 +58,8 @@ function toEventItem(
       row.attendance_present != null && row.attendance_total != null
         ? { present: row.attendance_present, total: row.attendance_total }
         : undefined,
-    // No separate attendance-roster table exists — "who's confirmed" is
-    // approximated as everyone who RSVP'd yes.
+    // Before attendance is finalized, "who's confirmed" is approximated as
+    // everyone who RSVP'd yes. The detail page replaces this with real rows.
     attendeeIds: rsvps.filter((r) => r.status === "yes").map((r) => r.member_id),
     flyer: row.flyer_url ? { url: row.flyer_url, alt: row.flyer_alt ?? row.title } : undefined,
     agenda: row.agenda_url
@@ -84,21 +85,23 @@ function groupByEvent(rows: RsvpRow[]) {
 
 export async function getEvents(): Promise<EventItem[]> {
   const supabase = await createClient();
-  const [{ data: eventRows }, { data: rsvpRows }, currentMember] = await Promise.all([
+  const [eventsResult, rsvpsResult, currentMember] = await Promise.all([
     supabase.from("events").select("*").order("starts_at").returns<EventRow[]>(),
     supabase.from("event_rsvps").select("event_id, member_id, status").returns<RsvpRow[]>(),
     getCurrentMember(),
   ]);
+  throwOnSupabaseError(eventsResult.error, "Unable to load events");
+  throwOnSupabaseError(rsvpsResult.error, "Unable to load event RSVPs");
 
-  const rsvpsByEvent = groupByEvent(rsvpRows ?? []);
-  return (eventRows ?? []).map((row) =>
+  const rsvpsByEvent = groupByEvent(rsvpsResult.data ?? []);
+  return (eventsResult.data ?? []).map((row) =>
     toEventItem(row, rsvpsByEvent.get(row.id) ?? [], currentMember?.id ?? null)
   );
 }
 
 export async function getEventById(id: string): Promise<EventItem | null> {
   const supabase = await createClient();
-  const [{ data: row }, { data: rsvpRows }, currentMember] = await Promise.all([
+  const [eventResult, rsvpsResult, currentMember] = await Promise.all([
     supabase.from("events").select("*").eq("id", id).maybeSingle<EventRow>(),
     supabase
       .from("event_rsvps")
@@ -107,7 +110,9 @@ export async function getEventById(id: string): Promise<EventItem | null> {
       .returns<RsvpRow[]>(),
     getCurrentMember(),
   ]);
+  throwOnSupabaseError(eventResult.error, "Unable to load the event");
+  throwOnSupabaseError(rsvpsResult.error, "Unable to load event RSVPs");
 
-  if (!row) return null;
-  return toEventItem(row, rsvpRows ?? [], currentMember?.id ?? null);
+  if (!eventResult.data) return null;
+  return toEventItem(eventResult.data, rsvpsResult.data ?? [], currentMember?.id ?? null);
 }
