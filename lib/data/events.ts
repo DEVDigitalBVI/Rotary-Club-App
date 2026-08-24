@@ -40,6 +40,9 @@ function toEventItem(
   const own = currentMemberId ? rsvps.find((r) => r.member_id === currentMemberId) : undefined;
   const counts = { yes: 0, no: 0, maybe: 0 };
   for (const r of rsvps) counts[r.status]++;
+  const guests = rsvps
+    .filter((r) => r.status === "yes")
+    .reduce((total, rsvp) => total + Number(rsvp.guest_count), 0);
 
   return {
     id: row.id,
@@ -56,7 +59,7 @@ function toEventItem(
       ? { name: row.speaker_name, topic: row.speaker_topic ?? "" }
       : undefined,
     rsvpDeadline: row.rsvp_deadline ?? undefined,
-    rsvps: counts,
+    rsvps: { ...counts, guests },
     myRsvp: own?.status ?? "none",
     registration: own ? { guestCount: own.guest_count, dietaryNotes: own.dietary_notes ?? "", status: own.registration_status } : undefined,
     capacity: row.capacity ?? undefined,
@@ -70,6 +73,11 @@ function toEventItem(
     // Before attendance is finalized, "who's confirmed" is approximated as
     // everyone who RSVP'd yes. The detail page replaces this with real rows.
     attendeeIds: rsvps.filter((r) => r.status === "yes").map((r) => r.member_id),
+    attendeeGuestCounts: Object.fromEntries(
+      rsvps
+        .filter((r) => r.status === "yes" && Number(r.guest_count) > 0)
+        .map((r) => [r.member_id, Number(r.guest_count)])
+    ),
     flyer: row.flyer_url ? { url: row.flyer_url, alt: row.flyer_alt ?? row.title } : undefined,
     agenda: row.agenda_url
       ? {

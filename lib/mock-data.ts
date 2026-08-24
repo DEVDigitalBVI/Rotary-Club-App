@@ -588,7 +588,7 @@ export type EventItem = {
   description: string;
   speaker?: { name: string; topic: string };
   rsvpDeadline?: string;
-  rsvps: { yes: number; no: number; maybe: number };
+  rsvps: { yes: number; no: number; maybe: number; guests?: number };
   myRsvp: RsvpStatus;
   registration?: {
     guestCount: number;
@@ -601,6 +601,7 @@ export type EventItem = {
   dietaryNotesEnabled?: boolean;
   attendance?: { present: number; total: number };
   attendeeIds?: string[];
+  attendeeGuestCounts?: Record<string, number>;
   /** Whether this event counts toward the bylaws' 50%-of-meetings requirement. */
   countsTowardAttendance: boolean;
   flyer?: EventFlyer;

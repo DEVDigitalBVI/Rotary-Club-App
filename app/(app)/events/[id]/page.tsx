@@ -39,9 +39,21 @@ export default async function EventDetailPage({
   const attendeeIdsToShow = attendanceTaken
     ? attendanceRecord.attendeeIds
     : (event.attendeeIds ?? []);
-  const attendees = attendeeIdsToShow
-    .map((mid) => members.find((m) => m.id === mid))
-    .filter((m): m is NonNullable<typeof m> => Boolean(m));
+  const attendees = attendeeIdsToShow.flatMap((memberId) => {
+    const member = members.find((candidate) => candidate.id === memberId);
+    return member
+      ? [{
+          member,
+          guestCount: attendanceTaken
+            ? 0
+            : (event.attendeeGuestCounts?.[memberId] ?? 0),
+        }]
+      : [];
+  });
+  const confirmedPeople = attendees.reduce(
+    (total, attendee) => total + 1 + attendee.guestCount,
+    0
+  );
 
   return (
     <div className="p-4 sm:p-8">
@@ -140,7 +152,7 @@ export default async function EventDetailPage({
               ) : (
                 <div className="mt-3 flex flex-col gap-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Going</span>
+                    <span className="text-muted-foreground">Members going</span>
                     <span className="font-medium text-foreground">{event.rsvps.yes}</span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -176,18 +188,25 @@ export default async function EventDetailPage({
                     {attendanceTaken ? "Attendees" : "Confirmed so far"}
                   </h2>
                   <span className="text-xs text-muted-foreground">
-                    {attendees.length}
+                    {confirmedPeople} {confirmedPeople === 1 ? "person" : "people"}
                   </span>
                 </div>
                 <ul className="mt-3 flex flex-col gap-2.5">
-                  {attendees.map((m) => (
-                    <li key={m.id} className="flex items-center gap-2">
+                  {attendees.map(({ member, guestCount }) => (
+                    <li key={member.id} className="flex items-center gap-2">
                       <MemberAvatar
-                        member={m}
+                        member={member}
                         className="size-7"
                         fallbackClassName="text-[0.6rem]"
                       />
-                      <span className="text-sm text-foreground">{m.name}</span>
+                      <span className="text-sm text-foreground">
+                        {member.name}
+                        {guestCount > 0 && (
+                          <span className="ml-1.5 font-medium text-primary">
+                            + {guestCount} {guestCount === 1 ? "guest" : "guests"}
+                          </span>
+                        )}
+                      </span>
                     </li>
                   ))}
                 </ul>
