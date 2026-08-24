@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/page-header";
 import { MemberDirectory } from "@/components/directory/member-directory";
 import { getMembers, getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
+import { OnboardingVisitTracker } from "@/components/directory/onboarding-visit-tracker";
 
 export default async function DirectoryPage() {
   const [members, committees, currentMember] = await Promise.all([
@@ -12,6 +13,7 @@ export default async function DirectoryPage() {
 
   return (
     <div>
+      {currentMember && <OnboardingVisitTracker />}
       <PageHeader
         title="Directory"
         description="Find fellow members and see who's on which committee."

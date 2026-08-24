@@ -5,14 +5,20 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentMember } from "@/lib/data/members";
 import { onboardingTasks, type OnboardingKey } from "@/lib/data/onboarding";
 
-export async function setOnboardingTaskAction(taskKey: OnboardingKey, completed: boolean) {
+export async function recordOnboardingTaskAction(taskKey: OnboardingKey) {
   if (!onboardingTasks.some((task) => task.key === taskKey)) throw new Error("Unknown onboarding task.");
   const member = await getCurrentMember();
   if (!member) throw new Error("You must be signed in.");
   const supabase = await createClient();
-  const result = completed
-    ? await supabase.from("member_onboarding").upsert({ member_id: member.id, task_key: taskKey })
-    : await supabase.from("member_onboarding").delete().eq("member_id", member.id).eq("task_key", taskKey);
+  const { data: existing, error: readError } = await supabase
+    .from("member_onboarding")
+    .select("task_key")
+    .eq("member_id", member.id)
+    .eq("task_key", taskKey)
+    .maybeSingle();
+  if (readError) throw new Error("Unable to read onboarding progress.", { cause: readError });
+  if (existing) return;
+  const result = await supabase.from("member_onboarding").insert({ member_id: member.id, task_key: taskKey });
   if (result.error) throw new Error("Unable to update onboarding progress.", { cause: result.error });
   revalidatePath("/dashboard");
 }

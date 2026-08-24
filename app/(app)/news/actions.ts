@@ -11,8 +11,8 @@ export async function postNewsAction(
 ): Promise<NewsFormState> {
   const title = String(formData.get("title") ?? "").trim();
   const body = String(formData.get("body") ?? "").trim();
-  const audienceType = String(formData.get("audienceType") ?? "all");
-  const audienceId = String(formData.get("audienceId") ?? "").trim() || null;
+  const audience = String(formData.get("audience") ?? "all");
+  const [audienceType, audienceId = null] = audience.split(":", 2);
   if (!title || !body) {
     return { error: "Title and message are required." };
   }

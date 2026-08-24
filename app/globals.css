@@ -213,6 +213,15 @@
     font-family: var(--font-body);
   }
   .font-heading {
+    font-family: var(--font-sans);
+    letter-spacing: normal;
+  }
+  h1.font-heading,
+  h2.font-heading,
+  h3.font-heading,
+  h4.font-heading,
+  h5.font-heading,
+  h6.font-heading {
     font-family: var(--font-heading);
     letter-spacing: -0.02em;
   }

@@ -89,3 +89,23 @@ describe("role assignment migration", () => {
     expect(sql.match(/if not can_assign_roles\(\) then/g)).toHaveLength(3);
   });
 });
+
+describe("member engagement migration", () => {
+  const sql = migration("20260824010000_member_engagement.sql");
+
+  it("keeps project management with the community-service leadership", () => {
+    expect(sql).toContain("can_manage_committee('community-service')");
+    expect(sql).toContain("member_id = current_member_id() and approved_at is null");
+  });
+
+  it("restricts targeted announcements to their intended audience", () => {
+    expect(sql).toContain("create or replace function can_read_news_post");
+    expect(sql).toContain("using (can_read_news_post(news_posts))");
+    expect(sql).toContain("news_posts_notify_target");
+  });
+
+  it("keeps onboarding progress private to the member and club officers", () => {
+    expect(sql).toContain("member_id = current_member_id() or runs_the_club()");
+    expect(sql).toContain("with check (member_id = current_member_id())");
+  });
+});

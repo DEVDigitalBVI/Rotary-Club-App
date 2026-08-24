@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { postNewsAction } from "@/app/(app)/news/actions";
 
 export function PostAnnouncementDialog({ committees, events }: { committees: { id: string; name: string }[]; events: { id: string; title: string }[] }) {
@@ -76,18 +75,12 @@ export function PostAnnouncementDialog({ committees, events }: { committees: { i
             <Textarea id="news-body" name="body" rows={4} required />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="news-audience">Audience</Label>
-            <Select name="audienceType" defaultValue="all">
-              <SelectTrigger id="news-audience"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="all">All members</SelectItem><SelectItem value="board">Board only</SelectItem><SelectItem value="committee">A committee</SelectItem><SelectItem value="event">Event attendees</SelectItem></SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="news-audience-id">Committee or event</Label>
-            <select id="news-audience-id" name="audienceId" className="h-9 rounded-lg border border-input bg-background px-3 text-sm">
-              <option value="">Not needed for all members or board</option>
-              <optgroup label="Committees">{committees.map((committee) => <option key={committee.id} value={committee.id}>{committee.name}</option>)}</optgroup>
-              <optgroup label="Events">{events.map((event) => <option key={event.id} value={event.id}>{event.title}</option>)}</optgroup>
+            <Label htmlFor="news-audience">Send to</Label>
+            <select id="news-audience" name="audience" className="h-10 rounded-lg border border-input bg-background px-3 text-sm">
+              <option value="all">All members</option>
+              <option value="board">Board only</option>
+              <optgroup label="Committees">{committees.map((committee) => <option key={committee.id} value={`committee:${committee.id}`}>{committee.name}</option>)}</optgroup>
+              <optgroup label="Event attendees">{events.map((event) => <option key={event.id} value={`event:${event.id}`}>{event.title}</option>)}</optgroup>
             </select>
           </div>
           <DialogFooter className="mt-2">
