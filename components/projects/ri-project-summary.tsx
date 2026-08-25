@@ -20,7 +20,7 @@ export function RiProjectSummary({ project }: { project: ServiceProject }) {
     `AREA OF FOCUS\n${project.areaOfFocus ?? "—"}`, `CATEGORIES\n${list(project.categories)}`, `TAGS\n${list(project.tags)}`,
     `PROJECT LOCATION\n${[project.location, project.address, project.city, project.territory, project.country].filter(Boolean).join(", ")}`,
     `COMMUNITY ASSESSMENT\n${project.communityAssessment ?? "—"}`, `PROJECT IMPACT\n${project.projectImpact ?? "—"}`,
-    `SUSTAINABILITY\n${project.sustainabilityPlan ?? "—"}`, `TIMELINE\n${project.startsAt.slice(0, 10)} to ${project.endsAt?.slice(0, 10) ?? "Ongoing"}`,
+    `SUSTAINABILITY\n${project.sustainabilityPlan ?? "—"}`, `TIMELINE\n${project.startsAt?.slice(0, 10) ?? "To be determined"} to ${project.endsAt?.slice(0, 10) ?? "Ongoing"}`,
     `TOTAL ESTIMATED BUDGET\n${amount(project.estimatedBudget, project.currency)}`, `AMOUNT PLEDGED\n${amount(project.amountPledged, project.currency)}`,
     `AMOUNT STILL NEEDED\n${project.estimatedBudget == null ? "—" : amount(Math.max(0, project.estimatedBudget - (project.amountPledged ?? 0)), project.currency)}`,
     `ROTARY GRANT\n${project.isRotaryGrant ? [project.grantType, project.grantNumber, amount(project.grantAmount, project.currency)].filter(Boolean).join(" · ") : "No"}`,

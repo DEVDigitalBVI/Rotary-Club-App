@@ -155,7 +155,7 @@ export default async function DashboardPage() {
             <div className="border-t border-border pt-5 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
               <div className="mb-3 flex items-center gap-2 text-xs font-bold text-muted-foreground"><HandHeart className="size-4" />Service opportunities</div>
               <div className="space-y-4">
-                {openServiceProjects.map((project) => <div key={project.id}><p className="text-xs text-muted-foreground">{formatDate(project.startsAt)}</p><p className="font-heading mt-1 text-lg font-semibold leading-snug">{project.title}</p><p className="mt-1 text-xs text-muted-foreground">{project.volunteerIds.length}{project.volunteerGoal ? ` of ${project.volunteerGoal}` : ""} volunteers</p></div>)}
+                {openServiceProjects.map((project) => <div key={project.id}><p className="text-xs text-muted-foreground">{project.startsAt ? formatDate(project.startsAt) : "Date to be announced"}</p><p className="font-heading mt-1 text-lg font-semibold leading-snug">{project.title}</p><p className="mt-1 text-xs text-muted-foreground">{project.volunteerIds.length}{project.volunteerGoal ? ` of ${project.volunteerGoal}` : ""} volunteers</p></div>)}
                 {openServiceProjects.length === 0 && <p className="text-xs leading-5 text-muted-foreground">No open service projects right now.</p>}
               </div>
               <Link href="/projects" className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">Explore service <ArrowUpRight className="size-3" /></Link>

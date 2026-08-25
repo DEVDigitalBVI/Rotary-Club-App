@@ -6,7 +6,7 @@ export type ServiceProject = {
   title: string;
   summary: string;
   location: string | null;
-  startsAt: string;
+  startsAt: string | null;
   endsAt: string | null;
   volunteerGoal: number | null;
   hoursGoal: number | null;
@@ -48,7 +48,7 @@ export type ServiceProject = {
 
 type ProjectRow = {
   id: string; title: string; summary: string; location: string | null;
-  starts_at: string; ends_at: string | null; volunteer_goal: number | null;
+  starts_at: string | null; ends_at: string | null; volunteer_goal: number | null;
   hours_goal: number | null; status: ServiceProject["status"];
   detailed_description: string | null; language: string; area_of_focus: string | null;
   categories: string[]; tags: string[]; address: string | null; city: string | null;
@@ -65,7 +65,7 @@ type ProjectRow = {
 export async function getServiceProjects(): Promise<ServiceProject[]> {
   const supabase = await createClient();
   const [projectsResult, volunteersResult, hoursResult] = await Promise.all([
-    supabase.from("service_projects").select("*").order("starts_at").returns<ProjectRow[]>(),
+    supabase.from("service_projects").select("*").order("starts_at", { nullsFirst: false }).returns<ProjectRow[]>(),
     supabase.from("project_volunteers").select("project_id, member_id").returns<{ project_id: string; member_id: string }[]>(),
     supabase.from("volunteer_hours").select("project_id, hours").not("approved_at", "is", null).returns<{ project_id: string; hours: number }[]>(),
   ]);

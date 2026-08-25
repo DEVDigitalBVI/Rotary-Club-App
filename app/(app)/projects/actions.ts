@@ -65,7 +65,7 @@ function projectValues(formData: FormData) {
     language: text(formData, "language") ?? "English",
     area_of_focus: text(formData, "areaOfFocus"),
     categories: lines(formData, "categories"), tags: lines(formData, "tags"),
-    status: text(formData, "status") ?? "open",
+    status: text(formData, "status") ?? "draft",
     volunteer_goal: number(formData, "volunteerGoal"), hours_goal: number(formData, "hoursGoal"),
     community_assessment: text(formData, "communityAssessment"),
     project_impact: text(formData, "projectImpact"), sustainability_plan: text(formData, "sustainabilityPlan"),
@@ -85,7 +85,7 @@ function projectValues(formData: FormData) {
 export async function createProjectAction(_state: ProjectFormState, formData: FormData): Promise<ProjectFormState> {
   const member = await requireMember();
   const values = projectValues(formData);
-  if (!values.title || !values.summary || !values.starts_at) return { error: "Title, summary, and start date are required." };
+  if (!values.title || !values.summary) return { error: "Title and summary are required." };
   const supabase = await createClient();
   const { error } = await supabase.from("service_projects").insert({
     ...values, created_by: member.id,
@@ -98,7 +98,7 @@ export async function createProjectAction(_state: ProjectFormState, formData: Fo
 export async function updateProjectAction(projectId: string, _state: ProjectFormState, formData: FormData): Promise<ProjectFormState> {
   await requireMember();
   const values = projectValues(formData);
-  if (!values.title || !values.summary || !values.starts_at) return { error: "Title, summary, and start date are required." };
+  if (!values.title || !values.summary) return { error: "Title and summary are required." };
   const supabase = await createClient();
   const { data, error } = await supabase.from("service_projects").update(values).eq("id", projectId).select("id").maybeSingle();
   if (error || !data) return { error: "Unable to save this project — you may not have permission." };

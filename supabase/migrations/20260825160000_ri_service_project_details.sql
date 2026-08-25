@@ -1,6 +1,8 @@
 -- Capture the same planning, impact, funding, collaboration, and reporting
 -- details used by Rotary International's Service Project Center. The app does
 -- not submit to RI; these fields make the final transfer accurate and quick.
+alter table service_projects alter column starts_at drop not null;
+
 alter table service_projects
   add column detailed_description text,
   add column language text not null default 'English',
