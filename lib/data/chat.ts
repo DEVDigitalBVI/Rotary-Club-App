@@ -29,6 +29,9 @@ export type ChatChannel = {
   memberIds: string[];
   lastReadAt?: string;
   messages: ChatMessage[];
+  archivedAt?: string;
+  rotaryYear?: string;
+  hasEarlierMessages: boolean;
 };
 
 type ChannelRow = {
@@ -36,6 +39,8 @@ type ChannelRow = {
   name: string;
   kind: ChatChannelKind;
   context_id: string | null;
+  archived_at: string | null;
+  rotary_year: string | null;
 };
 type MessageRow = {
   id: string;
@@ -46,6 +51,7 @@ type MessageRow = {
   edited_at: string | null;
   deleted_at: string | null;
   created_at: string;
+  total_count: number;
 };
 type ReactionRow = { message_id: string; member_id: string; emoji: string };
 
@@ -71,26 +77,25 @@ function toMessage(row: MessageRow, reactions: ReactionRow[]): ChatMessage {
 
 export async function getChatChannels(memberId: string): Promise<ChatChannel[]> {
   const supabase = await createClient();
-  const [channelsResult, messagesResult, membersResult, readsResult, reactionsResult] =
+  const [channelsResult, messagesResult, membersResult, readsResult] =
     await Promise.all([
-      supabase.from("chat_channels").select("id, name, kind, context_id").is("archived_at", null),
-      supabase
-        .from("chat_messages")
-        .select("id, channel_id, sender_id, body, reply_to_id, edited_at, deleted_at, created_at")
-        .order("created_at", { ascending: true })
-        .limit(600),
+      supabase.from("chat_channels").select("id, name, kind, context_id, archived_at, rotary_year"),
+      supabase.rpc("get_recent_chat_messages", { per_channel_limit: 50 }),
       supabase.from("chat_channel_members").select("channel_id, member_id"),
       supabase.from("chat_channel_reads").select("channel_id, last_read_at").eq("member_id", memberId),
-      supabase.from("chat_reactions").select("message_id, member_id, emoji"),
     ]);
 
   throwOnSupabaseError(channelsResult.error, "Unable to load chat channels");
   throwOnSupabaseError(messagesResult.error, "Unable to load chat messages");
   throwOnSupabaseError(membersResult.error, "Unable to load direct-message members");
   throwOnSupabaseError(readsResult.error, "Unable to load chat read state");
-  throwOnSupabaseError(reactionsResult.error, "Unable to load chat reactions");
 
   const messages = (messagesResult.data ?? []) as MessageRow[];
+  const messageIds = messages.map((message) => message.id);
+  const reactionsResult = messageIds.length
+    ? await supabase.from("chat_reactions").select("message_id, member_id, emoji").in("message_id", messageIds)
+    : { data: [] as ReactionRow[], error: null };
+  throwOnSupabaseError(reactionsResult.error, "Unable to load chat reactions");
   const reactions = (reactionsResult.data ?? []) as ReactionRow[];
   const memberships = (membersResult.data ?? []) as { channel_id: string; member_id: string }[];
   const reads = new Map(
@@ -106,6 +111,8 @@ export async function getChatChannels(memberId: string): Promise<ChatChannel[]> 
       name: channel.name,
       kind: channel.kind,
       contextId: channel.context_id ?? undefined,
+      archivedAt: channel.archived_at ?? undefined,
+      rotaryYear: channel.rotary_year ?? undefined,
       memberIds: memberships
         .filter((membership) => membership.channel_id === channel.id)
         .map((membership) => membership.member_id),
@@ -113,6 +120,7 @@ export async function getChatChannels(memberId: string): Promise<ChatChannel[]> 
       messages: messages
         .filter((message) => message.channel_id === channel.id)
         .map((message) => toMessage(message, reactions)),
+      hasEarlierMessages: messages.some((message) => message.channel_id === channel.id && Number(message.total_count) > 50),
     }))
     .sort((a, b) => {
       if (a.kind === "club") return -1;
@@ -122,4 +130,3 @@ export async function getChatChannels(memberId: string): Promise<ChatChannel[]> 
       return bLast.localeCompare(aLast) || a.name.localeCompare(b.name);
     });
 }
-

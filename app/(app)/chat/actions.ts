@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentMember } from "@/lib/data/members";
 import { createClient } from "@/lib/supabase/server";
+import type { ChatMessage, ChatReaction } from "@/lib/data/chat";
 
 async function requireMember() {
   const member = await getCurrentMember();
@@ -74,4 +75,40 @@ export async function startDirectChatAction(otherMemberId: string) {
   if (error || !data) throw new Error("Unable to start that conversation.", { cause: error });
   revalidatePath("/chat");
   return data as string;
+}
+
+export async function loadEarlierChatMessagesAction(channelId: string, before: string): Promise<ChatMessage[]> {
+  await requireMember();
+  if (Number.isNaN(Date.parse(before))) throw new Error("Invalid message cursor.");
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("chat_messages")
+    .select("id, channel_id, sender_id, body, reply_to_id, edited_at, deleted_at, created_at")
+    .eq("channel_id", channelId)
+    .lt("created_at", before)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw new Error("Unable to load earlier messages.", { cause: error });
+
+  const rows = data ?? [];
+  const ids = rows.map((row) => row.id);
+  const reactionResult = ids.length
+    ? await supabase.from("chat_reactions").select("message_id, member_id, emoji").in("message_id", ids)
+    : { data: [] as ChatReaction[], error: null };
+  if (reactionResult.error) throw new Error("Unable to load message reactions.", { cause: reactionResult.error });
+  const reactions = (reactionResult.data ?? []) as { message_id: string; member_id: string; emoji: string }[];
+
+  return rows.reverse().map((row) => ({
+    id: row.id,
+    channelId: row.channel_id,
+    senderId: row.sender_id,
+    body: row.body,
+    replyToId: row.reply_to_id ?? undefined,
+    editedAt: row.edited_at ?? undefined,
+    deletedAt: row.deleted_at ?? undefined,
+    createdAt: row.created_at,
+    reactions: reactions.filter((reaction) => reaction.message_id === row.id).map((reaction) => ({
+      messageId: reaction.message_id, memberId: reaction.member_id, emoji: reaction.emoji,
+    })),
+  }));
 }

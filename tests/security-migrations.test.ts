@@ -154,3 +154,14 @@ describe("member deletion migration", () => {
     expect(sql).toContain("runs_the_club() and id <> current_member_id()");
   });
 });
+
+describe("event chat cleanup migration", () => {
+  const sql = migration("20260825170000_stop_automatic_event_chats.sql");
+
+  it("stops event creation from creating chat rooms and hides existing rooms", () => {
+    expect(sql).toContain("drop trigger if exists events_create_chat on events");
+    expect(sql).toContain("drop function if exists create_event_chat_channel()");
+    expect(sql).toContain("where kind = 'event'");
+    expect(sql).toContain("set archived_at = coalesce(archived_at, now())");
+  });
+});
