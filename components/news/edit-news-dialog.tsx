@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { NewsPost } from "@/lib/mock-data";
-import { updateNewsPostAction } from "@/app/(app)/news/actions";
+import { deleteNewsPostAction, updateNewsPostAction } from "@/app/(app)/news/actions";
 
 /**
  * Lets a board member correct a club post after the fact — a wrong date, a
@@ -32,6 +33,7 @@ export function EditNewsDialog({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   // Re-seed the edited fields from the post each time the dialog opens for
   // one, so an abandoned edit doesn't leak into the next post opened.
@@ -51,6 +53,7 @@ export function EditNewsDialog({
     setRequiresAcknowledgement(Boolean(post.requiresAcknowledgement));
     setExpiresAt(post.expiresAt ?? "");
     setError(null);
+    setConfirmingDelete(false);
   }
 
   if (!post) return null;
@@ -129,10 +132,54 @@ export function EditNewsDialog({
             />
           </div>
           <DialogFooter className="mt-2">
-            <Button type="submit" disabled={pending} className="font-heading">
-              {pending ? "Saving…" : "Save changes"}
+            <Button type="button" variant="outline" disabled={pending} onClick={() => setConfirmingDelete(true)} className="mr-auto border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive">
+              <Trash2 className="size-4" />
+              Delete
+            </Button>
+            <Button type="submit" disabled={pending || confirmingDelete} className="font-heading">
+              {pending && !confirmingDelete ? "Saving…" : "Save changes"}
             </Button>
           </DialogFooter>
+
+          {confirmingDelete && (
+            <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+              <div className="flex gap-3">
+                <AlertTriangle className="mt-0.5 size-5 shrink-0 text-destructive" />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Delete this announcement?</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    This permanently removes “{post.title}” and its acknowledgement history.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button type="button" variant="ghost" size="sm" disabled={pending} onClick={() => setConfirmingDelete(false)}>
+                  Keep announcement
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() => {
+                    setError(null);
+                    startTransition(async () => {
+                      const result = await deleteNewsPostAction(post.id);
+                      if (result?.error) {
+                        setError(result.error);
+                        setConfirmingDelete(false);
+                      } else {
+                        onOpenChange(false);
+                      }
+                    });
+                  }}
+                >
+                  <Trash2 className="size-4" />
+                  {pending ? "Deleting…" : "Delete permanently"}
+                </Button>
+              </div>
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>

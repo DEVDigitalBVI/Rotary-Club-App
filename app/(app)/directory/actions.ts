@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { FoundationRecognition } from "@/lib/mock-data";
+import { getCurrentMember } from "@/lib/data/members";
 
 export type DirectoryFormState = { error?: string; success?: boolean } | undefined;
 
@@ -132,6 +133,26 @@ export async function updateMemberStatusAction(
   }
 
   revalidatePath(`/directory/${memberId}`);
+  revalidatePath("/directory");
+  return { success: true };
+}
+
+export async function deleteMemberAction(memberId: string): Promise<DirectoryFormState> {
+  const currentMember = await getCurrentMember();
+  if (!currentMember) return { error: "You must be signed in." };
+  if (currentMember.id === memberId) return { error: "You cannot remove your own member profile." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("members")
+    .delete()
+    .eq("id", memberId)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) {
+    return { error: "Couldn't remove this member. Deactivate them instead if their profile has protected club history." };
+  }
   revalidatePath("/directory");
   return { success: true };
 }

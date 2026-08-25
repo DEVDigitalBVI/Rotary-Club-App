@@ -91,6 +91,28 @@ export async function updateNewsPostAction(
   return { success: true };
 }
 
+export async function deleteNewsPostAction(postId: string): Promise<NewsFormState> {
+  const member = await getCurrentMember();
+  if (!member) return { error: "You must be signed in." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("news_posts")
+    .delete()
+    .eq("id", postId)
+    .eq("source", "club")
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) {
+    return { error: "Couldn't delete — the post may no longer exist or you may not have permission." };
+  }
+
+  revalidatePath("/news");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
 export async function acknowledgeNewsPostAction(postId: string): Promise<NewsFormState> {
   const member = await getCurrentMember();
   if (!member) return { error: "You must be signed in." };

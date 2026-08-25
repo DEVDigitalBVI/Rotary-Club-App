@@ -12,6 +12,8 @@ import { getCommittees } from "@/lib/data/committees";
 import { getEventAttendance } from "@/lib/data/attendance";
 import { canManageEvents, canAssignRoles } from "@/lib/mock-data";
 import { formatDate, todayDateString } from "@/lib/format";
+import { DeleteRecordButton } from "@/components/delete-record-button";
+import { deleteEventAction } from "@/app/(app)/events/actions";
 
 export default async function EventDetailPage({
   params,
@@ -133,6 +135,19 @@ export default async function EventDetailPage({
             canManage={mayManage}
             showAgenda={isUpcoming}
           />
+
+          {mayManage && (
+            <div className="flex justify-end border-t border-border pt-5">
+              <DeleteRecordButton
+                label="Delete event"
+                title={`Delete ${event.title}?`}
+                description="This permanently removes the event, its RSVPs, attendance record, flyer, and agenda. This cannot be undone."
+                deleteAction={deleteEventAction.bind(null, event.id)}
+                returnTo="/events"
+                className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-6">

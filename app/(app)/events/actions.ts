@@ -172,6 +172,35 @@ export async function createEventAction(
   return { success: true };
 }
 
+export async function deleteEventAction(eventId: string): Promise<EventFormState> {
+  const member = await getCurrentMember();
+  if (!member) return { error: "You must be signed in." };
+
+  const supabase = await createClient();
+  const { data: event, error: eventError } = await supabase
+    .from("events")
+    .select("flyer_url, agenda_url")
+    .eq("id", eventId)
+    .maybeSingle<{ flyer_url: string | null; agenda_url: string | null }>();
+  if (eventError || !event) return { error: "Event not found." };
+
+  const { data: deleted, error } = await supabase
+    .from("events")
+    .delete()
+    .eq("id", eventId)
+    .select("id")
+    .maybeSingle();
+  if (error || !deleted) return { error: "Couldn't delete the event — you may not have permission." };
+
+  await Promise.all([
+    removeStoredMaterial(supabase, event.flyer_url),
+    removeStoredMaterial(supabase, event.agenda_url),
+  ]);
+  revalidatePath("/events");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
 export async function updateRsvpAction(
   eventId: string,
   status: Exclude<RsvpStatus, "none">,

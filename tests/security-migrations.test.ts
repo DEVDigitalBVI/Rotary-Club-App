@@ -145,3 +145,12 @@ describe("board chat moderation migration", () => {
     expect(sql).toContain("on chat_messages for update to authenticated");
   });
 });
+
+describe("member deletion migration", () => {
+  const sql = migration("20260825150000_member_deletion.sql");
+
+  it("limits permanent roster removal to club leadership and prevents self-deletion", () => {
+    expect(sql).toContain("on members for delete to authenticated");
+    expect(sql).toContain("runs_the_club() and id <> current_member_id()");
+  });
+});
