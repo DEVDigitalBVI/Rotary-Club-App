@@ -104,6 +104,19 @@ revoke all on function rollover_committee_chats() from public;
 revoke execute on function rollover_committee_chats() from anon;
 grant execute on function rollover_committee_chats() to authenticated;
 
+-- Keep officer promotion and chat rollover atomic: either the full annual
+-- handover succeeds, or neither roles nor conversations change.
+create or replace function start_new_rotary_year()
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not can_assign_roles() then raise exception 'not permitted'; end if;
+  perform rollover_committee_chats();
+  update members set position = null where position in ('president', 'secretary');
+  update members set position = 'president' where position = 'president-elect';
+  update members set position = 'secretary' where position = 'secretary-elect';
+end;
+$$;
+
 -- Return only the newest page for each accessible room. Older pages are loaded
 -- on demand, keeping initial chat payloads bounded as history grows.
 create or replace function get_recent_chat_messages(per_channel_limit integer default 50)

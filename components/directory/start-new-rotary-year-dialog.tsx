@@ -60,6 +60,10 @@ export function StartNewRotaryYearDialog({
             {incomingSecretary ? incomingSecretary.name : "stays vacant"}
             {outgoingSecretary && ` (was ${outgoingSecretary.name})`}
           </li>
+          <li>
+            <span className="font-medium">Committee chats:</span>{" "}
+            archive this year&apos;s rooms and open new rooms for the current rosters
+          </li>
         </ul>
         {!incomingPresident && !incomingSecretary && (
           <p className="text-xs text-muted-foreground">

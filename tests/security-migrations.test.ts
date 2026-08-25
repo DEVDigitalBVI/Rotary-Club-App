@@ -165,3 +165,26 @@ describe("event chat cleanup migration", () => {
     expect(sql).toContain("set archived_at = coalesce(archived_at, now())");
   });
 });
+
+describe("yearly committee chat archives", () => {
+  const sql = migration("20260825180000_yearly_committee_chat_archives.sql");
+
+  it("snapshots the old roster and makes archived rooms readable but not writable", () => {
+    expect(sql).toContain("insert into chat_channel_members (channel_id, member_id)");
+    expect(sql).toContain("snapshot.channel_id = c.id and snapshot.member_id = current_member_id()");
+    expect(sql).toContain("c.archived_at is null");
+    expect(sql).toContain("perform rollover_committee_chats()");
+  });
+
+  it("bounds the initial message payload per channel", () => {
+    expect(sql).toContain("row_number() over (partition by m.channel_id order by m.created_at desc)");
+    expect(sql).toContain("page_row <= greatest(1, least(per_channel_limit, 100))");
+  });
+
+  it("records the agreed retention periods", () => {
+    expect(sql).toContain("('club', 36, now())");
+    expect(sql).toContain("('committee', 84, now())");
+    expect(sql).toContain("('project', 60, now())");
+    expect(sql).toContain("('dm', 24, now())");
+  });
+});
