@@ -115,7 +115,11 @@ export function NewsFeed({
                 {/* Syndicated items are summaries of someone else's article, so
                     they always offer the way back to the original. */}
                 {post.sourceUrl && (
-                  <ArticleReaderDialog title={post.title} url={post.sourceUrl} />
+                  <ArticleReaderDialog
+                    title={post.title}
+                    url={post.sourceUrl}
+                    source={post.source as Exclude<NewsSource, "club">}
+                  />
                 )}
               </div>
             </CardContent>
