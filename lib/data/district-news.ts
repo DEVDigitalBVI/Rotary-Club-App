@@ -83,7 +83,7 @@ function plainText(markdown: string) {
 }
 
 export function parseDistrictStoriesMarkdown(markdown: string): DistrictStoryPreview[] {
-  return [...markdown.matchAll(/^### \[([^\]]+)\]\((https:\/\/(?:www\.)?7020\.org\/Stories\/[^)]+)\)\s*\n([\s\S]*?)(?=^### \[|\s*$)/gim)]
+  return [...markdown.matchAll(/^### \[([^\]]+)\]\((https:\/\/(?:www\.)?7020\.org\/Stories\/[^)]+)\)\s*\n([\s\S]*?)(?=^### \[|(?![\s\S]))/gim)]
     .map((match) => {
       const section = match[3];
       const imageUrl = section.match(/!\[[^\]]*\]\((https:\/\/clubrunner\.blob\.core\.windows\.net\/[^)]+)\)/i)?.[1];

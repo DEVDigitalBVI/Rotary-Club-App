@@ -67,8 +67,6 @@ export function ArticleReaderDialog({
   useEffect(() => {
     if (!open || source !== "district" || districtContent) return;
     const controller = new AbortController();
-    setLoading(true);
-    setLoadError("");
     fetch(`/api/district-article?url=${encodeURIComponent(url)}`, { signal: controller.signal })
       .then(async (response) => {
         const result = await response.json() as { content?: string; error?: string };
@@ -88,7 +86,10 @@ export function ArticleReaderDialog({
       open={open}
       onOpenChange={(next) => {
         setOpen(next);
-        if (next) setLoading(source === "ri" || !districtContent);
+        if (next) {
+          setLoading(source === "ri" || !districtContent);
+          setLoadError("");
+        }
       }}
     >
       <button
