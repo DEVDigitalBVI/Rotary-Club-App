@@ -24,25 +24,31 @@ function DistrictArticle({ content }: { content: string }) {
   const blocks = content.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
 
   return (
-    <article className="mx-auto flex w-full max-w-3xl flex-col gap-5 px-5 py-7 sm:px-8 sm:py-10">
+    <article className="mx-auto flex w-full max-w-3xl flex-col gap-5 overflow-x-hidden px-4 py-6 pb-10 sm:gap-6 sm:px-8 sm:py-10">
       {blocks.map((block, index) => {
         const images = [...block.matchAll(/!\[([^\]]*)\]\((https:\/\/[^)]+)\)/g)];
         if (images.length > 0) {
           return (
-            <div key={index} className="grid gap-3">
+            <figure key={index} className="-mx-4 grid gap-3 sm:mx-0">
               {images.map((imageMatch) => (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img key={imageMatch[2]} src={imageMatch[2]} alt={imageMatch[1]} className="w-full rounded-xl object-cover" />
+                <img
+                  key={imageMatch[2]}
+                  src={imageMatch[2]}
+                  alt={imageMatch[1]}
+                  loading="lazy"
+                  className="max-h-[70dvh] w-full bg-muted object-contain sm:rounded-xl"
+                />
               ))}
-            </div>
+            </figure>
           );
         }
         if (/^#{1,3}\s/.test(block)) {
-          return <h2 key={index} className="font-heading text-xl font-semibold text-foreground">{cleanInlineMarkdown(block.replace(/^#{1,3}\s+/, ""))}</h2>;
+          return <h2 key={index} className="break-words font-heading text-xl font-semibold leading-tight text-foreground sm:text-2xl">{cleanInlineMarkdown(block.replace(/^#{1,3}\s+/, ""))}</h2>;
         }
         const text = cleanInlineMarkdown(block);
         if (!text) return null;
-        return <p key={index} className="whitespace-pre-line text-sm leading-7 text-foreground sm:text-base">{text}</p>;
+        return <p key={index} className="break-words whitespace-pre-line text-[0.9375rem] leading-7 text-foreground sm:text-base sm:leading-8">{text}</p>;
       })}
     </article>
   );
@@ -95,7 +101,7 @@ export function ArticleReaderDialog({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+        className="inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-primary hover:underline"
       >
         Read the full story
         <BookOpen className="size-3.5" />
@@ -104,12 +110,12 @@ export function ArticleReaderDialog({
       <DialogContent
         showCloseButton={false}
         contentClassName="h-full grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden"
-        className="h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] max-w-[calc(100%-1rem)] gap-0 overflow-hidden rounded-[1.25rem] border-border bg-background p-0 sm:h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[calc(100%-2rem)] lg:max-w-6xl"
+        className="inset-0 h-[100dvh] max-h-none max-w-none translate-x-0 translate-y-0 gap-0 overflow-hidden rounded-none border-0 bg-background p-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:max-w-[calc(100%-2rem)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[1.25rem] sm:border sm:border-border lg:max-w-6xl"
       >
-        <header className="flex shrink-0 items-center gap-3 border-b border-border bg-card px-4 py-3 sm:px-5">
+        <header className="flex shrink-0 items-start gap-3 border-b border-border bg-card px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 sm:items-center sm:px-5 sm:py-3">
           <div className="min-w-0 flex-1">
             <p className="font-label text-[0.52rem] text-primary/65">{publisher}</p>
-            <DialogTitle className="mt-1 truncate font-heading text-base font-semibold sm:text-lg">
+            <DialogTitle className="mt-1 line-clamp-2 break-words font-heading text-base font-semibold leading-snug sm:truncate sm:text-lg">
               {title}
             </DialogTitle>
             <DialogDescription className="sr-only">
@@ -126,14 +132,14 @@ export function ArticleReaderDialog({
             Open on {destination} <ExternalLink className="size-3.5" />
           </Button>
           <DialogClose
-            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-10"
             aria-label="Close article"
           >
             <X className="size-5" />
           </DialogClose>
         </header>
 
-        <div className="relative min-h-0 flex-1 overflow-y-auto bg-white">
+        <div className="relative min-h-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-auto overscroll-contain bg-white [-webkit-overflow-scrolling:touch]">
           {loading && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background text-sm text-muted-foreground">
               <LoaderCircle className="size-6 animate-spin text-primary" />
@@ -160,7 +166,7 @@ export function ArticleReaderDialog({
           )}
         </div>
 
-        <div className="flex shrink-0 border-t border-border bg-card p-3 sm:hidden">
+        <div className="flex shrink-0 border-t border-border bg-card px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden">
           <Button className="w-full rounded-full" variant="outline" nativeButton={false} render={<a href={url} target="_blank" rel="noreferrer noopener" />}>
             Open on {destination} <ExternalLink className="size-4" />
           </Button>
