@@ -14,9 +14,13 @@ import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/format";
 import type { ChatChannel, ChatMessage, ChatReaction } from "@/lib/data/chat";
 import type { Member } from "@/lib/mock-data";
-import { deleteChatMessageAction, loadEarlierChatMessagesAction, markChatReadAction, sendChatMessageAction, startDirectChatAction, toggleChatReactionAction } from "@/app/(app)/chat/actions";
+import { deleteChatMessageAction, deleteDirectChatAction, loadEarlierChatMessagesAction, markChatReadAction, sendChatMessageAction, startDirectChatAction, toggleChatReactionAction } from "@/app/(app)/chat/actions";
 
-const REACTIONS = ["👍", "❤️", "👏", "🎉", "🙏"];
+const REACTIONS = [
+  "👍", "❤️", "👏", "🎉", "🙏",
+  "😊", "😂", "🙌", "🔥", "💯",
+  "✅", "👀", "🤝", "💡", "📌",
+];
 
 export function ChatApp({ channels, members, currentMemberId, canModerate, initialChannelId }: { channels: ChatChannel[]; members: Member[]; currentMemberId: string; canModerate: boolean; initialChannelId?: string }) {
   const [data, setData] = useState(channels);
@@ -102,7 +106,7 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
 
   function selectChannel(id: string) { setSelectedId(id); setMobileShowThread(true); setQuery(""); setError(""); setReplyToId(undefined); }
 
-  return <div className="grid h-[calc(100dvh-10.5rem)] min-h-[540px] overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[var(--shadow-card)] md:grid-cols-[19rem_minmax(0,1fr)]">
+  return <div className="fixed inset-x-0 top-20 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-20 grid min-h-0 overflow-hidden border-y border-border/70 bg-card md:relative md:inset-auto md:z-auto md:h-[calc(100dvh-10.5rem)] md:min-h-[540px] md:rounded-2xl md:border md:shadow-[var(--shadow-card)] md:grid-cols-[19rem_minmax(0,1fr)]">
     <aside className={cn("min-w-0 flex-col border-r border-border bg-muted/25", mobileShowThread ? "hidden md:flex" : "flex")}>
       <div className="border-b border-border px-4 py-4"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.16em] text-primary">Club chat</p><h2 className="mt-0.5 text-lg font-semibold text-foreground">Conversations</h2></div><NewDirectMessage members={members} currentMemberId={currentMemberId} onCreated={(id) => { router.push(`/chat?channel=${id}`); router.refresh(); }} /></div></div>
       <div className="flex-1 overflow-y-auto px-2 py-3">
@@ -114,13 +118,52 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
     </aside>
     <section className={cn("min-w-0 flex-col", mobileShowThread ? "flex" : "hidden md:flex")}>
       {selected ? <>
-        <header className="flex min-h-16 items-center gap-3 border-b border-border px-3 sm:px-5"><Button variant="ghost" size="icon-sm" className="md:hidden" onClick={() => setMobileShowThread(false)} aria-label="Back to conversations"><ArrowLeft /></Button><ChannelIcon kind={selected.kind} /><div className="min-w-0 flex-1"><h2 className="truncate text-sm font-semibold text-foreground">{displayName(selected)}</h2><p className="truncate text-xs text-muted-foreground">{channelDescription(selected)}</p></div><SearchField value={query} onValueChange={setQuery} aria-label="Search this conversation" placeholder="Search conversation" className="hidden w-64 sm:block" inputClassName="h-9 text-sm" /></header>
+        <header className="flex min-h-16 items-center gap-3 border-b border-border px-3 sm:px-5"><Button variant="ghost" size="icon-sm" className="md:hidden" onClick={() => setMobileShowThread(false)} aria-label="Back to conversations"><ArrowLeft /></Button><ChannelIcon kind={selected.kind} /><div className="min-w-0 flex-1"><h2 className="truncate text-sm font-semibold text-foreground">{displayName(selected)}</h2><p className="truncate text-xs text-muted-foreground">{channelDescription(selected)}</p></div>{selected.kind === "dm" && selected.createdBy === currentMemberId && <DeleteDirectChat channelId={selected.id} name={displayName(selected)} onDeleted={() => { const remaining = data.filter((channel) => channel.id !== selected.id); setData(remaining); setSelectedId(remaining[0]?.id ?? ""); setMobileShowThread(false); router.replace("/chat"); }} />}<SearchField value={query} onValueChange={setQuery} aria-label="Search this conversation" placeholder="Search conversation" className="hidden w-64 sm:block" inputClassName="h-9 text-sm" /></header>
         <div className="border-b border-border p-3 sm:hidden"><SearchField value={query} onValueChange={setQuery} aria-label="Search this conversation" placeholder="Search this conversation" /></div>
         <div className="flex-1 overflow-y-auto px-3 py-5 sm:px-6">{selected.hasEarlierMessages && !query && <div className="mb-4 text-center"><Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => startTransition(async () => { const first = selected.messages[0]; if (!first) return; try { const earlier = await loadEarlierChatMessagesAction(selected.id, first.createdAt); setData((previous) => previous.map((channel) => channel.id === selected.id ? { ...channel, messages: [...earlier, ...channel.messages], hasEarlierMessages: earlier.length === 50 } : channel)); } catch { setError("Unable to load earlier messages."); } })}>{pending ? <Loader2 className="animate-spin" /> : <ChevronDown className="rotate-180" />}Load earlier messages</Button></div>}{visibleMessages.map((message, index) => <MessageRow key={message.id} message={message} previous={visibleMessages[index - 1]} messages={selected.messages} memberById={memberById} currentMemberId={currentMemberId} canModerate={canModerate && !selected.archivedAt} onReply={setReplyToId} onError={setError} readOnly={Boolean(selected.archivedAt)} />)}{visibleMessages.length === 0 && <EmptyConversation searching={Boolean(query)} name={displayName(selected)} />}<div ref={threadEndRef} /></div>
         {selected.archivedAt ? <footer className="flex items-center gap-2 border-t border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground"><Archive className="size-4" />This Rotary-year archive is read-only.</footer> : <footer className="border-t border-border bg-card p-3 sm:p-4">{replyTo && <div className="mb-2 flex items-center gap-2 rounded-lg border-l-2 border-primary bg-muted/60 px-3 py-2 text-xs"><Reply className="size-3.5 text-primary" /><span className="min-w-0 flex-1 truncate">Replying to {memberById.get(replyTo.senderId)?.name}: {replyTo.body}</span><Button variant="ghost" size="icon-xs" onClick={() => setReplyToId(undefined)}><X /></Button></div>}<div className="flex items-end gap-2 rounded-xl border border-border bg-background p-2 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/10"><Textarea value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendMessage(); } }} placeholder={`Message ${displayName(selected)}`} rows={1} className="max-h-32 min-h-9 resize-none border-0 bg-transparent px-2 shadow-none focus-visible:ring-0" /><Button size="icon" onClick={sendMessage} disabled={!draft.trim() || pending} aria-label="Send message">{pending ? <Loader2 className="animate-spin" /> : <Send />}</Button></div><div className="mt-1.5 flex justify-between px-1 text-[11px] text-muted-foreground"><span>{error || "Enter to send · Shift + Enter for a new line"}</span><span>{draft.length}/4000</span></div></footer>}
       </> : <EmptyConversation name="chat" searching={false} />}
     </section>
   </div>;
+}
+
+function DeleteDirectChat({ channelId, name, onDeleted }: { channelId: string; name: string; onDeleted: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  return (
+    <Dialog open={open} onOpenChange={(nextOpen) => { setOpen(nextOpen); if (!nextOpen) setError(""); }}>
+      <DialogTrigger render={<Button variant="ghost" size="icon-sm" className="shrink-0 text-muted-foreground hover:text-destructive" aria-label={`Delete chat with ${name}`} />}>
+        <Trash2 />
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Delete this conversation?</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm leading-6 text-muted-foreground">
+          Your conversation with {name} and all of its messages will be permanently deleted for both members. This cannot be undone.
+        </p>
+        {error && <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" disabled={pending} onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="destructive" disabled={pending} onClick={() => startTransition(async () => {
+            setError("");
+            try {
+              await deleteDirectChatAction(channelId);
+              setOpen(false);
+              onDeleted();
+            } catch (cause) {
+              setError(cause instanceof Error ? cause.message : "Unable to delete this conversation.");
+            }
+          })}>
+            {pending ? <Loader2 className="animate-spin motion-reduce:animate-none" /> : <Trash2 />}
+            Delete conversation
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function ChannelSection({ label, channels, selectedId, currentMemberId, memberById, displayName, onSelect }: { label: string; channels: ChatChannel[]; selectedId: string; currentMemberId: string; memberById: Map<string, Member>; displayName: (channel: ChatChannel) => string; onSelect: (id: string) => void }) {

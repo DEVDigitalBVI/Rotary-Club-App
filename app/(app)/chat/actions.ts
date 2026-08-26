@@ -40,7 +40,7 @@ export async function deleteChatMessageAction(messageId: string) {
 
 export async function toggleChatReactionAction(messageId: string, emoji: string) {
   const member = await requireMember();
-  const allowed = ["👍", "❤️", "👏", "🎉", "🙏"];
+  const allowed = ["👍", "❤️", "👏", "🎉", "🙏", "😊", "😂", "🙌", "🔥", "💯", "✅", "👀", "🤝", "💡", "📌"];
   if (!allowed.includes(emoji)) throw new Error("Unsupported reaction.");
   const supabase = await createClient();
   const { data: existing, error: lookupError } = await supabase
@@ -75,6 +75,18 @@ export async function startDirectChatAction(otherMemberId: string) {
   if (error || !data) throw new Error("Unable to start that conversation.", { cause: error });
   revalidatePath("/chat");
   return data as string;
+}
+
+export async function deleteDirectChatAction(channelId: string) {
+  await requireMember();
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("delete_owned_direct_chat", {
+    target_channel_id: channelId,
+  });
+  if (error) {
+    throw new Error("Only the member who started this direct chat can delete it.", { cause: error });
+  }
+  revalidatePath("/chat");
 }
 
 export async function loadEarlierChatMessagesAction(channelId: string, before: string): Promise<ChatMessage[]> {

@@ -25,6 +25,7 @@ export type ChatChannel = {
   id: string;
   name: string;
   kind: ChatChannelKind;
+  createdBy?: string;
   contextId?: string;
   memberIds: string[];
   lastReadAt?: string;
@@ -38,6 +39,7 @@ type ChannelRow = {
   id: string;
   name: string;
   kind: ChatChannelKind;
+  created_by: string | null;
   context_id: string | null;
   archived_at: string | null;
   rotary_year: string | null;
@@ -79,7 +81,7 @@ export async function getChatChannels(memberId: string): Promise<ChatChannel[]> 
   const supabase = await createClient();
   const [channelsResult, messagesResult, membersResult, readsResult] =
     await Promise.all([
-      supabase.from("chat_channels").select("id, name, kind, context_id, archived_at, rotary_year"),
+      supabase.from("chat_channels").select("id, name, kind, context_id, created_by, archived_at, rotary_year"),
       supabase.rpc("get_recent_chat_messages", { per_channel_limit: 50 }),
       supabase.from("chat_channel_members").select("channel_id, member_id"),
       supabase.from("chat_channel_reads").select("channel_id, last_read_at").eq("member_id", memberId),
@@ -110,6 +112,7 @@ export async function getChatChannels(memberId: string): Promise<ChatChannel[]> 
       id: channel.id,
       name: channel.name,
       kind: channel.kind,
+      createdBy: channel.created_by ?? undefined,
       contextId: channel.context_id ?? undefined,
       archivedAt: channel.archived_at ?? undefined,
       rotaryYear: channel.rotary_year ?? undefined,

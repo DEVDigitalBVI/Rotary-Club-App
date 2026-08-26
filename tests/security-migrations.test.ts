@@ -212,3 +212,14 @@ describe("in-app notification system", () => {
     expect(sql).not.toContain("alter publication supabase_realtime add table notification_preferences");
   });
 });
+
+describe("owned direct-chat deletion", () => {
+  const sql = migration("20260826030000_delete_owned_direct_chats.sql");
+
+  it("allows only the direct-chat creator to delete the conversation", () => {
+    expect(sql).toContain("kind = 'dm'");
+    expect(sql).toContain("created_by = current_member_id()");
+    expect(sql).toContain("security definer");
+    expect(sql).toContain("grant execute on function delete_owned_direct_chat(uuid) to authenticated");
+  });
+});
