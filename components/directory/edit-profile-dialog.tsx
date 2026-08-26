@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Camera, Trash2 } from "lucide-react";
+import { Camera, Loader2, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import type { Member } from "@/lib/mock-data";
 import { updateProfileAction } from "@/app/(app)/directory/actions";
 import { MemberAvatar } from "@/components/member-avatar";
 import { cn } from "@/lib/utils";
-import { validateProfilePhoto } from "@/lib/profile-photo";
+import { prepareProfilePhoto } from "@/lib/profile-photo-client";
 
 export function EditProfileDialog({ member }: { member: Member }) {
   const [open, setOpen] = useState(false);
@@ -26,6 +26,8 @@ export function EditProfileDialog({ member }: { member: Member }) {
   const [pending, startTransition] = useTransition();
   const [photoPreview, setPhotoPreview] = useState<string | null>(member.avatarUrl ?? null);
   const [removePhoto, setRemovePhoto] = useState(false);
+  const [preparedPhoto, setPreparedPhoto] = useState<File | null>(null);
+  const [processingPhoto, setProcessingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export function EditProfileDialog({ member }: { member: Member }) {
   function resetPhotoState() {
     setPhotoPreview(member.avatarUrl ?? null);
     setRemovePhoto(false);
+    setPreparedPhoto(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -66,6 +69,7 @@ export function EditProfileDialog({ member }: { member: Member }) {
           onSubmit={(e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
+            if (preparedPhoto) formData.set("profilePhoto", preparedPhoto);
             startTransition(async () => {
               const result = await updateProfileAction(member.id, undefined, formData);
               if (result?.error) {
@@ -91,12 +95,12 @@ export function EditProfileDialog({ member }: { member: Member }) {
               />
               <div className="flex flex-1 flex-col items-center gap-2 text-center sm:items-start sm:text-left">
                 <p className="text-sm leading-5 text-muted-foreground">
-                  Choose a clear, square photo. JPEG, PNG, or WebP, up to 3 MB.
+                  Choose a photo from your library. The app will resize it automatically before uploading.
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
-                  <label htmlFor="edit-profile-photo" className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer")}>
-                    <Camera aria-hidden="true" />
-                    {photoPreview ? "Choose another" : "Choose photo"}
+                  <label aria-disabled={processingPhoto || pending} htmlFor="edit-profile-photo" className={cn(buttonVariants({ variant: "outline" }), "cursor-pointer", (processingPhoto || pending) && "pointer-events-none opacity-50")}>
+                    {processingPhoto ? <Loader2 aria-hidden="true" className="animate-spin motion-reduce:animate-none" /> : <Camera aria-hidden="true" />}
+                    {processingPhoto ? "Preparing…" : photoPreview ? "Choose another" : "Choose photo"}
                   </label>
                   {photoPreview && (
                     <Button
@@ -106,6 +110,7 @@ export function EditProfileDialog({ member }: { member: Member }) {
                       onClick={() => {
                         setPhotoPreview(null);
                         setRemovePhoto(true);
+                        setPreparedPhoto(null);
                         if (fileInputRef.current) fileInputRef.current.value = "";
                       }}
                     >
@@ -118,24 +123,30 @@ export function EditProfileDialog({ member }: { member: Member }) {
                   id="edit-profile-photo"
                   name="profilePhoto"
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/*"
                   className="sr-only"
-                  onChange={(event) => {
+                  disabled={processingPhoto || pending}
+                  onChange={async (event) => {
                     const file = event.target.files?.[0];
                     if (!file) return;
-                    const validationError = validateProfilePhoto(file);
-                    if (validationError) {
-                      setError(validationError);
-                      event.target.value = "";
-                      return;
-                    }
+                    setProcessingPhoto(true);
                     setError(null);
-                    setRemovePhoto(false);
-                    setPhotoPreview(URL.createObjectURL(file));
+                    try {
+                      const prepared = await prepareProfilePhoto(file);
+                      setPreparedPhoto(prepared);
+                      setRemovePhoto(false);
+                      setPhotoPreview(URL.createObjectURL(prepared));
+                    } catch (cause) {
+                      setError(cause instanceof Error ? cause.message : "This photo couldn’t be prepared.");
+                      event.target.value = "";
+                    } finally {
+                      setProcessingPhoto(false);
+                    }
                   }}
                 />
                 <input type="hidden" name="removePhoto" value={String(removePhoto)} />
                 {removePhoto && <p role="status" className="text-xs font-medium text-muted-foreground">Your initials will be shown after you save.</p>}
+                {preparedPhoto && !processingPhoto && <p role="status" className="text-xs font-medium text-[var(--notice-success)]">Photo ready · {Math.max(1, Math.round(preparedPhoto.size / 1024))} KB</p>}
               </div>
             </div>
           </fieldset>
@@ -167,7 +178,7 @@ export function EditProfileDialog({ member }: { member: Member }) {
             <Textarea id="edit-bio" name="bio" rows={3} defaultValue={member.bio} />
           </div>
           <DialogFooter className="mt-2">
-            <Button type="submit" disabled={pending} className="font-heading">
+            <Button type="submit" disabled={pending || processingPhoto} className="font-heading">
               {pending ? "Saving profile…" : "Save changes"}
             </Button>
           </DialogFooter>
