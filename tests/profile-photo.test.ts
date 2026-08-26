@@ -4,7 +4,7 @@ import {
   profilePhotoExtension,
   profilePhotoStoragePath,
   validateProfilePhoto,
-} from "@/lib/profile-photo";
+} from "../lib/profile-photo";
 
 describe("profile photos", () => {
   it("accepts supported images within the size limit", () => {
