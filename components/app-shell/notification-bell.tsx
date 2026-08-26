@@ -16,7 +16,9 @@ export function NotificationBell({ notifications: initialNotifications, unreadCo
   const [, startTransition] = useTransition();
   useEffect(() => {
     const supabase = createClient();
-    const channel = supabase.channel("notification-inbox")
+    // A unique topic avoids colliding with a channel that is still closing
+    // during Fast Refresh or when two app shells briefly overlap.
+    const channel = supabase.channel(`notification-inbox:${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => { const item = toNotification(payload.new as NotificationRow); setNotifications((current) => [item, ...current.filter((existing) => existing.id !== item.id)].slice(0, 20)); setUnreadCount((count) => count + 1); })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications" }, (payload) => { const item = toNotification(payload.new as NotificationRow); setNotifications((current) => current.map((existing) => existing.id === item.id ? item : existing)); })
       .subscribe();
