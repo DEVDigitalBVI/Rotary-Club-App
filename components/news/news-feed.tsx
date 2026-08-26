@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Pencil, Pin } from "lucide-react";
+import { AlertTriangle, Newspaper, Pencil, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { NewsSourceBadge } from "@/components/news-source-badge";
@@ -10,6 +10,7 @@ import { EditNewsDialog } from "@/components/news/edit-news-dialog";
 import { formatDate } from "@/lib/format";
 import { NoticeAcknowledgement } from "@/components/news/notice-acknowledgement";
 import { ArticleReaderDialog } from "@/components/news/article-reader-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   isSyndicated,
   newsFeeds,
@@ -126,9 +127,12 @@ export function NewsFeed({
           </Card>
         ))}
         {filtered.length === 0 && (
-          <p className="py-12 text-center text-sm text-muted-foreground">
-            No news in this category yet.
-          </p>
+          <EmptyState
+            icon={Newspaper}
+            title="No updates in this category"
+            description="Choose another source to continue reading club, district, and Rotary International updates."
+            action={<Button type="button" variant="outline" onClick={() => setFilter("all")}>Show all news</Button>}
+          />
         )}
       </div>
 

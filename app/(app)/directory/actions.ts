@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { FoundationRecognition } from "@/lib/mock-data";
 import { getCurrentMember } from "@/lib/data/members";
+import {
+  PROFILE_PHOTOS_BUCKET,
+  profilePhotoExtension,
+  profilePhotoStoragePath,
+  validateProfilePhoto,
+} from "@/lib/profile-photo";
 
 export type DirectoryFormState = { error?: string; success?: boolean } | undefined;
 
@@ -48,7 +54,6 @@ export async function addMemberAction(
  * Self-service profile fields only. Email is excluded — it's how sign-in and
  * claim_member() match a person to their roster row, so changing it here
  * would need to stay in sync with their auth account, which isn't wired up.
- * Avatar upload needs Supabase Storage, not set up yet either.
  */
 export async function updateProfileAction(
   memberId: string,
@@ -58,18 +63,62 @@ export async function updateProfileAction(
   const phone = String(formData.get("phone") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
   const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
+  const photo = formData.get("profilePhoto");
+  const removePhoto = formData.get("removePhoto") === "true";
 
   const supabase = await createClient();
+  const { data: existing, error: memberError } = await supabase
+    .from("members")
+    .select("avatar_url")
+    .eq("id", memberId)
+    .maybeSingle<{ avatar_url: string | null }>();
+  if (memberError || !existing) {
+    return { error: "Couldn't find this profile or you may not have permission to edit it." };
+  }
+
+  let avatarUrl: string | null | undefined;
+  let uploadedPath: string | null = null;
+  if (photo instanceof File && photo.size > 0) {
+    const validationError = validateProfilePhoto(photo);
+    if (validationError) return { error: validationError };
+
+    uploadedPath = `${memberId}/avatar-${Date.now()}${profilePhotoExtension(photo.type)}`;
+    const { error: uploadError } = await supabase.storage
+      .from(PROFILE_PHOTOS_BUCKET)
+      .upload(uploadedPath, photo, { contentType: photo.type, upsert: false });
+    if (uploadError) return { error: "Couldn't upload the profile photo. Try another image." };
+
+    avatarUrl = supabase.storage.from(PROFILE_PHOTOS_BUCKET).getPublicUrl(uploadedPath).data.publicUrl;
+  } else if (removePhoto) {
+    avatarUrl = null;
+  }
+
+  const updates: Record<string, string | null> = {
+    phone: phone || null,
+    bio: bio || null,
+    date_of_birth: dateOfBirth || null,
+  };
+  if (avatarUrl !== undefined) updates.avatar_url = avatarUrl;
+
   const { error } = await supabase
     .from("members")
-    .update({ phone: phone || null, bio: bio || null, date_of_birth: dateOfBirth || null })
+    .update(updates)
     .eq("id", memberId);
 
   if (error) {
+    if (uploadedPath) await supabase.storage.from(PROFILE_PHOTOS_BUCKET).remove([uploadedPath]);
     return { error: "Couldn't save — you may not have permission to edit this profile." };
   }
 
+  if (avatarUrl !== undefined) {
+    const oldPath = profilePhotoStoragePath(existing.avatar_url);
+    if (oldPath) await supabase.storage.from(PROFILE_PHOTOS_BUCKET).remove([oldPath]);
+  }
+
   revalidatePath(`/directory/${memberId}`);
+  revalidatePath("/directory");
+  revalidatePath("/dashboard");
+  revalidatePath("/account");
   return { success: true };
 }
 

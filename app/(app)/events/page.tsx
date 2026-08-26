@@ -8,6 +8,8 @@ import { getCommittees } from "@/lib/data/committees";
 import { canManageEvents } from "@/lib/mock-data";
 import { todayDateString } from "@/lib/format";
 import { PageContainer } from "@/components/page-container";
+import { EmptyState } from "@/components/ui/empty-state";
+import { CalendarDays, History } from "lucide-react";
 
 export default async function EventsPage() {
   const [events, currentMember, committees] = await Promise.all([
@@ -44,6 +46,7 @@ export default async function EventsPage() {
               {upcoming.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
+              {upcoming.length === 0 && <EmptyState icon={CalendarDays} title="No upcoming events" description="There isn’t another club gathering scheduled yet. Check back after the programme is updated." />}
             </div>
           </TabsContent>
           <TabsContent value="past" className="mt-4">
@@ -51,6 +54,7 @@ export default async function EventsPage() {
               {past.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
+              {past.length === 0 && <EmptyState icon={History} title="No past events" description="Completed meetings and service events will appear here for future reference." />}
             </div>
           </TabsContent>
         </Tabs>

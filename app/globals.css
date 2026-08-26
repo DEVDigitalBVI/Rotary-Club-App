@@ -269,6 +269,17 @@
   .rise-in-delay-1 { animation-delay: 80ms; }
   .rise-in-delay-2 { animation-delay: 160ms; }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 /* Bottom-edge photo fade (login header).
 
    A two-stop mask — black 78%, transparent 100% — leaves a visible seam:

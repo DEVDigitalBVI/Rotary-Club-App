@@ -14,6 +14,7 @@ import { ProjectFormDialog } from "@/components/projects/project-form-dialog";
 import { RiProjectSummary } from "@/components/projects/ri-project-summary";
 import { projectReadiness } from "@/lib/project-readiness";
 import { ProjectImpactDialog } from "@/components/projects/project-impact-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 
 function dateLabel(value: string) {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "America/Tortola" }).format(new Date(value));
@@ -30,7 +31,7 @@ export default async function ProjectsPage() {
       <PageHeader title="Service projects" description="Plan measurable service, mobilize members, and keep every project ready for Rotary International." actions={canManage ? <ProjectFormDialog /> : undefined} />
       <PageContainer className="max-w-6xl space-y-6">
         {visibleProjects.length === 0 ? (
-          <div className="rounded-[1.75rem] border border-dashed border-border p-12 text-center"><HandHeart className="mx-auto size-9 text-primary" /><h2 className="font-heading mt-4 text-2xl font-semibold">The next act of service starts here.</h2><p className="mt-2 text-sm text-muted-foreground">No projects are open yet.</p></div>
+          <EmptyState icon={HandHeart} title="The next act of service starts here" description={canManage ? "Create a project when the club is ready to mobilize volunteers and measure its impact." : "No service projects are open right now. Check back for the club’s next opportunity to help."} action={canManage ? <ProjectFormDialog /> : undefined} />
         ) : (
           <div className="grid gap-5 lg:grid-cols-2">
             {visibleProjects.map((project) => {

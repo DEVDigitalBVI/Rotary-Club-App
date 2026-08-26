@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarClock, Plus, Search } from "lucide-react";
+import { CalendarClock, Plus, SearchX } from "lucide-react";
 import { MemberAvatar } from "@/components/member-avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/ui/search-field";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -135,16 +136,7 @@ export function MemberDirectory({
             <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:flex-wrap">
               <div className="flex flex-col gap-1.5 sm:max-w-xs sm:flex-1">
                 <Label htmlFor="directory-search">Search</Label>
-                <div className="relative">
-                  <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="directory-search"
-                    placeholder="Name or classification"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
+                <SearchField id="directory-search" aria-label="Search members" placeholder="Search by name or classification" value={query} onValueChange={setQuery} />
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -322,9 +314,12 @@ export function MemberDirectory({
               );
             })}
             {filtered.length === 0 && (
-              <p className="col-span-full py-12 text-center text-sm text-muted-foreground">
-                No members match your search.
-              </p>
+              <EmptyState
+                icon={SearchX}
+                title="No members found"
+                description="Try a different name or classification, or clear the active filters to see the full directory."
+                action={filtersActive ? <Button type="button" variant="outline" onClick={() => { setQuery(""); setCommitteeFilter("all"); setRecognitionFilter("all"); }}>Clear filters</Button> : undefined}
+              />
             )}
           </div>
         </TabsContent>
