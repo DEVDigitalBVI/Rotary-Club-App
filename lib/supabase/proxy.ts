@@ -37,7 +37,10 @@ export async function updateSession(request: NextRequest) {
   const { data, error: claimsError } = await supabase.auth.getClaims();
   const claims = data?.claims;
   const issuedAt = typeof claims?.iat === "number" ? claims.iat : null;
-  const issuedInFuture = issuedAt !== null && issuedAt > Math.floor(Date.now() / 1000) + 30;
+  // PostgREST rejects a token whose iat is even slightly ahead of its clock.
+  // Match that strict validation here so a skewed/stale browser cookie is
+  // cleared at the boundary instead of reaching data loaders and causing a 500.
+  const issuedInFuture = issuedAt !== null && issuedAt > Math.floor(Date.now() / 1000);
   const user = claimsError || issuedInFuture ? null : claims;
 
   // /auth (route handlers for emailed links — e.g. password reset) is
