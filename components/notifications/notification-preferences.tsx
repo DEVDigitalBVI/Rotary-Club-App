@@ -12,7 +12,7 @@ const options: { key: keyof NotificationPreferences; label: string; description:
   { key: "events", label: "Events", description: "New events and waitlist updates." },
   { key: "service", label: "Service projects", description: "New opportunities and volunteer activity." },
   { key: "chat", label: "Chat", description: "Replies and messages that mention you." },
-  { key: "administration", label: "Club administration", description: "Attendance, makeups, and account-related tasks." },
+  { key: "administration", label: "Club administration", description: "Attendance, makeups, and member-related tasks." },
 ];
 
 export function NotificationPreferencesForm({ initial }: { initial: NotificationPreferences }) {

@@ -15,7 +15,7 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "Rotary Club App",
-  description: "Member portal for the club — directory, events, dues, news, and chat.",
+  description: "Member portal for the club — directory, events, service, news, and chat.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

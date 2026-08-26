@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   Users,
   CalendarDays,
-  Wallet,
   Newspaper,
   MessageSquare,
   HandHeart,
@@ -21,7 +20,6 @@ export const navItems: NavItem[] = [
   { href: "/directory", label: "Directory", icon: Users },
   { href: "/events", label: "Events", icon: CalendarDays },
   { href: "/projects", label: "Service", icon: HandHeart },
-  { href: "/account", label: "My Account", mobileLabel: "Account", icon: Wallet },
   { href: "/news", label: "News", icon: Newspaper },
   { href: "/chat", label: "Chat", icon: MessageSquare },
 ];

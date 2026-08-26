@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowUpRight, CalendarDays, ChevronRight, Clock3, HandHeart, MapPin, MessageCircle, Newspaper, Pin, Sparkles, Users, Wallet } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CalendarDays, ChevronRight, Clock3, HandHeart, MapPin, MessageCircle, Newspaper, Pin, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/member-avatar";
 import { BirthdayBanner } from "@/components/dashboard/birthday-banner";
-import { currentMember, channels, members, balanceForMember, overdueBalanceForMember } from "@/lib/mock-data";
-import { formatCurrency, formatDate, todayDateString } from "@/lib/format";
+import { currentMember, channels, members } from "@/lib/mock-data";
+import { formatDate, todayDateString } from "@/lib/format";
 import { getCurrentMember, getTodaysBirthdays } from "@/lib/data/members";
 import { getVisibleNewsPosts } from "@/lib/data/news";
 import { getEvents } from "@/lib/data/events";
@@ -36,8 +36,6 @@ export default async function DashboardPage() {
   const nextEventAttending = nextEvent
     ? nextEvent.rsvps.yes + (nextEvent.rsvps.guests ?? 0)
     : 0;
-  const balance = balanceForMember(currentMember.id);
-  const overdue = overdueBalanceForMember(currentMember.id);
   const latestMessages = channels.flatMap((channel) => channel.messages.map((message) => ({ ...message, channel: channel.name }))).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)).slice(0, 2);
   const clubNotices = newsPosts.filter((post) => post.source === "club");
   const latestNotices = (clubNotices.length > 0 ? clubNotices : newsPosts).slice(0, 3);
@@ -134,10 +132,6 @@ export default async function DashboardPage() {
       <div className="mt-5 grid gap-5 px-4 sm:px-8 lg:grid-cols-[.85fr_1.15fr] lg:px-10">
         <section className="overflow-hidden rounded-[1.5rem] border border-border bg-card">
           <div className="border-b border-border p-6 sm:p-7"><p className="font-label text-[0.6rem] text-primary/60">At a glance</p><h2 className="font-heading mt-1 text-3xl font-semibold">Your club life</h2></div>
-          <Link href="/account" className="group flex items-center gap-4 border-b border-border p-6 transition-colors hover:bg-muted/45">
-            <span className="flex size-11 items-center justify-center rounded-full bg-primary/8 text-primary"><Wallet className="size-5" /></span>
-            <span className="min-w-0 flex-1"><span className="block text-xs text-muted-foreground">Account balance</span><strong className="font-heading mt-0.5 block text-2xl font-semibold">{formatCurrency(balance)}</strong><span className={`mt-1 block text-xs ${overdue > 0 ? "text-destructive" : "text-muted-foreground"}`}>{overdue > 0 ? `${formatCurrency(overdue)} overdue` : "You’re all paid up"}</span></span><ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
-          </Link>
           <Link href="/directory" className="group flex items-center gap-4 p-6 transition-colors hover:bg-muted/45">
             <span className="flex size-11 items-center justify-center rounded-full bg-[var(--rotary-gold)]/15 text-[#996000]"><Users className="size-5" /></span>
             <span className="min-w-0 flex-1"><span className="block text-xs text-muted-foreground">Club directory</span><strong className="font-heading mt-0.5 block text-2xl font-semibold">{members.length} people</strong><span className="mt-1 block text-xs text-muted-foreground">One shared purpose</span></span><ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />

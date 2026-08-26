@@ -65,7 +65,7 @@ export function MobileBottomNav() {
         <SheetContent side="bottom" className="rounded-t-[1.75rem] border-border pb-[calc(1rem+env(safe-area-inset-bottom))] md:hidden">
           <SheetHeader className="border-b border-border px-5 pb-4 pt-5">
             <SheetTitle className="font-heading text-2xl font-semibold">More from your club</SheetTitle>
-            <SheetDescription>Account, notices, and conversations.</SheetDescription>
+            <SheetDescription>Notices, conversations, and more from the club.</SheetDescription>
           </SheetHeader>
           <div className="grid grid-cols-3 gap-3 px-4 pb-2">
             {moreItems.map((item) => {

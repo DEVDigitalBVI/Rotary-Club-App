@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronsUpDown, LogOut, User, Settings } from "lucide-react";
+import { ChevronsUpDown, LogOut, User } from "lucide-react";
 import { MemberAvatar } from "@/components/member-avatar";
 import {
   DropdownMenu,
@@ -78,10 +78,6 @@ export function UserMenu({
         <DropdownMenuLinkItem render={<Link href={`/directory/${member.id}`} />}>
           <User />
           My profile
-        </DropdownMenuLinkItem>
-        <DropdownMenuLinkItem render={<Link href="/account" />}>
-          <Settings />
-          Account settings
         </DropdownMenuLinkItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={handleSignOut}>

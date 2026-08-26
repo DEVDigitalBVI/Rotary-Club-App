@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
 
 export const onboardingTasks = [
-  { key: "profile", href: "/account", title: "Complete your member profile", detail: "Add your phone, classification, and a short introduction." },
+  { key: "profile", href: "/directory", title: "Complete your member profile", detail: "Add your phone, classification, and a short introduction." },
   { key: "directory", href: "/directory", title: "Explore the club directory", detail: "Meet the people serving alongside you." },
   { key: "committee", href: "/directory", title: "Choose a committee", detail: "Find the part of Rotary where your skills can have the most impact." },
   { key: "first-event", href: "/events", title: "RSVP to your first event", detail: "Join an upcoming meeting or fellowship activity." },
