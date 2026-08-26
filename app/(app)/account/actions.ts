@@ -63,24 +63,3 @@ export async function markMakeupClubrunnerLoggedAction(
   revalidatePath("/account");
   return { success: true };
 }
-
-export async function markNotificationReadAction(notificationId: string) {
-  const supabase = await createClient();
-  await supabase
-    .from("notifications")
-    .update({ read_at: new Date().toISOString() })
-    .eq("id", notificationId)
-    .is("read_at", null);
-
-  revalidatePath("/", "layout");
-}
-
-export async function markAllNotificationsReadAction() {
-  const supabase = await createClient();
-  await supabase
-    .from("notifications")
-    .update({ read_at: new Date().toISOString() })
-    .is("read_at", null);
-
-  revalidatePath("/", "layout");
-}

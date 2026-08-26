@@ -11,7 +11,15 @@ export type Notification = {
   createdAt: string;
 };
 
-type NotificationRow = {
+export type NotificationPreferences = {
+  announcements: boolean;
+  events: boolean;
+  service: boolean;
+  chat: boolean;
+  administration: boolean;
+};
+
+export type NotificationRow = {
   id: string;
   type: string;
   title: string;
@@ -21,7 +29,7 @@ type NotificationRow = {
   created_at: string;
 };
 
-function toNotification(row: NotificationRow): Notification {
+export function toNotification(row: NotificationRow): Notification {
   return {
     id: row.id,
     type: row.type,
@@ -32,6 +40,14 @@ function toNotification(row: NotificationRow): Notification {
     createdAt: row.created_at,
   };
 }
+
+export const defaultNotificationPreferences: NotificationPreferences = {
+  announcements: true,
+  events: true,
+  service: true,
+  chat: true,
+  administration: true,
+};
 
 /** RLS (notifications_select) already scopes this to the signed-in member's own inbox. */
 export async function getNotifications(limit = 20): Promise<Notification[]> {
@@ -56,4 +72,14 @@ export async function getUnreadNotificationCount(): Promise<number> {
   throwOnSupabaseError(error, "Unable to load the unread notification count");
 
   return count ?? 0;
+}
+
+export async function getNotificationPreferences(): Promise<NotificationPreferences> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("notification_preferences")
+    .select("announcements, events, service, chat, administration")
+    .maybeSingle<NotificationPreferences>();
+  throwOnSupabaseError(error, "Unable to load notification preferences");
+  return data ?? defaultNotificationPreferences;
 }
