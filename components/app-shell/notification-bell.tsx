@@ -14,7 +14,6 @@ export function NotificationBell({ notifications: initialNotifications, unreadCo
   const [notifications, setNotifications] = useState(initialNotifications);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [, startTransition] = useTransition();
-  useEffect(() => { setNotifications(initialNotifications); setUnreadCount(initialUnreadCount); }, [initialNotifications, initialUnreadCount]);
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase.channel("notification-inbox")

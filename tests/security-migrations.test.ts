@@ -188,3 +188,27 @@ describe("yearly committee chat archives", () => {
     expect(sql).toContain("('dm', 24, now())");
   });
 });
+
+describe("in-app notification system", () => {
+  const sql = migration("20260826020000_notification_system.sql");
+
+  it("keeps preferences private and applies them inside trusted producers", () => {
+    expect(sql).toContain("notification_preferences_select");
+    expect(sql).toContain("member_id = current_member_id()");
+    expect(sql).toContain("notification_enabled(target_member_id uuid, notification_type text)");
+    expect(sql).toContain("notification_enabled(recipient.id, 'chat')");
+  });
+
+  it("deduplicates delivery and covers core club activity", () => {
+    expect(sql).toContain("notifications_recipient_dedupe_idx");
+    expect(sql).toContain("events_notify_new");
+    expect(sql).toContain("event_rsvps_notify_waitlist");
+    expect(sql).toContain("service_projects_notify_open");
+    expect(sql).toContain("project_volunteers_notify_owner");
+  });
+
+  it("publishes only the member-scoped inbox for realtime updates", () => {
+    expect(sql).toContain("alter publication supabase_realtime add table notifications");
+    expect(sql).not.toContain("alter publication supabase_realtime add table notification_preferences");
+  });
+});
