@@ -223,3 +223,24 @@ describe("owned direct-chat deletion", () => {
     expect(sql).toContain("grant execute on function delete_owned_direct_chat(uuid) to authenticated");
   });
 });
+
+describe("Supabase audit hardening", () => {
+  const sql = migration("20260826040000_security_hardening.sql");
+
+  it("keeps dietary notes private and serializes capacity decisions", () => {
+    expect(sql).toContain("revoke select on table event_rsvps from anon, authenticated");
+    expect(sql).toContain("r.member_id = current_member_id() or runs_the_club()");
+    expect(sql).toContain("for update");
+    expect(sql).toContain("event capacity has been reached");
+  });
+
+  it("enforces project state and notification immutability in PostgreSQL", () => {
+    expect(sql).toContain("p.status = 'open'");
+    expect(sql).toContain("only notification read status may be changed");
+  });
+
+  it("removes public execution from internal security-definer helpers", () => {
+    expect(sql).toContain("can_member_access_chat_channel(uuid, uuid) from public, anon, authenticated");
+    expect(sql).toContain("notification_enabled(uuid, text) from public, anon, authenticated");
+  });
+});

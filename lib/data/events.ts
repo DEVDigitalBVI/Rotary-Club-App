@@ -104,13 +104,13 @@ export async function getEvents(): Promise<EventItem[]> {
   const supabase = await createClient();
   const [eventsResult, rsvpsResult, currentMember] = await Promise.all([
     supabase.from("events").select("*").order("starts_at").returns<EventRow[]>(),
-    supabase.from("event_rsvps").select("event_id, member_id, status, guest_count, dietary_notes, registration_status").returns<RsvpRow[]>(),
+    supabase.rpc("get_visible_event_rsvps", { target_event_id: null }).overrideTypes<RsvpRow[], { merge: false }>(),
     getCurrentMember(),
   ]);
   throwOnSupabaseError(eventsResult.error, "Unable to load events");
   throwOnSupabaseError(rsvpsResult.error, "Unable to load event RSVPs");
 
-  const rsvpsByEvent = groupByEvent(rsvpsResult.data ?? []);
+  const rsvpsByEvent = groupByEvent((rsvpsResult.data ?? []) as unknown as RsvpRow[]);
   return (eventsResult.data ?? []).map((row) =>
     toEventItem(row, rsvpsByEvent.get(row.id) ?? [], currentMember?.id ?? null)
   );
@@ -120,16 +120,12 @@ export async function getEventById(id: string): Promise<EventItem | null> {
   const supabase = await createClient();
   const [eventResult, rsvpsResult, currentMember] = await Promise.all([
     supabase.from("events").select("*").eq("id", id).maybeSingle<EventRow>(),
-    supabase
-      .from("event_rsvps")
-      .select("event_id, member_id, status, guest_count, dietary_notes, registration_status")
-      .eq("event_id", id)
-      .returns<RsvpRow[]>(),
+    supabase.rpc("get_visible_event_rsvps", { target_event_id: id }).overrideTypes<RsvpRow[], { merge: false }>(),
     getCurrentMember(),
   ]);
   throwOnSupabaseError(eventResult.error, "Unable to load the event");
   throwOnSupabaseError(rsvpsResult.error, "Unable to load event RSVPs");
 
   if (!eventResult.data) return null;
-  return toEventItem(eventResult.data, rsvpsResult.data ?? [], currentMember?.id ?? null);
+  return toEventItem(eventResult.data, (rsvpsResult.data ?? []) as unknown as RsvpRow[], currentMember?.id ?? null);
 }
