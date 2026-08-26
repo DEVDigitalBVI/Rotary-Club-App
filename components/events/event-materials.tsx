@@ -98,7 +98,7 @@ export function EventMaterials({
         </h2>
 
         {error && (
-          <p className="rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive">
+          <p role="alert" className="rounded-lg bg-destructive/10 p-2.5 text-xs text-destructive">
             {error}
           </p>
         )}

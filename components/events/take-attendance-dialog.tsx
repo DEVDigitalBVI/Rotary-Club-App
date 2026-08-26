@@ -66,7 +66,7 @@ export function TakeAttendanceDialog({
         </DialogHeader>
 
         {error && (
-          <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+          <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
             {error}
           </p>
         )}
@@ -79,7 +79,7 @@ export function TakeAttendanceDialog({
                 <button
                   type="button"
                   onClick={() => toggle(member.id)}
-                  className="flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-muted"
+                  className="flex min-h-11 w-full items-center gap-3 rounded-lg p-2 text-left outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <MemberAvatar
                     member={member}

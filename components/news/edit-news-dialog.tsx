@@ -90,7 +90,7 @@ export function EditNewsDialog({
           }}
         >
           {error && (
-            <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+            <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
               {error}
             </p>
           )}

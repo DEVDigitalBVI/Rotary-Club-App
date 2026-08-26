@@ -74,7 +74,7 @@ export function RsvpControl({
           );
         })}
       </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
       {status === "yes" && registrationStatus === "waitlisted" && <p className="rounded-lg bg-secondary/20 p-2 text-xs text-foreground">You’re currently on the waitlist.</p>}
       {status === "yes" && (allowGuests || dietaryNotesEnabled) && (
         <div className="mt-2 grid gap-3 rounded-xl border border-border bg-muted/25 p-4 sm:grid-cols-2">
