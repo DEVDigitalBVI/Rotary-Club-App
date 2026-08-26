@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentMember } from "@/lib/data/members";
-import type { NotificationPreferences } from "@/lib/data/notifications";
+import type { NotificationPreferences } from "@/lib/notifications";
 
 function revalidateNotifications() {
   revalidatePath("/", "layout");

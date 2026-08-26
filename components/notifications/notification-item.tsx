@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BellRing, CalendarDays, HandHeart, MessageSquare, Settings2, type LucideIcon } from "lucide-react";
-import type { Notification } from "@/lib/data/notifications";
+import type { Notification } from "@/lib/notifications";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 

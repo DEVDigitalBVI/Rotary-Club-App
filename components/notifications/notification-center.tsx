@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotificationItem } from "@/components/notifications/notification-item";
-import type { Notification } from "@/lib/data/notifications";
+import type { Notification } from "@/lib/notifications";
 import { markAllNotificationsReadAction, markNotificationReadAction } from "@/app/(app)/notifications/actions";
 
 export function NotificationCenter({ initialNotifications }: { initialNotifications: Notification[] }) {

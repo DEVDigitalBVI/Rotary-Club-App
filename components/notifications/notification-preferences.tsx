@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { NotificationPreferences } from "@/lib/data/notifications";
+import type { NotificationPreferences } from "@/lib/notifications";
 import { updateNotificationPreferencesAction } from "@/app/(app)/notifications/actions";
 
 const options: { key: keyof NotificationPreferences; label: string; description: string }[] = [

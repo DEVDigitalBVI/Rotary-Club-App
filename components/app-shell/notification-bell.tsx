@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuT
 import { NotificationItem } from "@/components/notifications/notification-item";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { toNotification, type Notification, type NotificationRow } from "@/lib/data/notifications";
+import { toNotification, type Notification, type NotificationRow } from "@/lib/notifications";
 import { markAllNotificationsReadAction, markNotificationReadAction } from "@/app/(app)/notifications/actions";
 
 export function NotificationBell({ notifications: initialNotifications, unreadCount: initialUnreadCount, className }: { notifications: Notification[]; unreadCount: number; className?: string }) {
