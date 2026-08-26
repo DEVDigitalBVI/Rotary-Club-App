@@ -39,13 +39,13 @@ export function NotificationBell({
       <DropdownMenuTrigger
         aria-label="Notifications"
         className={cn(
-          "relative flex size-9 items-center justify-center rounded-full outline-none hover:bg-white/15 focus-visible:ring-3 focus-visible:ring-ring/50",
+          "relative flex size-11 items-center justify-center rounded-full outline-none hover:bg-white/15 focus-visible:ring-3 focus-visible:ring-ring/50",
           className
         )}
       >
         <Bell className="size-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-destructive" />
+          <span className="absolute right-2 top-2 size-2.5 rounded-full border-2 border-[var(--nav-surface)] bg-destructive" />
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">

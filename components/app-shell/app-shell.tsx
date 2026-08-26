@@ -61,7 +61,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-x-hidden pb-20 md:pb-0 print:pb-0">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0 print:pb-0">{children}</main>
 
         <MobileBottomNav />
       </div>

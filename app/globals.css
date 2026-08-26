@@ -204,6 +204,7 @@
     color: var(--foreground);
     background-image: radial-gradient(circle at 85% 5%, rgb(247 168 27 / 0.09), transparent 26rem);
     background-attachment: fixed;
+    -webkit-tap-highlight-color: transparent;
   }
   html {
     font-family: var(--font-sans);
@@ -242,6 +243,19 @@
     font-weight: 700;
     letter-spacing: 0.13em;
     text-transform: uppercase;
+    font-size: max(0.7rem, 11px);
+    line-height: 1.35;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --muted-foreground: oklch(0.38 0.025 262);
+    --border: #b8b0a2;
+  }
+  .dark {
+    --muted-foreground: oklch(0.8 0.012 262);
+    --border: oklch(1 0 0 / 28%);
   }
 }
 
