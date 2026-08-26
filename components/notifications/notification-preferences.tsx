@@ -28,7 +28,7 @@ export function NotificationPreferencesForm({ initial }: { initial: Notification
             <label key={option.key} className="flex min-h-16 cursor-pointer items-center gap-4 py-3">
               <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{option.label}</span><span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{option.description}</span></span>
               <input type="checkbox" className="peer sr-only" checked={preferences[option.key]} onChange={(event) => { setMessage(""); setPreferences((current) => ({ ...current, [option.key]: event.target.checked })); }} />
-              <span aria-hidden="true" className="flex h-8 w-12 shrink-0 items-center rounded-full bg-muted p-1 transition-colors peer-checked:bg-primary peer-focus-visible:ring-3 peer-focus-visible:ring-ring/40"><span className="flex size-6 translate-x-0 items-center justify-center rounded-full bg-white text-primary shadow-sm transition-transform peer-checked:translate-x-4"><Check className="size-3.5 opacity-0 peer-checked:opacity-100" /></span></span>
+              <span aria-hidden="true" className="flex h-8 w-12 shrink-0 items-center rounded-full bg-muted p-1 transition-colors peer-checked:bg-primary peer-checked:[&>span]:translate-x-4 peer-checked:[&_svg]:opacity-100 peer-focus-visible:ring-3 peer-focus-visible:ring-ring/40"><span className="flex size-6 translate-x-0 items-center justify-center rounded-full bg-white text-primary shadow-sm transition-transform"><Check className="size-3.5 opacity-0" /></span></span>
             </label>
           ))}
         </div>
