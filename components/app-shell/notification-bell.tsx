@@ -17,8 +17,11 @@ export function NotificationBell({ notifications: initialNotifications, unreadCo
   useEffect(() => {
     const supabase = createClient();
     // A unique topic avoids colliding with a channel that is still closing
-    // during Fast Refresh or when two app shells briefly overlap.
-    const channel = supabase.channel(`notification-inbox:${crypto.randomUUID()}`)
+    // during Fast Refresh or when two app shells briefly overlap. randomUUID
+    // is unavailable when local development is opened from a non-HTTPS LAN IP.
+    const channelId = globalThis.crypto?.randomUUID?.()
+      ?? `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    const channel = supabase.channel(`notification-inbox:${channelId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => { const item = toNotification(payload.new as NotificationRow); setNotifications((current) => [item, ...current.filter((existing) => existing.id !== item.id)].slice(0, 20)); setUnreadCount((count) => count + 1); })
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications" }, (payload) => { const item = toNotification(payload.new as NotificationRow); setNotifications((current) => current.map((existing) => existing.id === item.id ? item : existing)); })
       .subscribe();
