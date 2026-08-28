@@ -65,25 +65,12 @@ export async function signUp(
 
   const supabase = await createClient();
 
-  // Closed signup: only emails an officer already added to the roster (and
-  // hasn't been claimed by another account yet) may create a login. Checked
-  // via RPC rather than a direct select — members isn't readable by anon.
-  const { data: eligible } = await supabase.rpc("email_is_signup_eligible", {
-    target_email: email,
-  });
-
-  if (!eligible) {
-    return {
-      error:
-        "That email isn't on the club roster yet. Ask your secretary to add you first.",
-    };
-  }
-
-  const { error } = await supabase.auth.signUp({ email, password });
-
-  if (error) {
-    return { error: error.message };
-  }
+  // Account creation deliberately does not reveal whether this address is an
+  // active, unclaimed roster record. Membership remains enforced separately:
+  // claim_member() can link only the matching roster row, and every club-data
+  // policy requires that active link. Keep the response uniform for existing,
+  // unlisted, and eligible addresses.
+  await supabase.auth.signUp({ email, password });
 
   redirect("/login?check-email=1");
 }

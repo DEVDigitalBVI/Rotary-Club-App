@@ -21,7 +21,8 @@ export function LoginForm({
     <form action={action} className="mt-8 flex flex-col gap-5">
       {checkEmail === "signup" && (
         <p className="rounded-xl border border-border bg-card p-4 text-sm leading-5 text-foreground">
-          Account created — check your email to confirm it, then sign in below.
+          If that address can be registered, check your email to confirm it,
+          then sign in below.
         </p>
       )}
       {checkEmail === "reset" && (

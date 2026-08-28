@@ -30,7 +30,6 @@ export default async function EventDetailPage({
   ]);
   if (!event) notFound();
 
-  const isAdmin = currentMember?.role === "admin";
   const mayManage = currentMember ? canManageEvents(currentMember, committees) : false;
   const mayTakeAttendance = currentMember ? canAssignRoles(currentMember) : false;
   const isUpcoming = event.date >= todayDateString();
@@ -195,7 +194,7 @@ export default async function EventDetailPage({
             </Card>
           )}
 
-          {isAdmin && attendees.length > 0 && (
+          {mayTakeAttendance && attendees.length > 0 && (
             <Card>
               <CardContent>
                 <div className="flex items-center justify-between">

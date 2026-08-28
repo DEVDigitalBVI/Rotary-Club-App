@@ -16,11 +16,29 @@ type MemberRow = {
   bio: string | null;
   avatar_color: string | null;
   avatar_url: string | null;
-  date_of_birth: string | null;
+  date_of_birth?: string | null;
   paul_harris_count: number;
   polio_plus_society: boolean;
   action_groups: string[];
 };
+
+const MEMBER_DIRECTORY_COLUMNS = [
+  "id",
+  "name",
+  "email",
+  "phone",
+  "classification",
+  "join_date",
+  "status",
+  "role",
+  "position",
+  "bio",
+  "avatar_color",
+  "avatar_url",
+  "paul_harris_count",
+  "polio_plus_society",
+  "action_groups",
+].join(", ");
 
 function toMember(row: MemberRow): Member {
   return {
@@ -59,38 +77,62 @@ export async function getCurrentMember(): Promise<Member | null> {
   }
   if (!user) return null;
 
-  const { data, error } = await supabase
-    .from("members")
-    .select("*")
-    .eq("user_id", user.id)
-    .maybeSingle<MemberRow>();
-  throwOnSupabaseError(error, "Unable to load the current member");
+  const { data: memberId, error: memberIdError } = await supabase.rpc("current_member_id");
+  throwOnSupabaseError(memberIdError, "Unable to resolve the current member");
+  if (!memberId) return null;
 
-  return data ? toMember(data) : null;
+  const [{ data, error }, birthdayResult] = await Promise.all([
+    supabase
+    .from("members")
+    .select(MEMBER_DIRECTORY_COLUMNS)
+    .eq("id", memberId)
+    .maybeSingle<MemberRow>(),
+    supabase.rpc("get_member_birthday", { target_member_id: memberId }),
+  ]);
+  throwOnSupabaseError(error, "Unable to load the current member");
+  throwOnSupabaseError(birthdayResult.error, "Unable to load the current member birthday");
+
+  return data ? toMember({ ...data, date_of_birth: birthdayResult.data }) : null;
 }
 
 export async function getMemberById(id: string): Promise<Member | null> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("members")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle<MemberRow>();
+  const [{ data, error }, birthdayResult] = await Promise.all([
+    supabase
+      .from("members")
+      .select(MEMBER_DIRECTORY_COLUMNS)
+      .eq("id", id)
+      .maybeSingle<MemberRow>(),
+    supabase.rpc("get_member_birthday", { target_member_id: id }),
+  ]);
   throwOnSupabaseError(error, "Unable to load the member");
+  throwOnSupabaseError(birthdayResult.error, "Unable to load the member birthday");
 
-  return data ? toMember(data) : null;
+  return data ? toMember({ ...data, date_of_birth: birthdayResult.data }) : null;
 }
 
 export async function getMembers(): Promise<Member[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("members")
-    .select("*")
-    .order("name")
-    .returns<MemberRow[]>();
+  const [{ data, error }, birthdayResult] = await Promise.all([
+    supabase
+      .from("members")
+      .select(MEMBER_DIRECTORY_COLUMNS)
+      .order("name")
+      .returns<MemberRow[]>(),
+    supabase.rpc("get_member_birthdays"),
+  ]);
   throwOnSupabaseError(error, "Unable to load members");
+  throwOnSupabaseError(birthdayResult.error, "Unable to load member birthdays");
 
-  return (data ?? []).map(toMember);
+  const birthdays = new Map(
+    ((birthdayResult.data ?? []) as { member_id: string; birthday: string }[])
+      .map((row) => [row.member_id, row.birthday])
+  );
+
+  return (data ?? []).map((row) => toMember({
+    ...row,
+    date_of_birth: birthdays.get(row.id) ?? null,
+  }));
 }
 
 /**
@@ -100,17 +142,7 @@ export async function getMembers(): Promise<Member[]> {
  * roster.
  */
 export async function getTodaysBirthdays(): Promise<Member[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("members")
-    .select("*")
-    .not("date_of_birth", "is", null)
-    .order("name")
-    .returns<MemberRow[]>();
-  throwOnSupabaseError(error, "Unable to load member birthdays");
-
   const monthDay = todayMonthDay();
-  return (data ?? [])
-    .filter((row) => row.date_of_birth!.slice(5) === monthDay)
-    .map(toMember);
+  return (await getMembers())
+    .filter((member) => member.dateOfBirth?.slice(5) === monthDay);
 }

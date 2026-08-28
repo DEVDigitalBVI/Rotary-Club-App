@@ -67,7 +67,7 @@ export async function getServiceProjects(): Promise<ServiceProject[]> {
   const [projectsResult, volunteersResult, hoursResult] = await Promise.all([
     supabase.from("service_projects").select("*").order("starts_at", { nullsFirst: false }).returns<ProjectRow[]>(),
     supabase.from("project_volunteers").select("project_id, member_id").returns<{ project_id: string; member_id: string }[]>(),
-    supabase.from("volunteer_hours").select("project_id, hours").not("approved_at", "is", null).returns<{ project_id: string; hours: number }[]>(),
+    supabase.rpc("get_project_approved_hours").returns<{ project_id: string; hours: number }[]>(),
   ]);
   throwOnSupabaseError(projectsResult.error, "Unable to load service projects");
   throwOnSupabaseError(volunteersResult.error, "Unable to load project volunteers");

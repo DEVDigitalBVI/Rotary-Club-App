@@ -44,24 +44,20 @@ function toNewsPost(row: NewsPostRow, acknowledgedAt?: string): NewsPost {
 /** Same capping rules as the mock version (visibleNewsPosts), applied to real rows. */
 export async function getVisibleNewsPosts(): Promise<NewsPost[]> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
   const [{ data, error }, memberResult, latestRotaryNews, latestDistrictNews] = await Promise.all([
     supabase
     .from("news_posts")
     .select("id, source, title, body, author, published_at, image_url, image_alt, source_url, audience_type, audience_id, priority, is_pinned, expires_at, requires_acknowledgement")
     .order("published_at", { ascending: false })
     .returns<NewsPostRow[]>(),
-    user
-      ? supabase.from("members").select("id").eq("user_id", user.id).maybeSingle<{ id: string }>()
-      : Promise.resolve({ data: null, error: null }),
+    supabase.rpc("current_member_id"),
     getLatestRotaryNews(),
     getLatestDistrictNews(),
   ]);
   throwOnSupabaseError(error, "Unable to load news posts");
 
-  const memberId = memberResult.data?.id;
+  throwOnSupabaseError(memberResult.error, "Unable to resolve the current member");
+  const memberId = memberResult.data;
   const acknowledgementResult = memberId
     ? await supabase
         .from("news_acknowledgements")
