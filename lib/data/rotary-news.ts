@@ -1,4 +1,5 @@
 import type { NewsPost } from "@/lib/mock-data";
+import { normalizeTrustedArticleUrl } from "@/lib/security/news-urls";
 
 export const ROTARY_RSS_URL = "https://www.rotary.org/rss.xml";
 export const ROTARY_NEWS_LIMIT = 2;
@@ -25,7 +26,7 @@ export function parseRotaryRss(xml: string, limit = ROTARY_NEWS_LIMIT): NewsPost
     .flatMap((match) => {
       const item = match[1];
       const title = element(item, "title");
-      const sourceUrl = element(item, "link");
+      const sourceUrl = normalizeTrustedArticleUrl(element(item, "link"), "ri");
       const body = element(item, "description");
       const publishedAt = element(item, "pubDate");
       if (!title || !sourceUrl || !body || !publishedAt) return [];
@@ -61,4 +62,3 @@ export async function getLatestRotaryNews(): Promise<NewsPost[]> {
     return [];
   }
 }
-

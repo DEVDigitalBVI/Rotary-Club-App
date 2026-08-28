@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { NewsSource } from "@/lib/mock-data";
+import { normalizeTrustedArticleUrl } from "@/lib/security/news-urls";
 
 function cleanInlineMarkdown(value: string) {
   return value
@@ -69,11 +70,17 @@ export function ArticleReaderDialog({
   const [loadError, setLoadError] = useState("");
   const publisher = source === "district" ? "District 7020" : "Rotary International";
   const destination = source === "district" ? "District 7020" : "Rotary.org";
+  const trustedUrl = normalizeTrustedArticleUrl(url, source);
 
   useEffect(() => {
     if (!open || source !== "district" || districtContent) return;
+    if (!trustedUrl) {
+      setLoadError("This article link is not from an approved publisher.");
+      setLoading(false);
+      return;
+    }
     const controller = new AbortController();
-    fetch(`/api/district-article?url=${encodeURIComponent(url)}`, { signal: controller.signal })
+    fetch(`/api/district-article?url=${encodeURIComponent(trustedUrl)}`, { signal: controller.signal })
       .then(async (response) => {
         const result = await response.json() as { content?: string; error?: string };
         if (!response.ok || !result.content) throw new Error(result.error ?? "Unable to load story");
@@ -85,7 +92,7 @@ export function ArticleReaderDialog({
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [districtContent, open, source, url]);
+  }, [districtContent, open, source, trustedUrl]);
 
   return (
     <Dialog
@@ -122,15 +129,17 @@ export function ArticleReaderDialog({
               {publisher} article displayed inside the app.
             </DialogDescription>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="hidden rounded-full sm:inline-flex"
-            nativeButton={false}
-            render={<a href={url} target="_blank" rel="noreferrer noopener" />}
-          >
-            Open on {destination} <ExternalLink className="size-3.5" />
-          </Button>
+          {trustedUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden rounded-full sm:inline-flex"
+              nativeButton={false}
+              render={<a href={trustedUrl} target="_blank" rel="noreferrer noopener" />}
+            >
+              Open on {destination} <ExternalLink className="size-3.5" />
+            </Button>
+          )}
           <DialogClose
             className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-10"
             aria-label="Close article"
@@ -149,27 +158,37 @@ export function ArticleReaderDialog({
           {loadError && source === "district" && !loading && (
             <div className="mx-auto flex h-full max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
               <p className="text-sm text-muted-foreground">{loadError}</p>
-              <Button variant="outline" nativeButton={false} render={<a href={url} target="_blank" rel="noreferrer noopener" />}>
-                Open on District 7020 <ExternalLink className="size-4" />
-              </Button>
+              {trustedUrl && (
+                <Button variant="outline" nativeButton={false} render={<a href={trustedUrl} target="_blank" rel="noreferrer noopener" />}>
+                  Open on District 7020 <ExternalLink className="size-4" />
+                </Button>
+              )}
             </div>
           )}
           {source === "district" && districtContent && <DistrictArticle content={districtContent} />}
-          {open && source === "ri" && (
+          {open && source === "ri" && trustedUrl && (
             <iframe
-              src={url}
+              src={trustedUrl}
               title={`${title} — ${publisher}`}
               className="size-full border-0"
-              referrerPolicy="strict-origin-when-cross-origin"
+              sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts"
+              referrerPolicy="no-referrer"
               onLoad={() => setLoading(false)}
             />
+          )}
+          {open && source === "ri" && !trustedUrl && (
+            <div className="mx-auto flex h-full max-w-md items-center justify-center px-6 text-center">
+              <p className="text-sm text-muted-foreground">This article link is not from an approved publisher.</p>
+            </div>
           )}
         </div>
 
         <div className="flex shrink-0 border-t border-border bg-card px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden">
-          <Button className="w-full rounded-full" variant="outline" nativeButton={false} render={<a href={url} target="_blank" rel="noreferrer noopener" />}>
-            Open on {destination} <ExternalLink className="size-4" />
-          </Button>
+          {trustedUrl && (
+            <Button className="w-full rounded-full" variant="outline" nativeButton={false} render={<a href={trustedUrl} target="_blank" rel="noreferrer noopener" />}>
+              Open on {destination} <ExternalLink className="size-4" />
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
