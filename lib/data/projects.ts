@@ -67,11 +67,15 @@ export async function getServiceProjects(): Promise<ServiceProject[]> {
   const [projectsResult, volunteersResult, hoursResult] = await Promise.all([
     supabase.from("service_projects").select("*").order("starts_at", { nullsFirst: false }).returns<ProjectRow[]>(),
     supabase.from("project_volunteers").select("project_id, member_id").returns<{ project_id: string; member_id: string }[]>(),
-    supabase.rpc("get_project_approved_hours").returns<{ project_id: string; hours: number }[]>(),
+    supabase.rpc("get_project_approved_hours"),
   ]);
   throwOnSupabaseError(projectsResult.error, "Unable to load service projects");
   throwOnSupabaseError(volunteersResult.error, "Unable to load project volunteers");
   throwOnSupabaseError(hoursResult.error, "Unable to load volunteer hours");
+  const approvedHourRows = (hoursResult.data ?? []) as {
+    project_id: string;
+    hours: number;
+  }[];
 
   return (projectsResult.data ?? []).map((project) => ({
     id: project.id,
@@ -84,7 +88,7 @@ export async function getServiceProjects(): Promise<ServiceProject[]> {
     hoursGoal: project.hours_goal == null ? null : Number(project.hours_goal),
     status: project.status,
     volunteerIds: (volunteersResult.data ?? []).filter((row) => row.project_id === project.id).map((row) => row.member_id),
-    approvedHours: (hoursResult.data ?? []).filter((row) => row.project_id === project.id).reduce((sum, row) => sum + Number(row.hours), 0),
+    approvedHours: approvedHourRows.filter((row) => row.project_id === project.id).reduce((sum, row) => sum + Number(row.hours), 0),
     detailedDescription: project.detailed_description,
     language: project.language,
     areaOfFocus: project.area_of_focus,

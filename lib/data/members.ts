@@ -11,7 +11,7 @@ type MemberRow = {
   classification: string | null;
   join_date: string | null;
   status: "active" | "inactive" | "honorary";
-  role: "member" | "admin";
+  role?: "member" | "admin";
   position: "president" | "president-elect" | "secretary" | "secretary-elect" | "treasurer" | null;
   bio: string | null;
   avatar_color: string | null;
@@ -30,7 +30,6 @@ const MEMBER_DIRECTORY_COLUMNS = [
   "classification",
   "join_date",
   "status",
-  "role",
   "position",
   "bio",
   "avatar_color",
@@ -50,7 +49,7 @@ function toMember(row: MemberRow): Member {
     classification: row.classification ?? "",
     joinDate: row.join_date ?? "",
     status: row.status,
-    role: row.role,
+    role: row.role ?? "member",
     position: row.position ?? undefined,
     bio: row.bio ?? undefined,
     avatarColor: row.avatar_color ?? "var(--rotary-blue)",

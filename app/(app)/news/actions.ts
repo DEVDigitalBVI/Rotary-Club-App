@@ -22,21 +22,12 @@ export async function postNewsAction(
     return { error: "Title and message are required." };
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "You must be signed in." };
-
-  const { data: member } = await supabase
-    .from("members")
-    .select("id, name")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const member = await getCurrentMember();
   if (!member) {
     return { error: "Your account isn't linked to a member profile yet." };
   }
 
+  const supabase = await createClient();
   const { error } = await supabase.from("news_posts").insert({
     source: "club",
     title,

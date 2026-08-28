@@ -14,6 +14,7 @@ import {
   foundationRecognition,
   canEditRecognition,
   canAssignRoles,
+  canAddMembers,
 } from "@/lib/mock-data";
 import { getMemberById, getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
@@ -35,7 +36,7 @@ export default async function MemberProfilePage({
   const isSelf = currentMember?.id === member.id;
   const memberCommittees = committeesForMember(member.id, committees);
   const office = positionLabel(member.position);
-  const isAdmin = currentMember?.role === "admin";
+  const isAdmin = currentMember ? canAddMembers(currentMember, committees) : false;
 
   return (
     <div className="mx-auto w-full max-w-[1400px] p-4 sm:p-8">

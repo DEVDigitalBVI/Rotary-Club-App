@@ -83,9 +83,24 @@ grant execute on function delete_owned_direct_chat(uuid) to authenticated;
 -- ordinary directory readers receive month/day through a narrow RPC.
 -- ---------------------------------------------------------------------------
 
+create or replace function current_member_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select m.id
+  from public.members m
+  where m.user_id = (select auth.uid());
+$$;
+
+revoke all on function current_member_id() from public, anon;
+grant execute on function current_member_id() to authenticated;
+
 revoke select on table members from authenticated;
 grant select (
-  id, name, email, phone, classification, join_date, status, role, position,
+  id, name, email, phone, classification, join_date, status, position,
   bio, avatar_color, avatar_url, paul_harris_count, polio_plus_society,
   action_groups
 ) on table members to authenticated;

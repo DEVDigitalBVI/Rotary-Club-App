@@ -256,7 +256,8 @@ describe("validated security finding remediation", () => {
 
   it("replaces unrestricted member reads with a safe column projection", () => {
     expect(sql).toContain("revoke select on table members from authenticated");
-    expect(sql).toContain("grant select ( id, name, email, phone, classification, join_date, status, role, position, bio, avatar_color, avatar_url, paul_harris_count, polio_plus_society, action_groups ) on table members to authenticated");
+    expect(sql).toContain("grant select ( id, name, email, phone, classification, join_date, status, position, bio, avatar_color, avatar_url, paul_harris_count, polio_plus_society, action_groups ) on table members to authenticated");
+    expect(sql).toContain("create or replace function current_member_id() returns uuid language sql stable security definer");
     expect(sql).toContain("create or replace function get_member_birthday(target_member_id uuid)");
     expect(sql).toContain("else '2000-' || to_char(m.date_of_birth, 'mm-dd')");
   });
