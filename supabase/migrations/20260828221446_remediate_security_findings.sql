@@ -222,4 +222,83 @@ grant execute on function get_project_approved_hours() to authenticated;
 -- policy, while claim_member() remains the only route to an active roster row.
 revoke all on function email_is_signup_eligible(text) from public, anon, authenticated;
 
+-- Deactivation must also cut off chat snippets already copied into the inbox,
+-- and replies must not create new snippets for stale channel participants.
+drop policy if exists "notifications_select" on notifications;
+create policy "notifications_select" on notifications for select to authenticated
+  using (recipient_id = current_member_id() and is_active_club_member());
+
+drop policy if exists "notifications_update" on notifications;
+create policy "notifications_update" on notifications for update to authenticated
+  using (recipient_id = current_member_id() and is_active_club_member())
+  with check (recipient_id = current_member_id() and is_active_club_member());
+
+create or replace function notify_chat_message()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into notifications (recipient_id, type, title, body, link, dedupe_key)
+  select recipient.id, 'chat', sender.name || ' mentioned you', left(new.body, 180),
+    '/chat?channel=' || new.channel_id::text || '&message=' || new.id::text,
+    'chat:' || new.id::text || ':mention:' || recipient.id::text
+  from members recipient join members sender on sender.id = new.sender_id
+  where recipient.id <> new.sender_id and recipient.status = 'active'
+    and notification_enabled(recipient.id, 'chat')
+    and can_member_access_chat_channel(recipient.id, new.channel_id)
+    and lower(new.body) like '%@' || lower(recipient.name) || '%'
+  on conflict do nothing;
+
+  if new.reply_to_id is not null then
+    insert into notifications (recipient_id, type, title, body, link, dedupe_key)
+    select recipient.id, 'chat', sender.name || ' replied to you', left(new.body, 180),
+      '/chat?channel=' || new.channel_id::text || '&message=' || new.id::text,
+      'chat:' || new.id::text || ':reply:' || recipient.id::text
+    from chat_messages parent
+    join members recipient on recipient.id = parent.sender_id
+    join members sender on sender.id = new.sender_id
+    where parent.id = new.reply_to_id
+      and recipient.id <> new.sender_id
+      and recipient.status = 'active'
+      and notification_enabled(recipient.id, 'chat')
+      and can_member_access_chat_channel(recipient.id, new.channel_id)
+    on conflict do nothing;
+  end if;
+  return new;
+end;
+$$;
+
+-- Recognition editors need mutation authority, not a complete private member
+-- record in the RPC response. The application consumes only the error state.
+drop function update_member_recognition(uuid, integer, boolean, text[]);
+create function update_member_recognition(
+  target_member_id uuid,
+  p_paul_harris_count integer,
+  p_polio_plus_society boolean,
+  p_action_groups text[]
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not can_edit_recognition() then
+    raise exception 'not permitted';
+  end if;
+
+  update members
+  set
+    paul_harris_count = greatest(0, p_paul_harris_count),
+    polio_plus_society = p_polio_plus_society,
+    action_groups = p_action_groups
+  where id = target_member_id;
+end;
+$$;
+
+revoke all on function update_member_recognition(uuid, integer, boolean, text[]) from public, anon;
+grant execute on function update_member_recognition(uuid, integer, boolean, text[]) to authenticated;
+
 notify pgrst, 'reload schema';

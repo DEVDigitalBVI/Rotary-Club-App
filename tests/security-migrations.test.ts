@@ -278,4 +278,18 @@ describe("validated security finding remediation", () => {
   it("removes the anonymous roster eligibility oracle", () => {
     expect(sql).toContain("revoke all on function email_is_signup_eligible(text) from public, anon, authenticated");
   });
+
+  it("cuts inactive members off from chat notification snippets", () => {
+    expect(sql).toContain("recipient_id = current_member_id() and is_active_club_member()");
+    expect(sql).toContain("recipient.status = 'active'");
+    expect(sql).toContain("can_member_access_chat_channel(recipient.id, new.channel_id)");
+  });
+
+  it("does not return private member rows from recognition updates", () => {
+    expect(sql).toContain("drop function update_member_recognition(uuid, integer, boolean, text[])");
+    expect(sql).toContain("create function update_member_recognition(");
+    expect(sql).toContain("returns void language plpgsql security definer");
+    const replacement = sql.slice(sql.lastIndexOf("create function update_member_recognition("));
+    expect(replacement).not.toContain("returning *");
+  });
 });
