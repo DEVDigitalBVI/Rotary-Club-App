@@ -1,5 +1,5 @@
 import type { NewsPost } from "@/lib/mock-data";
-import { normalizeTrustedArticleUrl } from "@/lib/security/news-urls";
+import { normalizeTrustedArticleUrl } from "../security/news-urls";
 
 export const ROTARY_RSS_URL = "https://www.rotary.org/rss.xml";
 export const ROTARY_NEWS_LIMIT = 2;

@@ -29,4 +29,11 @@ describe("Rotary International RSS", () => {
     expect(parseRotaryRss("<rss><item><title>Missing fields</title></item></rss>"))
       .toEqual([]);
   });
+
+  it("rejects feed links outside the approved HTTPS Rotary origin", () => {
+    const malicious = `<rss><channel><item><title>Looks official</title><link>https://evil.example/phish</link><pubDate>Thu, 20 Aug 2026 13:41:00 GMT</pubDate><description>Summary</description></item></channel></rss>`;
+    const insecure = `<rss><channel><item><title>Insecure</title><link>http://www.rotary.org/en/story</link><pubDate>Thu, 20 Aug 2026 13:41:00 GMT</pubDate><description>Summary</description></item></channel></rss>`;
+    expect(parseRotaryRss(malicious)).toEqual([]);
+    expect(parseRotaryRss(insecure)).toEqual([]);
+  });
 });

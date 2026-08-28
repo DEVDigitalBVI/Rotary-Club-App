@@ -244,3 +244,37 @@ describe("Supabase audit hardening", () => {
     expect(sql).toContain("notification_enabled(uuid, text) from public, anon, authenticated");
   });
 });
+
+describe("validated security finding remediation", () => {
+  const sql = migration("20260828221446_remediate_security_findings.sql");
+
+  it("requires active membership at every chat boundary", () => {
+    expect(sql).toContain("select is_active_club_member() and exists");
+    expect(sql).toContain("if not is_active_club_member() then");
+    expect(sql).toContain("and can_access_chat_channel(id)");
+  });
+
+  it("replaces unrestricted member reads with a safe column projection", () => {
+    expect(sql).toContain("revoke select on table members from authenticated");
+    expect(sql).toContain("grant select ( id, name, email, phone, classification, join_date, status, role, position, bio, avatar_color, avatar_url, paul_harris_count, polio_plus_society, action_groups ) on table members to authenticated");
+    expect(sql).toContain("create or replace function get_member_birthday(target_member_id uuid)");
+    expect(sql).toContain("else '2000-' || to_char(m.date_of_birth, 'mm-dd')");
+  });
+
+  it("allowlists self-service profile changes and preserves safe account claiming", () => {
+    expect(sql).toContain("only club leadership can edit roster identity fields");
+    expect(sql).toContain("old.user_id is null and new.user_id = auth.uid()");
+    expect(sql).toContain("before update on members");
+  });
+
+  it("limits detailed engagement rows and exposes only approved-hour totals", () => {
+    expect(sql).toContain("member_id = current_member_id() or can_assign_roles()");
+    expect(sql).toContain("member_id = current_member_id() or can_manage_committee('community-service')");
+    expect(sql).toContain("create or replace function get_project_approved_hours()");
+    expect(sql).toContain("where vh.approved_at is not null and public.is_active_club_member()");
+  });
+
+  it("removes the anonymous roster eligibility oracle", () => {
+    expect(sql).toContain("revoke all on function email_is_signup_eligible(text) from public, anon, authenticated");
+  });
+});

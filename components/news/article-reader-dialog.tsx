@@ -74,11 +74,7 @@ export function ArticleReaderDialog({
 
   useEffect(() => {
     if (!open || source !== "district" || districtContent) return;
-    if (!trustedUrl) {
-      setLoadError("This article link is not from an approved publisher.");
-      setLoading(false);
-      return;
-    }
+    if (!trustedUrl) return;
     const controller = new AbortController();
     fetch(`/api/district-article?url=${encodeURIComponent(trustedUrl)}`, { signal: controller.signal })
       .then(async (response) => {
@@ -100,7 +96,7 @@ export function ArticleReaderDialog({
       onOpenChange={(next) => {
         setOpen(next);
         if (next) {
-          setLoading(source === "ri" || !districtContent);
+          setLoading(Boolean(trustedUrl) && (source === "ri" || !districtContent));
           setLoadError("");
         }
       }}
@@ -155,9 +151,11 @@ export function ArticleReaderDialog({
               Loading story from {publisher}…
             </div>
           )}
-          {loadError && source === "district" && !loading && (
+          {(loadError || !trustedUrl) && source === "district" && !loading && (
             <div className="mx-auto flex h-full max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
-              <p className="text-sm text-muted-foreground">{loadError}</p>
+              <p className="text-sm text-muted-foreground">
+                {loadError || "This article link is not from an approved publisher."}
+              </p>
               {trustedUrl && (
                 <Button variant="outline" nativeButton={false} render={<a href={trustedUrl} target="_blank" rel="noreferrer noopener" />}>
                   Open on District 7020 <ExternalLink className="size-4" />
