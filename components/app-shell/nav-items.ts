@@ -23,3 +23,7 @@ export const navItems: NavItem[] = [
   { href: "/news", label: "News", icon: Newspaper },
   { href: "/chat", label: "Chat", icon: MessageSquare },
 ];
+
+const byHref = new Map(navItems.map((item) => [item.href, item]));
+export const mobilePrimaryItems = ["/dashboard", "/events", "/chat", "/projects"].map((href) => byHref.get(href)!);
+export const mobileMoreItems = ["/directory", "/news"].map((href) => byHref.get(href)!);

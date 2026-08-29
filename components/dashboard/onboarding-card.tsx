@@ -1,17 +1,24 @@
-import { Check, Circle, Compass } from "lucide-react";
+import { ArrowUpRight, Check, Compass } from "lucide-react";
 import Link from "next/link";
 import { onboardingTasks, type OnboardingKey } from "@/lib/data/onboarding";
 
 export function OnboardingCard({ completed }: { completed: OnboardingKey[] }) {
   if (completed.length === onboardingTasks.length) return null;
   const percent = Math.round(completed.length / onboardingTasks.length * 100);
+  const nextTask = onboardingTasks.find((task) => !completed.includes(task.key));
+  if (!nextTask) return null;
   return (
     <section className="mx-4 mt-5 overflow-hidden rounded-[1.5rem] border border-border bg-card sm:mx-8 lg:mx-10">
-      <div className="grid lg:grid-cols-[.7fr_1.3fr]">
-        <div className="bg-[var(--nav-surface)] p-5 text-white"><div className="flex items-center gap-3"><Compass className="size-5 text-[var(--rotary-gold)]" /><div><p className="font-label text-[0.55rem] text-white/50">Your Rotary journey</p><h2 className="font-heading mt-1 text-2xl font-semibold">Find your place in the club.</h2></div></div><p className="mt-3 text-xs text-white/60">{completed.length} of {onboardingTasks.length} steps complete · {percent}%</p><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/12"><div className="h-full rounded-full bg-[var(--rotary-gold)]" style={{ width: `${percent}%` }} /></div></div>
-        <div className="divide-y divide-border px-6">
-          {onboardingTasks.map((task) => { const done = completed.includes(task.key); const content = <><span className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full ${done ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground"}`}>{done ? <Check className="size-3.5" /> : <Circle className="size-2" />}</span><span><strong className={`block text-sm ${done ? "text-muted-foreground" : "text-foreground"}`}>{task.title}</strong><span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{done ? "Completed automatically" : task.detail}</span></span></>; return done ? <div key={task.key} className="flex w-full items-start gap-3 py-4">{content}</div> : <Link key={task.key} href={task.href} className="group flex w-full items-start gap-3 py-4 transition-transform hover:translate-x-1">{content}</Link>; })}
+      <div className="grid md:grid-cols-[minmax(16rem,.65fr)_minmax(0,1.35fr)]">
+        <div className="bg-[var(--nav-surface)] p-6 text-white">
+          <div className="flex items-center gap-3"><Compass className="size-5 text-[var(--rotary-gold)]" /><div><p className="font-label text-white/55">Your Rotary journey</p><h2 className="font-heading mt-1 text-2xl font-semibold">Find your place.</h2></div></div>
+          <div className="mt-5 flex items-center gap-3"><div className="h-2 flex-1 overflow-hidden rounded-full bg-white/12"><div className="h-full rounded-full bg-[var(--rotary-gold)]" style={{ width: `${percent}%` }} /></div><span className="text-sm font-semibold text-white/70">{percent}%</span></div>
         </div>
+        <Link href={nextTask.href} className="group flex items-center gap-4 p-6 transition-colors hover:bg-muted/45">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"><Check className="size-4" /></span>
+          <span className="min-w-0 flex-1"><span className="font-label block text-primary/70">Next journey step</span><strong className="mt-1 block text-base text-foreground">{nextTask.title}</strong><span className="mt-1 block text-sm leading-6 text-muted-foreground">{nextTask.detail}</span></span>
+          <ArrowUpRight className="size-5 shrink-0 text-primary transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+        </Link>
       </div>
     </section>
   );

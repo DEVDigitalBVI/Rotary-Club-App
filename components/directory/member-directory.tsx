@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarClock, Plus, SearchX } from "lucide-react";
+import { CalendarClock, DatabaseZap, Settings2, UserPlus, SearchX } from "lucide-react";
 import { MemberAvatar } from "@/components/member-avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +26,7 @@ import { CommitteeCard } from "@/components/directory/committee-card";
 import { ManageCommitteeDialog } from "@/components/directory/manage-committee-dialog";
 import { AssignDirectorDialog } from "@/components/directory/assign-director-dialog";
 import { StartNewRotaryYearDialog } from "@/components/directory/start-new-rotary-year-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLinkItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { formatDate } from "@/lib/format";
 import {
   canAddMembers,
@@ -198,25 +199,19 @@ export function MemberDirectory({
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-2">
-              {mayAssignRoles && (
-                <Button
-                  variant="outline"
-                  className="font-heading"
-                  onClick={() => setStartingNewYear(true)}
-                >
-                  <CalendarClock />
-                  Start new Rotary year
-                </Button>
-              )}
-              {/* Adding a member is an officer act, not a committee one. */}
-              {mayAddMembers && (
-                <Button className="font-heading" onClick={() => setAddOpen(true)}>
-                  <Plus />
-                  Add member
-                </Button>
-              )}
-            </div>
+            {(mayAddMembers || mayAssignRoles) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger render={<Button variant="outline" className="font-heading" />}>
+                  <Settings2 />Admin tools
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-60">
+                  {mayAddMembers && <DropdownMenuItem onClick={() => setAddOpen(true)}><UserPlus />Add one member</DropdownMenuItem>}
+                  {mayAddMembers && <DropdownMenuLinkItem render={<Link href="/admin/clubrunner" />}><DatabaseZap />ClubRunner import</DropdownMenuLinkItem>}
+                  {mayAddMembers && mayAssignRoles && <DropdownMenuSeparator />}
+                  {mayAssignRoles && <DropdownMenuItem onClick={() => setStartingNewYear(true)}><CalendarClock />Start new Rotary year</DropdownMenuItem>}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

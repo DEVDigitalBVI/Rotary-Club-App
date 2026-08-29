@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
 
-export function SidebarNav() {
+export function SidebarNav({ unreadChatCount = 0 }: { unreadChatCount?: number }) {
   const pathname = usePathname();
 
   return (
@@ -28,6 +28,7 @@ export function SidebarNav() {
           >
             <Icon className="size-4 shrink-0" strokeWidth={active ? 2.5 : 2} />
             {item.label}
+            {item.href === "/chat" && unreadChatCount > 0 && <span className={cn("ml-auto flex min-h-5 min-w-5 items-center justify-center rounded-full px-1 text-[0.65rem] font-bold", active ? "bg-[var(--rotary-gold)] text-[var(--action-gold-foreground)]" : "bg-white/15 text-white")}>{Math.min(unreadChatCount, 99)}</span>}
           </Link>
         );
       })}

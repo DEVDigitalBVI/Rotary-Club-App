@@ -1,18 +1,18 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowUpRight, CalendarDays, ChevronRight, Clock3, HandHeart, MapPin, MessageCircle, Newspaper, Pin, Sparkles, Users } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CalendarDays, CheckCircle2, ChevronRight, Clock3, HandHeart, MapPin, MessageCircle, Newspaper, Pin, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/member-avatar";
 import { BirthdayBanner } from "@/components/dashboard/birthday-banner";
-import { currentMember, channels, members } from "@/lib/mock-data";
-import { formatDate, todayDateString } from "@/lib/format";
-import { getCurrentMember, getTodaysBirthdays } from "@/lib/data/members";
+import { formatDate, todayDateString, todayMonthDay } from "@/lib/format";
+import { getCurrentMember, getMembers } from "@/lib/data/members";
 import { getVisibleNewsPosts } from "@/lib/data/news";
 import { getEvents } from "@/lib/data/events";
-import { getCompletedOnboarding } from "@/lib/data/onboarding";
+import { getCompletedOnboarding, onboardingTasks } from "@/lib/data/onboarding";
 import { OnboardingCard } from "@/components/dashboard/onboarding-card";
 import { EventFlyerPreview } from "@/components/dashboard/event-flyer-preview";
 import { NoticeAcknowledgement } from "@/components/news/notice-acknowledgement";
 import { getServiceProjects } from "@/lib/data/projects";
+import { getChatChannels } from "@/lib/data/chat";
 
 function eventDateParts(date: string) {
   const value = new Date(`${date}T12:00:00Z`);
@@ -23,37 +23,57 @@ function eventDateParts(date: string) {
 }
 
 export default async function DashboardPage() {
-  const [viewer, birthdaysToday, newsPosts, events, serviceProjects] = await Promise.all([
+  const [viewer, members, newsPosts, events, serviceProjects] = await Promise.all([
     getCurrentMember(),
-    getTodaysBirthdays(),
+    getMembers(),
     getVisibleNewsPosts(),
     getEvents(),
     getServiceProjects(),
   ]);
+  const birthdaysToday = members.filter(
+    (member) => member.dateOfBirth?.slice(5) === todayMonthDay()
+  );
   const today = todayDateString();
   const upcoming = events.filter((event) => event.date >= today).sort((a, b) => (a.date < b.date ? -1 : 1));
   const nextEvent = upcoming[0];
   const nextEventAttending = nextEvent
     ? nextEvent.rsvps.yes + (nextEvent.rsvps.guests ?? 0)
     : 0;
-  const latestMessages = channels.flatMap((channel) => channel.messages.map((message) => ({ ...message, channel: channel.name }))).sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1)).slice(0, 2);
+  const channels = viewer ? await getChatChannels(viewer.id) : [];
+  const latestMessages = channels
+    .flatMap((channel) => channel.messages.map((message) => ({ ...message, channel: channel.name })))
+    .filter((message) => !message.deletedAt)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 2);
   const clubNotices = newsPosts.filter((post) => post.source === "club");
   const latestNotices = (clubNotices.length > 0 ? clubNotices : newsPosts).slice(0, 3);
   const openServiceProjects = serviceProjects.filter((project) => project.status === "open").slice(0, 2);
-  const firstName = currentMember.name.split(" ")[0];
+  const firstName = viewer?.name.split(" ")[0] ?? "friend";
   const date = nextEvent ? eventDateParts(nextEvent.date) : null;
   const onboarding = viewer ? await getCompletedOnboarding(viewer.id) : [];
+  const nextOnboardingTask = onboardingTasks.find((task) => !onboarding.includes(task.key));
+  const noticeNeedingAction = latestNotices.find((notice) => notice.requiresAcknowledgement && !notice.acknowledgedAt);
+  const eventNeedingRsvp = upcoming.find((event) => event.myRsvp === "none");
+  const nextAction = noticeNeedingAction
+    ? { eyebrow: "Notice awaiting you", title: noticeNeedingAction.title, detail: "Read and acknowledge this club update.", href: "/news" }
+    : eventNeedingRsvp
+      ? { eyebrow: "RSVP requested", title: eventNeedingRsvp.title, detail: `${formatDate(eventNeedingRsvp.date)} · Let the club know if you’re coming.`, href: `/events/${eventNeedingRsvp.id}` }
+      : nextOnboardingTask
+        ? { eyebrow: "Your next step", title: nextOnboardingTask.title, detail: nextOnboardingTask.detail, href: nextOnboardingTask.href }
+        : openServiceProjects[0]
+          ? { eyebrow: "Service opportunity", title: openServiceProjects[0].title, detail: "Join the team and help move this project forward.", href: "/projects" }
+          : { eyebrow: "You’re all caught up", title: "Nothing needs your attention.", detail: "Explore the directory or start a conversation with a fellow member.", href: "/chat" };
 
   return (
     <div className="mx-auto w-full max-w-[1500px] pb-10">
       <header className="rise-in px-4 pb-6 pt-8 sm:px-8 sm:pb-8 sm:pt-10 lg:px-10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="font-label mb-3 text-[0.63rem] text-primary/65">What’s happening · Road Town</p>
+            <p className="font-label mb-3 text-primary/70">Member house · Road Town</p>
             <h1 className="font-heading max-w-3xl text-[2.6rem] font-semibold leading-[0.95] text-foreground sm:text-6xl">
-              Latest club <span className="text-primary">events.</span>
+              Your club, <span className="text-primary">today.</span>
             </h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">Meetings, service projects, and the moments bringing us together.</p>
+            <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">The next gathering, the updates that matter, and one clear place to begin.</p>
           </div>
           <div className="hidden items-center gap-3 pb-1 lg:flex">
             <div className="flex -space-x-2.5">{members.slice(0, 5).map((member) => <MemberAvatar key={member.id} member={member} className="size-9 border-2 border-background" />)}</div>
@@ -63,7 +83,7 @@ export default async function DashboardPage() {
       </header>
 
       <div className="grid gap-5 px-4 sm:px-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(19rem,.75fr)] lg:px-10">
-        {nextEvent && date && (
+        {nextEvent && date ? (
           <section className="rise-in rise-in-delay-1 relative min-h-[23rem] overflow-hidden rounded-[1.75rem] bg-[var(--feature-surface)] text-[var(--feature-foreground)] shadow-[0_30px_70px_-38px_rgba(13,49,91,.8)]">
             <div className="absolute -right-24 -top-20 size-80 rounded-full border-[70px] border-white/[0.035]" />
             <div className="absolute -bottom-24 right-1/4 size-64 rounded-full bg-[var(--rotary-gold)]/10 blur-2xl" />
@@ -90,6 +110,20 @@ export default async function DashboardPage() {
               </div>
             </div>
           </section>
+        ) : (
+          <section className="rise-in rise-in-delay-1 relative flex min-h-[23rem] flex-col justify-between overflow-hidden rounded-[1.75rem] bg-[var(--feature-surface)] p-6 text-white shadow-[0_30px_70px_-38px_rgba(13,49,91,.8)] sm:p-8">
+            <div className="absolute -right-16 -top-20 size-72 rounded-full border-[64px] border-white/[0.04]" />
+            <div className="relative">
+              <span className="inline-flex size-11 items-center justify-center rounded-full bg-white/10 text-[var(--rotary-gold)]"><CalendarDays className="size-5" /></span>
+              <p className="font-label mt-8 text-white/55">Club calendar</p>
+              <h2 className="font-heading mt-3 max-w-xl text-4xl font-semibold leading-tight sm:text-5xl">The next gathering is waiting to be scheduled.</h2>
+              <p className="mt-4 max-w-lg text-base leading-7 text-white/70">Once the programme is added—or the ClubRunner calendar is connected—members will see the next meeting here.</p>
+            </div>
+            <div className="relative mt-8 flex flex-wrap items-center gap-3">
+              <Button nativeButton={false} render={<Link href="/events" />} className="rounded-full bg-white text-[var(--feature-surface)] hover:bg-[var(--rotary-gold)]">Open events <ArrowUpRight /></Button>
+              <span className="text-sm text-white/55">No upcoming events</span>
+            </div>
+          </section>
         )}
 
         <aside className="rise-in rise-in-delay-2 flex flex-col overflow-hidden rounded-[1.75rem] border border-border bg-card">
@@ -110,7 +144,7 @@ export default async function DashboardPage() {
                   <Link href="/news" aria-label={`Read ${notice.title}`}><ArrowUpRight className="size-3.5 text-muted-foreground transition-transform hover:-translate-y-0.5 hover:translate-x-0.5 hover:text-primary" /></Link>
                 </div>
                 <Link href="/news" className="mt-1.5 block text-sm font-semibold leading-snug text-foreground hover:text-primary">{notice.title}</Link>
-                <span className="mt-1 line-clamp-2 block text-xs leading-5 text-muted-foreground">{notice.body}</span>
+                <span className="mt-1 line-clamp-2 block text-sm leading-6 text-muted-foreground">{notice.body}</span>
                 {notice.requiresAcknowledgement && notice.source === "club" && <div className="mt-3"><NoticeAcknowledgement postId={notice.id} acknowledgedAt={notice.acknowledgedAt} compact /></div>}
               </article>
             ))}
@@ -126,6 +160,24 @@ export default async function DashboardPage() {
         <div><p className="font-label text-[0.58rem] text-primary/60">Your member house</p><h2 className="font-heading mt-1 text-2xl font-semibold">Good to see you, {firstName}.</h2></div>
         <p className="text-sm text-muted-foreground">Here’s the rest of your club at a glance.</p>
       </div>
+
+      <section className="mx-4 mt-5 overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-[var(--shadow-card)] sm:mx-8 lg:mx-10">
+        <div className="grid md:grid-cols-[minmax(0,.65fr)_minmax(0,1.35fr)]">
+          <div className="bg-[var(--action-gold)] p-6 text-[var(--action-gold-foreground)] sm:p-7">
+            <CheckCircle2 className="size-6" />
+            <p className="font-label mt-5 text-current/65">Next for you</p>
+            <h2 className="font-heading mt-2 text-3xl font-semibold">One useful next step.</h2>
+          </div>
+          <Link href={nextAction.href} className="group flex items-center gap-4 p-6 transition-colors hover:bg-muted/45 sm:p-7">
+            <span className="min-w-0 flex-1">
+              <span className="font-label block text-primary/70">{nextAction.eyebrow}</span>
+              <strong className="font-heading mt-2 block text-2xl font-semibold text-foreground">{nextAction.title}</strong>
+              <span className="mt-2 block text-base leading-7 text-muted-foreground">{nextAction.detail}</span>
+            </span>
+            <ArrowUpRight className="size-5 shrink-0 text-primary transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </section>
 
       <OnboardingCard completed={onboarding} />
 
@@ -143,7 +195,7 @@ export default async function DashboardPage() {
           <div className="grid gap-6 sm:grid-cols-2">
             <div>
               <div className="mb-3 flex items-center gap-2 text-xs font-bold text-muted-foreground"><MessageCircle className="size-4" />Recent conversation</div>
-              <div className="space-y-4">{latestMessages.map((message) => { const sender = members.find((member) => member.id === message.senderId); return <div key={message.id} className="flex gap-3"><MemberAvatar member={sender} className="size-8 shrink-0" /><div className="min-w-0"><p className="text-xs font-semibold">{sender?.name} <span className="font-normal text-muted-foreground">in {message.channel}</span></p><p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">{message.body}</p></div></div>; })}</div>
+              <div className="space-y-4">{latestMessages.map((message) => { const sender = members.find((member) => member.id === message.senderId); return <div key={message.id} className="flex gap-3"><MemberAvatar member={sender} className="size-8 shrink-0" /><div className="min-w-0"><p className="text-sm font-semibold">{sender?.name ?? "Former member"} <span className="font-normal text-muted-foreground">in {message.channel}</span></p><p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">{message.body}</p></div></div>; })}{latestMessages.length === 0 && <p className="text-sm leading-6 text-muted-foreground">No club conversations yet. Be the first to say hello.</p>}</div>
               <Link href="/chat" className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">Join the conversation <ArrowUpRight className="size-3" /></Link>
             </div>
             <div className="border-t border-border pt-5 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">

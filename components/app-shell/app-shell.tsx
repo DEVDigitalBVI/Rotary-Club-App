@@ -13,6 +13,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
     getNotifications(),
     getUnreadNotificationCount(),
   ]);
+  const unreadChatCount = notifications.filter((item) => item.type === "chat" && !item.read).length;
 
   return (
     <div className="flex min-h-full min-w-0 flex-1">
@@ -21,7 +22,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           <BrandLockup className="-ml-3" logoClassName="h-[5.5rem]" />
         </div>
         <p className="font-label px-6 pb-5 text-[0.62rem] text-white/45">Member house · Road Town</p>
-        <SidebarNav />
+        <SidebarNav unreadChatCount={unreadChatCount} />
         <div className="flex items-center gap-2 border-t border-sidebar-border p-4">
           <div className="min-w-0 flex-1">
             {currentMember ? (
@@ -63,7 +64,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
         <main className="min-w-0 flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0 print:pb-0">{children}</main>
 
-        <MobileBottomNav />
+        <MobileBottomNav unreadChatCount={unreadChatCount} />
       </div>
     </div>
   );

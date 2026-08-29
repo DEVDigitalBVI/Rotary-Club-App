@@ -5,14 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { navItems } from "./nav-items";
+import { mobileMoreItems, mobilePrimaryItems } from "./nav-items";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
-export function MobileBottomNav() {
+export function MobileBottomNav({ unreadChatCount = 0 }: { unreadChatCount?: number }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
-  const primaryItems = navItems.slice(0, 4);
-  const moreItems = navItems.slice(4);
+  const primaryItems = mobilePrimaryItems;
+  const moreItems = mobileMoreItems;
   const moreActive = moreItems.some((item) => pathname === item.href || pathname.startsWith(`${item.href}/`));
 
   return (
@@ -27,7 +27,7 @@ export function MobileBottomNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex min-h-16 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-2 text-[0.7rem] font-semibold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white/80",
+              "relative flex min-h-16 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-2 text-[0.75rem] font-semibold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white/80",
               active ? "text-white" : "text-white/65 hover:text-white"
             )}
             aria-current={active ? "page" : undefined}
@@ -44,6 +44,7 @@ export function MobileBottomNav() {
                 fill={active ? "color-mix(in oklch, var(--primary) 15%, transparent)" : "none"}
               />
             </span>
+            {item.href === "/chat" && unreadChatCount > 0 && <span className="absolute right-[8%] top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--rotary-gold)] px-1 text-[0.65rem] font-bold text-[var(--action-gold-foreground)]">{Math.min(unreadChatCount, 99)}</span>}
             {item.mobileLabel ?? item.label}
           </Link>
         );
