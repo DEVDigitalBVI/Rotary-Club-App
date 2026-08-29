@@ -293,3 +293,23 @@ describe("validated security finding remediation", () => {
     expect(replacement).not.toContain("returning *");
   });
 });
+
+describe("hidden emergency superuser", () => {
+  const sql = migration("20260829212253_hide_emergency_superuser.sql");
+
+  it("hides the emergency row while preserving its own authentication lookup", () => {
+    expect(sql).toContain("not members.is_superuser or members.user_id = (select auth.uid())");
+    expect(sql).toContain("and not m.is_superuser");
+  });
+
+  it("prevents officers from changing or deleting the emergency record", () => {
+    expect(sql).toContain("not members.is_superuser or members.user_id = (select auth.uid())");
+    expect(sql).toContain("id <> current_member_id() and not members.is_superuser");
+  });
+
+  it("keeps the emergency identity out of chat and direct-message discovery", () => {
+    expect(sql).toContain("where m.id = chat_messages.sender_id and not m.is_superuser");
+    expect(sql).toContain("or is_superuser()");
+    expect(sql).toContain("status = 'active' and not is_superuser");
+  });
+});

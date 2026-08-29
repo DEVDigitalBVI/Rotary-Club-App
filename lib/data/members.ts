@@ -112,23 +112,31 @@ export async function getMemberById(id: string): Promise<Member | null> {
 
 export async function getMembers(): Promise<Member[]> {
   const supabase = await createClient();
-  const [{ data, error }, birthdayResult] = await Promise.all([
+  const [{ data, error }, birthdayResult, superuserResult, currentMemberResult] = await Promise.all([
     supabase
       .from("members")
       .select(MEMBER_DIRECTORY_COLUMNS)
       .order("name")
       .returns<MemberRow[]>(),
     supabase.rpc("get_member_birthdays"),
+    supabase.rpc("is_superuser"),
+    supabase.rpc("current_member_id"),
   ]);
   throwOnSupabaseError(error, "Unable to load members");
   throwOnSupabaseError(birthdayResult.error, "Unable to load member birthdays");
+  throwOnSupabaseError(superuserResult.error, "Unable to apply directory visibility");
+  throwOnSupabaseError(currentMemberResult.error, "Unable to resolve the current member");
 
   const birthdays = new Map(
     ((birthdayResult.data ?? []) as { member_id: string; birthday: string }[])
       .map((row) => [row.member_id, row.birthday])
   );
 
-  return (data ?? []).map((row) => toMember({
+  const visibleRows = superuserResult.data
+    ? (data ?? []).filter((row) => row.id !== currentMemberResult.data)
+    : (data ?? []);
+
+  return visibleRows.map((row) => toMember({
     ...row,
     date_of_birth: birthdays.get(row.id) ?? null,
   }));

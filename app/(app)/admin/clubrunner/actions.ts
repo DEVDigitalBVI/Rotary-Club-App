@@ -34,11 +34,18 @@ export async function importClubRunnerMembers(
 
   const supabase = await createClient();
   const emails = result.rows.map((row) => row.email);
-  const { data: existing, error: lookupError } = await supabase
-    .from("members")
-    .select("email, phone, classification, join_date, status")
-    .returns<{ email: string; phone: string | null; classification: string | null; join_date: string | null; status: "active" | "inactive" | "honorary" }[]>();
+  const [{ data: existing, error: lookupError }, superuserResult] = await Promise.all([
+    supabase
+      .from("members")
+      .select("email, phone, classification, join_date, status")
+      .returns<{ email: string; phone: string | null; classification: string | null; join_date: string | null; status: "active" | "inactive" | "honorary" }[]>(),
+    supabase.rpc("is_superuser"),
+  ]);
   if (lookupError) return { error: "The current roster could not be checked. Try again." };
+  if (superuserResult.error) return { error: "The emergency-account guard could not be checked. Try again." };
+  if (superuserResult.data && emails.includes(member.email.toLowerCase())) {
+    return { error: "Remove the emergency account from the CSV before importing." };
+  }
 
   const existingByEmail = new Map((existing ?? []).map((row) => [row.email.toLowerCase(), row]));
   const payload = result.rows.map((row) => {
