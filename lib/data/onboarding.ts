@@ -8,7 +8,14 @@ export const onboardingTasks = [
   { key: "first-event", href: "/events", title: "RSVP to your first event", detail: "Join an upcoming meeting or fellowship activity." },
   { key: "first-project", href: "/projects", title: "Join a service project", detail: "Turn fellowship into action in the community." },
 ] as const;
+export type OnboardingTask = typeof onboardingTasks[number];
 export type OnboardingKey = typeof onboardingTasks[number]["key"];
+
+export function getOnboardingTaskHref(task: OnboardingTask, memberId: string) {
+  return task.key === "profile"
+    ? `/directory/${memberId}?edit=profile`
+    : task.href;
+}
 
 export async function getCompletedOnboarding(memberId: string): Promise<OnboardingKey[]> {
   const supabase = await createClient();

@@ -22,10 +22,13 @@ import { formatDate, formatBirthday } from "@/lib/format";
 
 export default async function MemberProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ edit?: string }>;
 }) {
   const { id } = await params;
+  const { edit } = await searchParams;
   const [member, currentMember, committees] = await Promise.all([
     getMemberById(id),
     getCurrentMember(),
@@ -86,7 +89,9 @@ export default async function MemberProfilePage({
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              {(isSelf || isAdmin) && <EditProfileDialog member={member} />}
+              {(isSelf || isAdmin) && (
+                <EditProfileDialog member={member} initialOpen={isSelf && edit === "profile"} />
+              )}
               {currentMember && canAssignRoles(currentMember) && (
                 <AssignPositionDialog member={member} viewer={currentMember} />
               )}

@@ -20,8 +20,14 @@ import { MemberAvatar } from "@/components/member-avatar";
 import { cn } from "@/lib/utils";
 import { prepareProfilePhoto } from "@/lib/profile-photo-client";
 
-export function EditProfileDialog({ member }: { member: Member }) {
-  const [open, setOpen] = useState(false);
+export function EditProfileDialog({
+  member,
+  initialOpen = false,
+}: {
+  member: Member;
+  initialOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(initialOpen);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [photoPreview, setPhotoPreview] = useState<string | null>(member.avatarUrl ?? null);

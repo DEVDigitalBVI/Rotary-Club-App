@@ -7,7 +7,7 @@ import { formatDate, todayDateString, todayMonthDay } from "@/lib/format";
 import { getCurrentMember, getMembers } from "@/lib/data/members";
 import { getVisibleNewsPosts } from "@/lib/data/news";
 import { getEvents } from "@/lib/data/events";
-import { getCompletedOnboarding, onboardingTasks } from "@/lib/data/onboarding";
+import { getCompletedOnboarding, getOnboardingTaskHref, onboardingTasks } from "@/lib/data/onboarding";
 import { OnboardingCard } from "@/components/dashboard/onboarding-card";
 import { EventFlyerPreview } from "@/components/dashboard/event-flyer-preview";
 import { NoticeAcknowledgement } from "@/components/news/notice-acknowledgement";
@@ -59,7 +59,12 @@ export default async function DashboardPage() {
     : eventNeedingRsvp
       ? { eyebrow: "RSVP requested", title: eventNeedingRsvp.title, detail: `${formatDate(eventNeedingRsvp.date)} · Let the club know if you’re coming.`, href: `/events/${eventNeedingRsvp.id}` }
       : nextOnboardingTask
-        ? { eyebrow: "Your next step", title: nextOnboardingTask.title, detail: nextOnboardingTask.detail, href: nextOnboardingTask.href }
+        ? {
+            eyebrow: "Your next step",
+            title: nextOnboardingTask.title,
+            detail: nextOnboardingTask.detail,
+            href: viewer ? getOnboardingTaskHref(nextOnboardingTask, viewer.id) : nextOnboardingTask.href,
+          }
         : openServiceProjects[0]
           ? { eyebrow: "Service opportunity", title: openServiceProjects[0].title, detail: "Join the team and help move this project forward.", href: "/projects" }
           : { eyebrow: "You’re all caught up", title: "Nothing needs your attention.", detail: "Explore the directory or start a conversation with a fellow member.", href: "/chat" };

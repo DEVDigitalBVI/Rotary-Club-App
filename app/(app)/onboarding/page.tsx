@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { getCurrentMember } from "@/lib/data/members";
-import { getCompletedOnboarding, onboardingTasks } from "@/lib/data/onboarding";
+import { getCompletedOnboarding, getOnboardingTaskHref, onboardingTasks } from "@/lib/data/onboarding";
 
 export default async function OnboardingPage() {
   const member = await getCurrentMember();
@@ -39,7 +39,7 @@ export default async function OnboardingPage() {
           {onboardingTasks.map((task, index) => {
             const isComplete = completedSet.has(task.key);
             return (
-              <Link key={task.key} href={task.href} className="group flex items-start gap-4 border-b border-border p-5 transition-colors last:border-0 hover:bg-muted/40 sm:p-6">
+              <Link key={task.key} href={getOnboardingTaskHref(task, member.id)} className="group flex items-start gap-4 border-b border-border p-5 transition-colors last:border-0 hover:bg-muted/40 sm:p-6">
                 <span className={isComplete ? "flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-600/12 text-emerald-700 dark:text-emerald-300" : "flex size-9 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground"}>
                   {isComplete ? <Check className="size-4" /> : <Circle className="size-3" />}
                 </span>
