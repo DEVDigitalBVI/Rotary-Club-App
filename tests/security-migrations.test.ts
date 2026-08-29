@@ -313,3 +313,34 @@ describe("hidden emergency superuser", () => {
     expect(sql).toContain("status = 'active' and not is_superuser");
   });
 });
+
+describe("emergency visibility helper correction", () => {
+  const sql = migration("20260829213427_fix_superuser_visibility_helper.sql");
+
+  it("reads the protected flag only for the authenticated account", () => {
+    expect(sql).toContain("security definer set search_path = ''");
+    expect(sql).toContain("member.user_id = (select auth.uid())");
+    expect(sql).toContain("member.is_superuser");
+  });
+
+  it("keeps the helper unavailable to anonymous callers", () => {
+    expect(sql).toContain("revoke all on function public.is_superuser() from public, anon");
+    expect(sql).toContain("grant execute on function public.is_superuser() to authenticated, service_role");
+  });
+});
+
+describe("hidden-member chat policy correction", () => {
+  const sql = migration("20260829213816_fix_hidden_member_chat_policy.sql");
+
+  it("keeps protected member lookups outside the exposed API schema", () => {
+    expect(sql).toContain("create schema if not exists app_private");
+    expect(sql).toContain("function app_private.is_visible_member(target_member_id uuid)");
+    expect(sql).toContain("revoke all on schema app_private from public, anon");
+  });
+
+  it("routes chat visibility policies through the internal helper", () => {
+    expect(sql).toContain("app_private.is_visible_member(member_id)");
+    expect(sql).toContain("app_private.is_visible_member(sender_id)");
+    expect(sql).not.toContain("join public.members");
+  });
+});
