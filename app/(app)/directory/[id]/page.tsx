@@ -88,7 +88,7 @@ export default async function MemberProfilePage({
                 </div>
               )}
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:max-w-[50%] sm:justify-end">
               {(isSelf || isAdmin) && (
                 <EditProfileDialog member={member} initialOpen={isSelf && edit === "profile"} />
               )}

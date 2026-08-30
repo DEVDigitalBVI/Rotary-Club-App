@@ -83,7 +83,7 @@ export function AssignPositionDialog({
     >
       <Button
         variant="outline"
-        className="font-heading"
+        className="font-heading h-auto max-w-full shrink whitespace-normal py-2.5 text-center leading-snug"
         disabled={locked}
         onClick={() => setOpen(true)}
       >
