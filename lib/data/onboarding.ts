@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
+import { getMissingMemberProfileFields } from "@/lib/member-profile";
 
 export const onboardingTasks = [
   { key: "profile", href: "/directory", title: "Complete your member profile", detail: "Add your phone, classification, and a short introduction." },
@@ -29,7 +30,7 @@ export async function getCompletedOnboarding(memberId: string): Promise<Onboardi
   [recorded.error, member.error, committees.error, rsvps.error, projects.error].forEach((error) => throwOnSupabaseError(error, "Unable to load onboarding progress"));
 
   const completed = new Set<OnboardingKey>((recorded.data ?? []).map((row) => row.task_key));
-  if (member.data?.phone?.trim() && member.data.classification?.trim() && member.data.bio?.trim()) completed.add("profile");
+  if (getMissingMemberProfileFields(member.data).length === 0) completed.add("profile");
   if ((committees.data?.length ?? 0) > 0) completed.add("committee");
   if ((rsvps.data?.length ?? 0) > 0) completed.add("first-event");
   if ((projects.data?.length ?? 0) > 0) completed.add("first-project");

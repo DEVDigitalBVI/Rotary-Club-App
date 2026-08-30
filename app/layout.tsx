@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
-import { DM_Sans, Playfair_Display } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const dmSans = localFont({
+  src: "./fonts/dm-sans-latin-variable.woff2",
   variable: "--font-dm-sans",
-  subsets: ["latin"],
+  display: "swap",
+  weight: "100 1000",
+  style: "normal",
+  fallback: ["Segoe UI", "Arial", "sans-serif"],
 });
 
-const playfair = Playfair_Display({
+const playfairDisplay = localFont({
+  src: "./fonts/playfair-display-latin-variable.woff2",
   variable: "--font-playfair",
-  subsets: ["latin"],
+  display: "swap",
+  weight: "400 900",
+  style: "normal",
+  fallback: ["Georgia", "Times New Roman", "serif"],
+  adjustFontFallback: "Times New Roman",
 });
 
 export const metadata: Metadata = {
@@ -22,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${playfair.variable} h-full antialiased`}
+      className={`${dmSans.variable} ${playfairDisplay.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">

@@ -75,9 +75,12 @@
   --notice-urgent: var(--rotary-cardinal);
   --notice-success: #087a37;
 
+  /* The two committed variable fonts are the app-wide type system. Keep all
+     font utilities pointed at these tokens so a component cannot silently
+     fall back to Tailwind's generic defaults. */
   --font-sans: var(--font-dm-sans), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-playfair), Georgia, serif;
-  --font-body: var(--font-dm-sans), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-sans);
+  --font-heading: var(--font-playfair), Georgia, "Times New Roman", serif;
 
   --background: #f3f0e9;
   --foreground: oklch(0.225 0.03 262);
@@ -226,6 +229,8 @@
     font-family: var(--font-body);
   }
   .font-heading {
+    /* Compact controls and names historically use this utility but should
+       stay in the UI face; semantic headings below retain the display face. */
     font-family: var(--font-sans);
     letter-spacing: normal;
   }

@@ -164,6 +164,23 @@ export function EditProfileDialog({
             </p>
           </div>
           <div className="flex flex-col gap-1.5">
+            <Label htmlFor="edit-classification">Classification</Label>
+            <Input
+              id="edit-classification"
+              name={member.classification.trim() ? undefined : "classification"}
+              defaultValue={member.classification}
+              placeholder="e.g. Education, Accounting, Hospitality"
+              maxLength={100}
+              required={!member.classification.trim()}
+              disabled={Boolean(member.classification.trim())}
+            />
+            <p className="text-xs text-muted-foreground">
+              {member.classification.trim()
+                ? "Your classification is now part of the club roster. Contact your secretary to change it."
+                : "Add your professional classification. Once saved, contact your secretary if it needs to change."}
+            </p>
+          </div>
+          <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-phone">Phone</Label>
             <Input id="edit-phone" name="phone" type="tel" defaultValue={member.phone} />
           </div>

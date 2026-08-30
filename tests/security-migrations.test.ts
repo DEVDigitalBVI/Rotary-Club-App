@@ -294,6 +294,17 @@ describe("validated security finding remediation", () => {
   });
 });
 
+describe("member-supplied initial classification", () => {
+  const sql = migration("20260830015221_allow_member_initial_classification.sql");
+
+  it("allows only a bounded first value while preserving roster identity protection", () => {
+    expect(sql).toContain("nullif(btrim(old.classification), '') is null");
+    expect(sql).toContain("nullif(btrim(new.classification), '') is not null");
+    expect(sql).toContain("char_length(btrim(new.classification)) <= 100");
+    expect(sql).toContain("only club leadership can edit roster identity fields");
+  });
+});
+
 describe("hidden emergency superuser", () => {
   const sql = migration("20260829212253_hide_emergency_superuser.sql");
 

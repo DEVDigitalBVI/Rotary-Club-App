@@ -63,17 +63,28 @@ export async function updateProfileAction(
   const phone = String(formData.get("phone") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
   const dateOfBirth = String(formData.get("dateOfBirth") ?? "").trim();
+  const classificationValue = formData.get("classification");
+  const classification = typeof classificationValue === "string"
+    ? classificationValue.trim()
+    : undefined;
   const photo = formData.get("profilePhoto");
   const removePhoto = formData.get("removePhoto") === "true";
+
+  if (classification !== undefined && (!classification || classification.length > 100)) {
+    return { error: "Enter a classification between 1 and 100 characters." };
+  }
 
   const supabase = await createClient();
   const { data: existing, error: memberError } = await supabase
     .from("members")
-    .select("avatar_url")
+    .select("avatar_url, classification")
     .eq("id", memberId)
-    .maybeSingle<{ avatar_url: string | null }>();
+    .maybeSingle<{ avatar_url: string | null; classification: string | null }>();
   if (memberError || !existing) {
     return { error: "Couldn't find this profile or you may not have permission to edit it." };
+  }
+  if (classification !== undefined && existing.classification?.trim()) {
+    return { error: "Contact your secretary to change an existing classification." };
   }
 
   let avatarUrl: string | null | undefined;
@@ -98,6 +109,9 @@ export async function updateProfileAction(
     bio: bio || null,
     date_of_birth: dateOfBirth || null,
   };
+  if (classification !== undefined) {
+    updates.classification = classification;
+  }
   if (avatarUrl !== undefined) updates.avatar_url = avatarUrl;
 
   const { error } = await supabase

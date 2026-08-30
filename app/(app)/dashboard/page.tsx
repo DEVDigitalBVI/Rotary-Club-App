@@ -13,6 +13,19 @@ import { EventFlyerPreview } from "@/components/dashboard/event-flyer-preview";
 import { NoticeAcknowledgement } from "@/components/news/notice-acknowledgement";
 import { getServiceProjects } from "@/lib/data/projects";
 import { getChatChannels } from "@/lib/data/chat";
+import { getMissingMemberProfileFields } from "@/lib/member-profile";
+
+type NextAction = {
+  eyebrow: string;
+  title: string;
+  detail: string;
+  href: string;
+  missingFields?: string[];
+};
+
+function listWords(words: string[]) {
+  return new Intl.ListFormat("en", { style: "long", type: "conjunction" }).format(words);
+}
 
 function eventDateParts(date: string) {
   const value = new Date(`${date}T12:00:00Z`);
@@ -52,9 +65,10 @@ export default async function DashboardPage() {
   const date = nextEvent ? eventDateParts(nextEvent.date) : null;
   const onboarding = viewer ? await getCompletedOnboarding(viewer.id) : [];
   const nextOnboardingTask = onboardingTasks.find((task) => !onboarding.includes(task.key));
+  const missingProfileFields = getMissingMemberProfileFields(viewer);
   const noticeNeedingAction = latestNotices.find((notice) => notice.requiresAcknowledgement && !notice.acknowledgedAt);
   const eventNeedingRsvp = upcoming.find((event) => event.myRsvp === "none");
-  const nextAction = noticeNeedingAction
+  const nextAction: NextAction = noticeNeedingAction
     ? { eyebrow: "Notice awaiting you", title: noticeNeedingAction.title, detail: "Read and acknowledge this club update.", href: "/news" }
     : eventNeedingRsvp
       ? { eyebrow: "RSVP requested", title: eventNeedingRsvp.title, detail: `${formatDate(eventNeedingRsvp.date)} · Let the club know if you’re coming.`, href: `/events/${eventNeedingRsvp.id}` }
@@ -62,8 +76,20 @@ export default async function DashboardPage() {
         ? {
             eyebrow: "Your next step",
             title: nextOnboardingTask.title,
-            detail: nextOnboardingTask.detail,
+            detail: nextOnboardingTask.key === "profile"
+              ? [
+                  missingProfileFields.some((field) => field.selfService)
+                    ? `You can add ${listWords(missingProfileFields.filter((field) => field.selfService).map((field) => field.label.toLowerCase()))}.`
+                    : null,
+                  missingProfileFields.some((field) => !field.selfService)
+                    ? "You can add your classification now; your club secretary can change it later."
+                    : null,
+                ].filter(Boolean).join(" ")
+              : nextOnboardingTask.detail,
             href: viewer ? getOnboardingTaskHref(nextOnboardingTask, viewer.id) : nextOnboardingTask.href,
+            missingFields: nextOnboardingTask.key === "profile"
+              ? missingProfileFields.map((field) => field.label)
+              : undefined,
           }
         : openServiceProjects[0]
           ? { eyebrow: "Service opportunity", title: openServiceProjects[0].title, detail: "Join the team and help move this project forward.", href: "/projects" }
@@ -178,6 +204,15 @@ export default async function DashboardPage() {
               <span className="font-label block text-primary/70">{nextAction.eyebrow}</span>
               <strong className="font-heading mt-2 block text-2xl font-semibold text-foreground">{nextAction.title}</strong>
               <span className="mt-2 block text-base leading-7 text-muted-foreground">{nextAction.detail}</span>
+              {nextAction.missingFields && nextAction.missingFields.length > 0 && (
+                <span className="mt-4 flex flex-wrap gap-2" aria-label="Missing profile information">
+                  {nextAction.missingFields.map((field) => (
+                    <span key={field} className="rounded-full border border-primary/15 bg-primary/[0.06] px-3 py-1 text-xs font-semibold text-primary">
+                      Missing: {field}
+                    </span>
+                  ))}
+                </span>
+              )}
             </span>
             <ArrowUpRight className="size-5 shrink-0 text-primary transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
           </Link>
