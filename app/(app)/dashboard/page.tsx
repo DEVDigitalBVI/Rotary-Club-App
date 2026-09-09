@@ -16,7 +16,7 @@ import { OnboardingCard } from "@/components/dashboard/onboarding-card";
 import { EventFlyerPreview } from "@/components/dashboard/event-flyer-preview";
 import { NoticeAcknowledgement } from "@/components/news/notice-acknowledgement";
 import { getServiceProjects } from "@/lib/data/projects";
-import { getChatChannels } from "@/lib/data/chat";
+import { getLatestChatPreview } from "@/lib/data/chat";
 import { getMissingMemberProfileFields } from "@/lib/member-profile";
 
 type NextAction = {
@@ -40,13 +40,12 @@ function eventDateParts(date: string) {
 }
 
 export default async function DashboardPage() {
-  const [viewer, members, newsPosts, events, serviceProjects, committees] = await Promise.all([
-    getCurrentMember(),
-    getMembers(),
-    getVisibleNewsPosts(),
-    getEvents(),
-    getServiceProjects(),
-    getCommittees(),
+  const viewerPromise = getCurrentMember();
+  const [viewer, members, newsPosts, events, serviceProjects, committees, latestMessages, personalActivity, onboarding] = await Promise.all([
+    viewerPromise, getMembers(), getVisibleNewsPosts(), getEvents(), getServiceProjects(), getCommittees(),
+    getLatestChatPreview(),
+    viewerPromise.then(member => member ? getMyRotaryActivity(member.id) : null),
+    viewerPromise.then(member => member ? getCompletedOnboarding(member.id) : [] as OnboardingKey[]),
   ]);
   const birthdaysToday = members.filter(
     (member) => member.dateOfBirth?.slice(5) === todayMonthDay()
@@ -57,16 +56,6 @@ export default async function DashboardPage() {
   const nextEventAttending = nextEvent
     ? nextEvent.rsvps.yes + (nextEvent.rsvps.guests ?? 0)
     : 0;
-  const [channels, personalActivity, onboarding] = await Promise.all([
-    viewer ? getChatChannels(viewer.id) : [],
-    viewer ? getMyRotaryActivity(viewer.id) : null,
-    viewer ? getCompletedOnboarding(viewer.id) : Promise.resolve<OnboardingKey[]>([]),
-  ]);
-  const latestMessages = channels
-    .flatMap((channel) => channel.messages.map((message) => ({ ...message, channel: channel.name })))
-    .filter((message) => !message.deletedAt)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, 2);
   const clubNotices = newsPosts.filter((post) => post.source === "club");
   const latestNotices = (clubNotices.length > 0 ? clubNotices : newsPosts).slice(0, 3);
   const openServiceProjects = serviceProjects.filter((project) => project.status === "open").slice(0, 2);

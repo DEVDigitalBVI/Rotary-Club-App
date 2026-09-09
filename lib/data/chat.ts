@@ -133,3 +133,14 @@ export async function getChatChannels(memberId: string): Promise<ChatChannel[]> 
       return bLast.localeCompare(aLast) || a.name.localeCompare(b.name);
     });
 }
+
+/** Dashboard preview: two visible messages, without loading every conversation. */
+export async function getLatestChatPreview() {
+  const supabase = await createClient();
+  const {data,error} = await supabase.from("chat_messages")
+    .select("id, sender_id, body, created_at, chat_channels!inner(name)")
+    .is("deleted_at",null).order("created_at",{ascending:false}).order("id").limit(2)
+    .returns<{id:string;sender_id:string;body:string;created_at:string;chat_channels:{name:string}}[]>();
+  throwOnSupabaseError(error,"Unable to load recent conversations");
+  return (data??[]).map(row=>({id:row.id,senderId:row.sender_id,body:row.body,createdAt:row.created_at,channel:row.chat_channels.name}));
+}

@@ -51,6 +51,7 @@ export function parseRotaryRss(xml: string, limit = ROTARY_NEWS_LIMIT): NewsPost
 export async function getLatestRotaryNews(): Promise<NewsPost[]> {
   try {
     const response = await fetch(ROTARY_RSS_URL, {
+      signal: AbortSignal.timeout(4000),
       cache: "force-cache",
       next: { revalidate: 60 * 60, tags: ["rotary-international-news"] },
       headers: { Accept: "application/rss+xml, application/xml;q=0.9" },

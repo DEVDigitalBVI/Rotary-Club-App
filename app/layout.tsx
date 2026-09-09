@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
+import { MobileAppRuntime } from "@/components/pwa/mobile-app";
 
 const dmSans = localFont({
   src: "./fonts/dm-sans-latin-variable.woff2",
@@ -24,8 +25,13 @@ const playfairDisplay = localFont({
 
 export const metadata: Metadata = {
   title: "Rotary Club App",
+  applicationName: "Road Town Rotary",
+  appleWebApp: { capable: true, title: "Road Town Rotary", statusBarStyle: "default" },
+  formatDetection: { telephone: false },
   description: "Member portal for the club — directory, events, service, news, and chat.",
 };
+
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#0D315B" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -35,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider><MobileAppRuntime />{children}</ThemeProvider>
       </body>
     </html>
   );

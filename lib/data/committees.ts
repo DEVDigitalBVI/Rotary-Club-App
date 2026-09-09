@@ -1,3 +1,5 @@
+import { cache } from "react";
+// Request-scoped deduplication only: never share member data across requests.
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
 import type { Committee, CommitteeId } from "@/lib/club";
@@ -16,7 +18,7 @@ type CommitteeRow = {
  * lib/club.ts's permission predicates (canPostNews, runsTheClub, etc.)
  * already expect — so that logic is reused unchanged against real data.
  */
-export async function getCommittees(): Promise<Committee[]> {
+export const getCommittees = cache(async function getCommittees(): Promise<Committee[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("committees")
@@ -32,4 +34,4 @@ export async function getCommittees(): Promise<Committee[]> {
     memberIds: row.committee_members.map((m) => m.member_id),
     managedBy: row.managed_by,
   }));
-}
+});

@@ -1,3 +1,5 @@
+import { cache } from "react";
+// Request-scoped deduplication only: never share member data across requests.
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
 import { initialsFromName, todayMonthDay } from "@/lib/format";
@@ -64,7 +66,7 @@ function toMember(row: MemberRow): Member {
 }
 
 /** The signed-in member's own row, or null if not linked to one yet. */
-export async function getCurrentMember(): Promise<Member | null> {
+export const getCurrentMember = cache(async function getCurrentMember(): Promise<Member | null> {
   const supabase = await createClient();
   const {
     data: { user }, error: authError,
@@ -92,9 +94,9 @@ export async function getCurrentMember(): Promise<Member | null> {
   throwOnSupabaseError(birthdayResult.error, "Unable to load the current member birthday");
 
   return data ? toMember({ ...data, date_of_birth: birthdayResult.data }) : null;
-}
+});
 
-export async function getMemberById(id: string): Promise<Member | null> {
+export const getMemberById = cache(async function getMemberById(id: string): Promise<Member | null> {
   const supabase = await createClient();
   const [{ data, error }, birthdayResult] = await Promise.all([
     supabase
@@ -108,9 +110,9 @@ export async function getMemberById(id: string): Promise<Member | null> {
   throwOnSupabaseError(birthdayResult.error, "Unable to load the member birthday");
 
   return data ? toMember({ ...data, date_of_birth: birthdayResult.data }) : null;
-}
+});
 
-export async function getMembers(): Promise<Member[]> {
+export const getMembers = cache(async function getMembers(): Promise<Member[]> {
   const supabase = await createClient();
   const [{ data, error }, birthdayResult, superuserResult, currentMemberResult] = await Promise.all([
     supabase
@@ -140,7 +142,7 @@ export async function getMembers(): Promise<Member[]> {
     ...row,
     date_of_birth: birthdays.get(row.id) ?? null,
   }));
-}
+});
 
 /**
  * Members whose birthday is today, club-local. The club is small enough that

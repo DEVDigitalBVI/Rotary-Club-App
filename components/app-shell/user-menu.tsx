@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronsUpDown, LogOut, User, MessageSquare } from "lucide-react";
+import { ChevronsUpDown, LogOut, User, MessageSquare, Download } from "lucide-react";
 import { MemberAvatar } from "@/components/member-avatar";
 import {
   DropdownMenu,
@@ -79,6 +79,7 @@ export function UserMenu({
           <User />
           My profile
         </DropdownMenuLinkItem>
+        <DropdownMenuLinkItem render={<Link href="/install" />}><Download />Install mobile app</DropdownMenuLinkItem>
         <DropdownMenuLinkItem render={<Link href="/feedback" />}><MessageSquare />Feedback & suggestions</DropdownMenuLinkItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onClick={handleSignOut}>

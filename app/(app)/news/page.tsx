@@ -9,19 +9,21 @@ import { getEvents } from "@/lib/data/events";
 import { PageContainer } from "@/components/page-container";
 
 export default async function NewsPage() {
-  const [currentMember, committees, posts, events] = await Promise.all([
+  const [currentMember, committees, posts] = await Promise.all([
     getCurrentMember(),
     getCommittees(),
     getVisibleNewsPosts(),
-    getEvents(),
   ]);
 
   const canEdit = currentMember ? canPostNews(currentMember, committees) : false;
+  const eventsPromise = canEdit ? getEvents() : Promise.resolve([]);
   const acknowledgementSummary = canEdit
     ? await getNoticeAcknowledgementSummary(
         posts.filter((post) => post.requiresAcknowledgement).map((post) => post.id)
       )
     : {};
+
+  const events = await eventsPromise;
 
   return (
     <div>

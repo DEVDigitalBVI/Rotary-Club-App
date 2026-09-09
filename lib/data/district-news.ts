@@ -104,6 +104,7 @@ function normalizedTitle(title: string) {
 export async function getLatestDistrictNews(): Promise<NewsPost[]> {
   try {
     const requestOptions = {
+      signal: AbortSignal.timeout(4000),
       cache: "force-cache" as const,
       next: { revalidate: 60 * 60, tags: ["district-7020-news-v2"] },
     };
