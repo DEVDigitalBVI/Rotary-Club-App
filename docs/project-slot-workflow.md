@@ -1,10 +1,10 @@
 # Project slots and attendance
 
-Status: implemented and locally tested; connected Supabase migration requires explicit approval before activation.
+Status: implemented, locally tested, and activated on connected Supabase project `ezdoxdcnbwhdzhbumkye` with user approval on 2026-09-09 UTC.
 
 ## Setup
 
-Apply `supabase/migrations/20260909004450_project_slots_and_leadership.sql` to the intended Supabase project through the normal migration process. The connected project is `ezdoxdcnbwhdzhbumkye`. Until then, the dashboard stays usable and project scheduling shows a setup message.
+Migration `supabase/migrations/20260909010613_project_slots_and_leadership.sql` is applied to the connected project. Its local version matches the recorded remote migration version. Other environments should apply it through the normal migration process.
 
 Existing projects initially belong to Community Service. A club officer can change the responsible committee on the project scheduling page. Existing volunteer enrollments, hours, and makeups are retained; legacy enrollments are not automatically assigned to time slots.
 
