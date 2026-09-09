@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rotary Club of Road Town
 
-## Getting Started
+Member portal built with Next.js, React, and Supabase.
 
-First, run the development server:
+## Development
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Install dependencies with `npm ci`. Configure `.env.local` with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, then run `npm run dev`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Checks
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `npm run lint`
+- `npm test`
+- `npm run build -- --webpack`
 
-This project uses [`next/font/local`](https://nextjs.org/docs/app/api-reference/components/font) to optimize the committed DM Sans and Playfair Display variable fonts. DM Sans is the UI and body face; Playfair Display is reserved for headings.
+Database integration checks live in `tests/database/`. Set `PGLITE_MODULE` to an installed `@electric-sql/pglite/dist/index.js` module and run each script with Node. These tests use an isolated database.
 
-## Learn More
+## Database and mobile installation
 
-To learn more about Next.js, take a look at the following resources:
+Schema history lives in `supabase/migrations/`. Apply migrations deliberately to the intended Supabase environment; local feature files may precede remote activation.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Mobile installation instructions are at `/install`. Phone installation requires a trusted HTTPS site. The offline worker runs in production and caches only the public offline screen, not member records or chat.
