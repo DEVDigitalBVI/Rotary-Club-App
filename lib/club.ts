@@ -486,9 +486,7 @@ export function isSyndicated(post: NewsPost) {
 }
 
 /**
- * Where the two external feeds come from, and when they were last read. Mirrors
- * the QuickBooks provenance treatment: the app owns none of this content, so a
- * reader should be able to see where it came from and how fresh it is.
+ * Source names and links for the live external news feeds.
  */
 export const newsFeeds: Record<
   Exclude<NewsSource, "club">,
