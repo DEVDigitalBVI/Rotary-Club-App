@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Member } from "@/lib/mock-data";
+import type { Member } from "@/lib/club";
 import { deleteMemberAction, updateMemberStatusAction } from "@/app/(app)/directory/actions";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 

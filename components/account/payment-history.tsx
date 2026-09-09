@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/format";
-import type { Payment, PaymentMethod } from "@/lib/mock-data";
+import type { Payment, PaymentMethod } from "@/lib/club";
 
 const methodLabel: Record<PaymentMethod, string> = {
   cash: "Cash",

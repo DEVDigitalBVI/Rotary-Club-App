@@ -3,7 +3,7 @@ import { ChatApp } from "@/components/chat/chat-app";
 import { getChatChannels } from "@/lib/data/chat";
 import { getCurrentMember, getMembers } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
-import { canPostNews } from "@/lib/mock-data";
+import { canPostNews } from "@/lib/club";
 import { redirect } from "next/navigation";
 import { PageContainer } from "@/components/page-container";
 

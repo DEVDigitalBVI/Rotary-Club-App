@@ -13,7 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/lib/format";
 import type { ChatChannel, ChatMessage, ChatReaction } from "@/lib/data/chat";
-import type { Member } from "@/lib/mock-data";
+import type { Member } from "@/lib/club";
 import { deleteChatMessageAction, deleteDirectChatAction, loadEarlierChatMessagesAction, markChatReadAction, sendChatMessageAction, startDirectChatAction, toggleChatReactionAction } from "@/app/(app)/chat/actions";
 
 const REACTIONS = [

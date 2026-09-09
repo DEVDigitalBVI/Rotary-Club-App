@@ -8,7 +8,7 @@ import type {
   Committee,
   CommitteeManageRight,
   Member,
-} from "@/lib/mock-data";
+} from "@/lib/club";
 
 export function CommitteeCard({
   committee,

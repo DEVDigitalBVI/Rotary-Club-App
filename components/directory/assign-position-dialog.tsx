@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { isPresident, positionLabel, type ClubPosition, type Member } from "@/lib/mock-data";
+import { isPresident, positionLabel, type ClubPosition, type Member } from "@/lib/club";
 import { assignMemberPositionAction } from "@/app/(app)/directory/actions";
 
 const NONE = "none";

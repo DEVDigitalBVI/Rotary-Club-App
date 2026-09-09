@@ -1,4 +1,4 @@
-import type { EventItem } from "@/lib/mock-data";
+import type { EventItem } from "@/lib/club";
 
 export function rotaryYear(today: string) {
   const year = Number(today.slice(0, 4));

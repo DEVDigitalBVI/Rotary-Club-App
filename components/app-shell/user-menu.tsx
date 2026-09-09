@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { positionLabel, type Member } from "@/lib/mock-data";
+import { positionLabel, type Member } from "@/lib/club";
 
 export function UserMenu({
   member,

@@ -2,7 +2,7 @@ import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { formatCurrency, formatDate, daysBetween } from "@/lib/format";
-import { isOverdue, type Invoice } from "@/lib/mock-data";
+import { isOverdue, type Invoice } from "@/lib/club";
 
 /**
  * QuickBooks shows an invoice as a document; a member mostly wants to know

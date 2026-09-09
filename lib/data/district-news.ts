@@ -1,4 +1,4 @@
-import type { NewsPost } from "@/lib/mock-data";
+import type { NewsPost } from "@/lib/club";
 
 export const DISTRICT_NEWS_RSS_URL =
   "https://news.google.com/rss/search?q=site%3A7020.org%2Fstories&hl=en-US&gl=US&ceid=US%3Aen";

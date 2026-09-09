@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { NewsSource } from "@/lib/mock-data";
+import type { NewsSource } from "@/lib/club";
 import { normalizeTrustedArticleUrl } from "@/lib/security/news-urls";
 
 function cleanInlineMarkdown(value: string) {

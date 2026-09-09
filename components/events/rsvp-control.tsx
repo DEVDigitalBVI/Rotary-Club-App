@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Check, HelpCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { RsvpStatus } from "@/lib/mock-data";
+import type { RsvpStatus } from "@/lib/club";
 import { updateRsvpAction } from "@/app/(app)/events/actions";
 
 const options: { value: Exclude<RsvpStatus, "none">; label: string; icon: typeof Check }[] = [
@@ -56,6 +56,7 @@ export function RsvpControl({
   return (
     <div className="flex flex-col gap-2">
       <p className="text-xs font-medium text-muted-foreground">Your RSVP</p>
+      <p className="text-xs text-muted-foreground">Confirmed bookings receive in-app reminders 24 hours and 2 hours before the event. Manage these in your notification preferences.</p>
       <div className="flex gap-2">
         {options.map((opt) => {
           const active = status === opt.value;
@@ -75,7 +76,7 @@ export function RsvpControl({
         })}
       </div>
       {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
-      {status === "yes" && registrationStatus === "waitlisted" && <p className="rounded-lg bg-secondary/20 p-2 text-xs text-foreground">You’re currently on the waitlist.</p>}
+      {status === "yes" && registrationStatus === "waitlisted" && <p className="rounded-lg bg-secondary/20 p-2 text-xs text-foreground">You’re on the waitlist. When enough seats open for you and your guests, your booking will be confirmed automatically. Check your notifications for updates.</p>}
       {status === "yes" && (allowGuests || dietaryNotesEnabled) && (
         <div className="mt-2 grid gap-3 rounded-xl border border-border bg-muted/25 p-4 sm:grid-cols-2">
           {allowGuests && <label className="text-xs font-medium text-muted-foreground">Guests<input type="number" min="0" max="10" value={guestCount} onChange={(event) => { setGuestCount(Number(event.target.value)); setSaved(false); }} className="mt-1.5 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground" /></label>}

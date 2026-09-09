@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Committee, Member } from "@/lib/mock-data";
+import type { Committee, Member } from "@/lib/club";
 import { assignCommitteeDirectorAction } from "@/app/(app)/directory/actions";
 
 const VACANT = "vacant";

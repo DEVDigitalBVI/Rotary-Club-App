@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
-import { visibleNewsPosts, type NewsPost, type NewsSource } from "@/lib/mock-data";
+import { visibleNewsPosts, type NewsPost, type NewsSource } from "@/lib/club";
 import { getLatestRotaryNews } from "@/lib/data/rotary-news";
 import { getLatestDistrictNews } from "@/lib/data/district-news";
 

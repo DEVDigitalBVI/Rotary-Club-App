@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { daysBetween, formatTime, initialsFromName, toClubDateString } from "../lib/format";
-import { daysBefore } from "../lib/mock-data";
+import { daysBefore } from "../lib/club";
 
 describe("club date rules", () => {
   it("uses the BVI calendar day for UTC instants around midnight", () => {

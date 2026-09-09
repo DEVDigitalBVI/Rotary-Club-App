@@ -1,5 +1,5 @@
 import { StatusBadge } from "@/components/status-badge";
-import type { RsvpStatus } from "@/lib/mock-data";
+import type { RsvpStatus } from "@/lib/club";
 
 export function RsvpStatusBadge({ status }: { status: RsvpStatus }) {
   if (status === "yes") return <StatusBadge tone="grass">Going</StatusBadge>;

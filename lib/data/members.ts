@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
 import { initialsFromName, todayMonthDay } from "@/lib/format";
-import type { Member } from "@/lib/mock-data";
+import type { Member } from "@/lib/club";
 
 type MemberRow = {
   id: string;

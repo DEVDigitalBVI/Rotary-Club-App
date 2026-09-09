@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
 import { getCurrentMember } from "@/lib/data/members";
 import { formatTime, toClubDateString } from "@/lib/format";
-import type { EventItem } from "@/lib/mock-data";
+import type { EventItem } from "@/lib/club";
 
 type EventRow = {
   id: string;

@@ -19,7 +19,7 @@ import {
   paulHarrisLabel,
   type FoundationRecognition,
   type Member,
-} from "@/lib/mock-data";
+} from "@/lib/club";
 import { updateRecognitionAction } from "@/app/(app)/directory/actions";
 
 /**

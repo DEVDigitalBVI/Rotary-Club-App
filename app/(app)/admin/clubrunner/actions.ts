@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { parseClubRunnerCsv } from "@/lib/clubrunner-csv";
 import { getCommittees } from "@/lib/data/committees";
 import { getCurrentMember } from "@/lib/data/members";
-import { canAddMembers } from "@/lib/mock-data";
+import { canAddMembers } from "@/lib/club";
 import { createClient } from "@/lib/supabase/server";
 
 export type ClubRunnerImportState =

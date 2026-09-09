@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
-import type { EventAgenda, EventFlyer } from "@/lib/mock-data";
+import type { EventAgenda, EventFlyer } from "@/lib/club";
 import {
   removeEventAgendaAction,
   removeEventFlyerAction,

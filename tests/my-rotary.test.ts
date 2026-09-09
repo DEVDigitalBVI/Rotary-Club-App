@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { rotaryYear, summarizePersonalHours, upcomingPersonalRsvps } from "../lib/my-rotary";
-import type { EventItem } from "../lib/mock-data";
+import type { EventItem } from "../lib/club";
 
 describe("My Rotary summaries", () => {
   it("rolls the Rotary year over on July 1", () => {

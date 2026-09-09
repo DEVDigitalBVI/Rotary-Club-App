@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/member-avatar";
 import { cn } from "@/lib/utils";
-import type { Member } from "@/lib/mock-data";
+import type { Member } from "@/lib/club";
 import { saveEventAttendanceAction } from "@/app/(app)/events/actions";
 
 export function TakeAttendanceDialog({

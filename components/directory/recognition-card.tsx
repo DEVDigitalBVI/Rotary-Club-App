@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { EditRecognitionDialog } from "@/components/directory/edit-recognition-dialog";
-import { paulHarrisLabel, type FoundationRecognition, type Member } from "@/lib/mock-data";
+import { paulHarrisLabel, type FoundationRecognition, type Member } from "@/lib/club";
 
 export function RecognitionCard({
   member,

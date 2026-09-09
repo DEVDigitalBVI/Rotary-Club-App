@@ -1,6 +1,6 @@
 import { PartyPopper, Cake } from "lucide-react";
 import { MemberAvatar } from "@/components/member-avatar";
-import type { Member } from "@/lib/mock-data";
+import type { Member } from "@/lib/club";
 
 function formatNames(names: string[]) {
   if (names.length === 1) return names[0];

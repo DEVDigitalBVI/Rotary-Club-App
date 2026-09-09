@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getEvents } from "@/lib/data/events";
 import { getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
-import { canManageEvents } from "@/lib/mock-data";
+import { canManageEvents } from "@/lib/club";
 import { todayDateString } from "@/lib/format";
 import { PageContainer } from "@/components/page-container";
 import { EmptyState } from "@/components/ui/empty-state";

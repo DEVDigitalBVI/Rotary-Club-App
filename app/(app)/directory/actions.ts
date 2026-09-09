@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { FoundationRecognition } from "@/lib/mock-data";
+import type { FoundationRecognition } from "@/lib/club";
 import { getCurrentMember } from "@/lib/data/members";
 import {
   PROFILE_PHOTOS_BUCKET,

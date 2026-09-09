@@ -16,7 +16,7 @@ import {
   newsFeeds,
   type NewsPost,
   type NewsSource,
-} from "@/lib/mock-data";
+} from "@/lib/club";
 
 export function NewsFeed({
   posts,

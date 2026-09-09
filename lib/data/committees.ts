@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
-import type { Committee, CommitteeId } from "@/lib/mock-data";
+import type { Committee, CommitteeId } from "@/lib/club";
 
 type CommitteeRow = {
   id: string;
@@ -13,7 +13,7 @@ type CommitteeRow = {
 
 /**
  * Assembles committees with their rosters, in the same shape
- * lib/mock-data.ts's permission predicates (canPostNews, runsTheClub, etc.)
+ * lib/club.ts's permission predicates (canPostNews, runsTheClub, etc.)
  * already expect — so that logic is reused unchanged against real data.
  */
 export async function getCommittees(): Promise<Committee[]> {

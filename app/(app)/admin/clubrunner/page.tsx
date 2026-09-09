@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { getCommittees } from "@/lib/data/committees";
 import { getCurrentMember } from "@/lib/data/members";
-import { canAddMembers } from "@/lib/mock-data";
+import { canAddMembers } from "@/lib/club";
 
 export default async function ClubRunnerAdminPage() {
   const [member, committees] = await Promise.all([getCurrentMember(), getCommittees()]);

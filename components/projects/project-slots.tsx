@@ -3,7 +3,7 @@ import { useState, useTransition } from "react";
 import { CalendarDays, Clock3, Users, ShieldCheck, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { Member, Committee } from "@/lib/mock-data";
+import type { Member, Committee } from "@/lib/club";
 import type { ServiceProject } from "@/lib/data/projects";
 import type { getProjectSlots, ProjectSlot, SlotSignup } from "@/lib/data/project-slots";
 import { formatDate, formatTime, toClubDateString } from "@/lib/format";

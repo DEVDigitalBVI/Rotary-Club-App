@@ -39,7 +39,7 @@ import {
   paulHarrisLabel,
   type Committee,
   type Member,
-} from "@/lib/mock-data";
+} from "@/lib/club";
 
 /**
  * `all`, `phf`, `polioplus`, or `ag:<group name>`. Encoded in one string so

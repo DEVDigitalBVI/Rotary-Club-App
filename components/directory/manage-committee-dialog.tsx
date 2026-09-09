@@ -19,7 +19,7 @@ import type {
   Committee,
   CommitteeManageRight,
   Member,
-} from "@/lib/mock-data";
+} from "@/lib/club";
 import { updateCommitteeRosterAction } from "@/app/(app)/directory/actions";
 
 /**

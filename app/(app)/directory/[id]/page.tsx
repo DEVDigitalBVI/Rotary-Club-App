@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { getMemberServiceHistory } from "@/lib/data/service-record";
+import { MemberServiceRecord } from "@/components/directory/member-service-record";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Mail, Phone, Calendar, Cake } from "lucide-react";
 import { MemberAvatar } from "@/components/member-avatar";
@@ -15,7 +17,7 @@ import {
   canEditRecognition,
   canAssignRoles,
   canAddMembers,
-} from "@/lib/mock-data";
+} from "@/lib/club";
 import { getMemberById, getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
 import { formatDate, formatBirthday } from "@/lib/format";
@@ -36,6 +38,7 @@ export default async function MemberProfilePage({
   ]);
   if (!member) notFound();
 
+  const serviceHistory = await getMemberServiceHistory(member.id);
   const isSelf = currentMember?.id === member.id;
   const memberCommittees = committeesForMember(member.id, committees);
   const office = positionLabel(member.position);
@@ -133,6 +136,8 @@ export default async function MemberProfilePage({
             )}
           </CardContent>
         </Card>
+
+        <MemberServiceRecord {...serviceHistory} isSelf={isSelf} />
 
         <RecognitionCard
           member={member}

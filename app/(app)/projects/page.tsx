@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { getServiceProjects } from "@/lib/data/projects";
 import { getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
-import { committeeManageRight, canAssignRoles } from "@/lib/mock-data";
+import { committeeManageRight, canAssignRoles } from "@/lib/club";
 import { deleteProjectAction } from "./actions";
 import { PageContainer } from "@/components/page-container";
 import { DeleteRecordButton } from "@/components/delete-record-button";

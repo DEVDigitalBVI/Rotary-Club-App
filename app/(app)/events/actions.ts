@@ -10,7 +10,7 @@ import {
   eventMaterialStoragePath,
   validateEventMaterial,
 } from "@/lib/event-materials";
-import type { RsvpStatus } from "@/lib/mock-data";
+import type { RsvpStatus } from "@/lib/club";
 
 export type EventFormState = { error?: string; success?: boolean } | undefined;
 
@@ -252,18 +252,21 @@ export async function updateRsvpAction(
   if (!member) return { error: "You must be signed in." };
   const supabase = await createClient();
   const guestCount = Math.max(0, Math.min(10, Math.floor(details?.guestCount ?? 0)));
-  const { data: event } = await supabase.from("events").select("capacity, waitlist_enabled").eq("id", eventId).maybeSingle<{ capacity: number | null; waitlist_enabled: boolean }>();
-  const { data: registrations } = await supabase.from("event_rsvps").select("member_id, guest_count, status, registration_status").eq("event_id", eventId).eq("status", "yes");
-  const occupied = (registrations ?? []).filter((row) => row.member_id !== member.id && row.registration_status === "registered").reduce((sum, row) => sum + 1 + Number(row.guest_count), 0);
-  const shouldWaitlist = status === "yes" && Boolean(event?.waitlist_enabled && event.capacity && occupied + 1 + guestCount > event.capacity);
-  const { error } = await supabase
-    .from("event_rsvps")
-    .upsert(
-      { event_id: eventId, member_id: member.id, status, guest_count: status === "yes" ? guestCount : 0, dietary_notes: details?.dietaryNotes?.trim() || null, registration_status: shouldWaitlist ? "waitlisted" : "registered" },
-      { onConflict: "event_id,member_id" }
-    );
-
-  if (error) return { error: "Couldn't update your RSVP." };
+  let { error } = await supabase.rpc("change_event_rsvp", {
+    p_event: eventId, p_status: status, p_guests: guestCount,
+    p_dietary: details?.dietaryNotes?.trim() || null,
+  });
+  // Preserve the existing RSVP path until this environment applies the migration.
+  if (error && ["PGRST202", "42883"].includes(error.code)) {
+    const legacy = await supabase.from("event_rsvps").upsert({
+      event_id: eventId, member_id: member.id, status,
+      guest_count: status === "yes" ? guestCount : 0,
+      dietary_notes: details?.dietaryNotes?.trim() || null,
+      registration_status: "registered",
+    }, { onConflict: "event_id,member_id" });
+    error = legacy.error;
+  }
+  if (error) return { error: error.code === "P0001" ? error.message : "Couldn't update your RSVP." };
 
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/events");

@@ -10,7 +10,7 @@ import { getEventById } from "@/lib/data/events";
 import { getCurrentMember, getMembers } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
 import { getEventAttendance } from "@/lib/data/attendance";
-import { canManageEvents, canAssignRoles } from "@/lib/mock-data";
+import { canManageEvents, canAssignRoles } from "@/lib/club";
 import { formatDate, todayDateString } from "@/lib/format";
 import { DeleteRecordButton } from "@/components/delete-record-button";
 import { deleteEventAction } from "@/app/(app)/events/actions";

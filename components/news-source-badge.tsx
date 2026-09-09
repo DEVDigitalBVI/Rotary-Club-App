@@ -1,5 +1,5 @@
 import { StatusBadge } from "@/components/status-badge";
-import type { NewsSource } from "@/lib/mock-data";
+import type { NewsSource } from "@/lib/club";
 
 export function NewsSourceBadge({ source }: { source: NewsSource }) {
   if (source === "club") return <StatusBadge tone="sky">Club</StatusBadge>;

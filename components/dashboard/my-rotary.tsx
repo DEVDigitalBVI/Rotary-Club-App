@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Bell, CalendarDays, HandHeart, Users } from "lucide-react";
-import type { Member, Committee, EventItem } from "@/lib/mock-data";
+import type { Member, Committee, EventItem } from "@/lib/club";
 import type { ServiceProject } from "@/lib/data/projects";
 import type { getMyRotaryActivity } from "@/lib/data/my-rotary";
 import { upcomingPersonalRsvps } from "@/lib/my-rotary";
@@ -45,6 +45,7 @@ export function MyRotary({ member, committees, events, projects, activity }: {
         <div className="mt-5">
           <p className="font-heading text-6xl font-semibold tracking-tight text-primary">{number(activity.hours.total)}<span className="ml-2 text-xl font-normal">hrs</span></p>
           <p className="mt-2 text-xs text-muted-foreground">Service hours logged this Rotary year</p>
+          <Link href="/service-record" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">View your service record <ArrowUpRight className="size-4" /></Link>
         </div>
         <div className="mt-6 border-t border-border pt-4">
           <p className="text-sm font-semibold">{myProjects.length} active service {myProjects.length === 1 ? "commitment" : "commitments"}</p>

@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { Member } from "@/lib/mock-data";
+import type { Member } from "@/lib/club";
 import { startNewRotaryYearAction } from "@/app/(app)/directory/actions";
 
 /**

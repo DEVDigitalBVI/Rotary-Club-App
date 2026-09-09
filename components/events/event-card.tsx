@@ -3,7 +3,7 @@ import { CalendarDays, MapPin, Users, Video } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { RsvpStatusBadge } from "@/components/rsvp-badge";
 import { formatDate } from "@/lib/format";
-import type { EventItem } from "@/lib/mock-data";
+import type { EventItem } from "@/lib/club";
 
 export function EventCard({ event }: { event: EventItem }) {
   const peopleGoing = event.rsvps.yes + (event.rsvps.guests ?? 0);

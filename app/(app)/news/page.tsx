@@ -1,7 +1,7 @@
 import { PageHeader } from "@/components/page-header";
 import { NewsFeed } from "@/components/news/news-feed";
 import { PostAnnouncementDialog } from "@/components/news/post-announcement-dialog";
-import { canPostNews } from "@/lib/mock-data";
+import { canPostNews } from "@/lib/club";
 import { getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
 import { getNoticeAcknowledgementSummary, getVisibleNewsPosts } from "@/lib/data/news";
