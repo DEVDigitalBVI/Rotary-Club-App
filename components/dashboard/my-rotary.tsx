@@ -66,6 +66,7 @@ export function MyRotary({ member, committees, events, projects, activity }: {
         {memberships.length ? <ul className="mt-3 divide-y divide-border">{memberships.map((committee) => <li key={committee.id} className="flex items-center justify-between gap-3 py-3"><span className="text-sm font-medium">{committee.name}</span><span className="shrink-0 text-xs text-muted-foreground">{committee.directorId === member.id ? "Director" : "Member"}</span></li>)}</ul> : <p className="mt-4 text-sm leading-6 text-muted-foreground">Get to know the committees and find where you’d like to serve.</p>}
         <Link href="/directory?tab=committees" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">Explore committees <ArrowUpRight className="size-4" /></Link>
       </section>
+      <Link href="/feedback" className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5 hover:bg-muted/40 lg:col-span-2"><span><strong className="font-heading block text-lg">Have an idea for the club?</strong><span className="mt-1 block text-sm text-muted-foreground">Send quick feedback or suggest an improvement.</span></span><ArrowUpRight className="size-5 shrink-0 text-primary" /></Link>
     </section>
   );
 }
