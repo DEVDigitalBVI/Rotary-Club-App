@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { daysBetween, initialsFromName, toClubDateString } from "../lib/format";
+import { daysBetween, formatTime, initialsFromName, toClubDateString } from "../lib/format";
 import { daysBefore } from "../lib/mock-data";
 
 describe("club date rules", () => {
@@ -19,4 +19,8 @@ describe("member display rules", () => {
     expect(initialsFromName("Althea Francis")).toBe("AF");
     expect(initialsFromName("Jamaal Devon Hodge")).toBe("JD");
   });
+});
+
+it("formats event times in BVI regardless of the server timezone", () => {
+  expect(formatTime("2026-09-09T22:00:00Z")).toBe("6:00 PM");
 });

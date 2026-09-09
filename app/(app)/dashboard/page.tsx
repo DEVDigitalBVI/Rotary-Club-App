@@ -1,13 +1,17 @@
+import { MyRotary } from "@/components/dashboard/my-rotary";
+import { getMyRotaryActivity } from "@/lib/data/my-rotary";
+import { getCommittees } from "@/lib/data/committees";
+import { rotaryYear, upcomingEvents } from "@/lib/my-rotary";
 import Link from "next/link";
 import { AlertTriangle, ArrowUpRight, CalendarDays, CheckCircle2, ChevronRight, Clock3, HandHeart, MapPin, MessageCircle, Newspaper, Pin, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/member-avatar";
 import { BirthdayBanner } from "@/components/dashboard/birthday-banner";
-import { formatDate, todayDateString, todayMonthDay } from "@/lib/format";
+import { formatDate, toClubDateString, todayDateString, todayMonthDay } from "@/lib/format";
 import { getCurrentMember, getMembers } from "@/lib/data/members";
 import { getVisibleNewsPosts } from "@/lib/data/news";
 import { getEvents } from "@/lib/data/events";
-import { getCompletedOnboarding, getOnboardingTaskHref, onboardingTasks } from "@/lib/data/onboarding";
+import { getCompletedOnboarding, getOnboardingTaskHref, onboardingTasks, type OnboardingKey } from "@/lib/data/onboarding";
 import { OnboardingCard } from "@/components/dashboard/onboarding-card";
 import { EventFlyerPreview } from "@/components/dashboard/event-flyer-preview";
 import { NoticeAcknowledgement } from "@/components/news/notice-acknowledgement";
@@ -36,23 +40,28 @@ function eventDateParts(date: string) {
 }
 
 export default async function DashboardPage() {
-  const [viewer, members, newsPosts, events, serviceProjects] = await Promise.all([
+  const [viewer, members, newsPosts, events, serviceProjects, committees] = await Promise.all([
     getCurrentMember(),
     getMembers(),
     getVisibleNewsPosts(),
     getEvents(),
     getServiceProjects(),
+    getCommittees(),
   ]);
   const birthdaysToday = members.filter(
     (member) => member.dateOfBirth?.slice(5) === todayMonthDay()
   );
   const today = todayDateString();
-  const upcoming = events.filter((event) => event.date >= today).sort((a, b) => (a.date < b.date ? -1 : 1));
+  const upcoming = upcomingEvents(events);
   const nextEvent = upcoming[0];
   const nextEventAttending = nextEvent
     ? nextEvent.rsvps.yes + (nextEvent.rsvps.guests ?? 0)
     : 0;
-  const channels = viewer ? await getChatChannels(viewer.id) : [];
+  const [channels, personalActivity, onboarding] = await Promise.all([
+    viewer ? getChatChannels(viewer.id) : [],
+    viewer ? getMyRotaryActivity(viewer.id) : null,
+    viewer ? getCompletedOnboarding(viewer.id) : Promise.resolve<OnboardingKey[]>([]),
+  ]);
   const latestMessages = channels
     .flatMap((channel) => channel.messages.map((message) => ({ ...message, channel: channel.name })))
     .filter((message) => !message.deletedAt)
@@ -63,10 +72,9 @@ export default async function DashboardPage() {
   const openServiceProjects = serviceProjects.filter((project) => project.status === "open").slice(0, 2);
   const firstName = viewer?.name.split(" ")[0] ?? "friend";
   const date = nextEvent ? eventDateParts(nextEvent.date) : null;
-  const onboarding = viewer ? await getCompletedOnboarding(viewer.id) : [];
   const nextOnboardingTask = onboardingTasks.find((task) => !onboarding.includes(task.key));
   const missingProfileFields = getMissingMemberProfileFields(viewer);
-  const noticeNeedingAction = latestNotices.find((notice) => notice.requiresAcknowledgement && !notice.acknowledgedAt);
+  const noticeNeedingAction = clubNotices.find((notice) => notice.requiresAcknowledgement && !notice.acknowledgedAt);
   const eventNeedingRsvp = upcoming.find((event) => event.myRsvp === "none");
   const nextAction: NextAction = noticeNeedingAction
     ? { eyebrow: "Notice awaiting you", title: noticeNeedingAction.title, detail: "Read and acknowledge this club update.", href: "/news" }
@@ -102,9 +110,9 @@ export default async function DashboardPage() {
           <div>
             <p className="font-label mb-3 text-primary/70">Member house · Road Town</p>
             <h1 className="font-heading max-w-3xl text-[2.6rem] font-semibold leading-[0.95] text-foreground sm:text-6xl">
-              Your club, <span className="text-primary">today.</span>
+              My <span className="text-primary">Rotary.</span>
             </h1>
-            <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">The next gathering, the updates that matter, and one clear place to begin.</p>
+            <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">Good to see you, {firstName}. Your commitments, your contribution, your club.</p>
           </div>
           <div className="hidden items-center gap-3 pb-1 lg:flex">
             <div className="flex -space-x-2.5">{members.slice(0, 5).map((member) => <MemberAvatar key={member.id} member={member} className="size-9 border-2 border-background" />)}</div>
@@ -112,6 +120,9 @@ export default async function DashboardPage() {
           </div>
         </div>
       </header>
+
+      {viewer && personalActivity && <MyRotary member={viewer} committees={committees} events={events} projects={serviceProjects} activity={personalActivity} />}
+      <div className="px-4 pb-5 sm:px-8 lg:px-10"><p className="font-label text-primary/65">Beyond your diary</p><h2 className="font-heading mt-2 text-3xl font-semibold">Around your club</h2></div>
 
       <div className="grid gap-5 px-4 sm:px-8 lg:grid-cols-[minmax(0,1.65fr)_minmax(19rem,.75fr)] lg:px-10">
         {nextEvent && date ? (
@@ -187,11 +198,6 @@ export default async function DashboardPage() {
 
       <BirthdayBanner viewerId={viewer?.id} birthdays={birthdaysToday} />
 
-      <div className="mx-4 mt-5 flex flex-col gap-2 border-y border-border py-5 sm:mx-8 sm:flex-row sm:items-center sm:justify-between lg:mx-10">
-        <div><p className="font-label text-[0.58rem] text-primary/60">Your member house</p><h2 className="font-heading mt-1 text-2xl font-semibold">Good to see you, {firstName}.</h2></div>
-        <p className="text-sm text-muted-foreground">Here’s the rest of your club at a glance.</p>
-      </div>
-
       <section className="mx-4 mt-5 overflow-hidden rounded-[1.5rem] border border-border bg-card shadow-[var(--shadow-card)] sm:mx-8 lg:mx-10">
         <div className="grid md:grid-cols-[minmax(0,.65fr)_minmax(0,1.35fr)]">
           <div className="bg-[var(--action-gold)] p-6 text-[var(--action-gold-foreground)] sm:p-7">
@@ -226,7 +232,7 @@ export default async function DashboardPage() {
           <div className="border-b border-border p-6 sm:p-7"><p className="font-label text-[0.6rem] text-primary/60">At a glance</p><h2 className="font-heading mt-1 text-3xl font-semibold">Your club life</h2></div>
           <Link href="/directory" className="group flex items-center gap-4 p-6 transition-colors hover:bg-muted/45">
             <span className="flex size-11 items-center justify-center rounded-full bg-[var(--rotary-gold)]/15 text-[#996000]"><Users className="size-5" /></span>
-            <span className="min-w-0 flex-1"><span className="block text-xs text-muted-foreground">Club directory</span><strong className="font-heading mt-0.5 block text-2xl font-semibold">{members.length} people</strong><span className="mt-1 block text-xs text-muted-foreground">One shared purpose</span></span><ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+            <span className="min-w-0 flex-1"><span className="block text-xs text-muted-foreground">Club directory</span><strong className="font-heading mt-0.5 block text-2xl font-semibold">{members.length} {members.length === 1 ? "person" : "people"}</strong><span className="mt-1 block text-xs text-muted-foreground">One shared purpose</span></span><ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
           </Link>
         </section>
 
@@ -241,7 +247,7 @@ export default async function DashboardPage() {
             <div className="border-t border-border pt-5 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
               <div className="mb-3 flex items-center gap-2 text-xs font-bold text-muted-foreground"><HandHeart className="size-4" />Service opportunities</div>
               <div className="space-y-4">
-                {openServiceProjects.map((project) => <div key={project.id}><p className="text-xs text-muted-foreground">{project.startsAt ? formatDate(project.startsAt) : "Date to be announced"}</p><p className="font-heading mt-1 text-lg font-semibold leading-snug">{project.title}</p><p className="mt-1 text-xs text-muted-foreground">{project.volunteerIds.length}{project.volunteerGoal ? ` of ${project.volunteerGoal}` : ""} volunteers</p></div>)}
+                {openServiceProjects.map((project) => <div key={project.id}><p className="text-xs text-muted-foreground">{project.startsAt ? formatDate(toClubDateString(project.startsAt)) : "Date to be announced"}</p><p className="font-heading mt-1 text-lg font-semibold leading-snug">{project.title}</p><p className="mt-1 text-xs text-muted-foreground">{project.volunteerIds.length}{project.volunteerGoal ? ` of ${project.volunteerGoal}` : ""} volunteers</p></div>)}
                 {openServiceProjects.length === 0 && <p className="text-xs leading-5 text-muted-foreground">No open service projects right now.</p>}
               </div>
               <Link href="/projects" className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline">Explore service <ArrowUpRight className="size-3" /></Link>
@@ -250,7 +256,7 @@ export default async function DashboardPage() {
         </section>
       </div>
 
-      <div className="mt-5 flex items-center justify-between px-4 text-xs text-muted-foreground sm:px-8 lg:px-10"><span className="flex items-center gap-2"><CalendarDays className="size-3.5" />Rotary year 2026–27</span><span>Road Town · British Virgin Islands</span></div>
+      <div className="mt-5 flex items-center justify-between px-4 text-xs text-muted-foreground sm:px-8 lg:px-10"><span className="flex items-center gap-2"><CalendarDays className="size-3.5" />Rotary year {rotaryYear(today).label}</span><span>Road Town · British Virgin Islands</span></div>
     </div>
   );
 }

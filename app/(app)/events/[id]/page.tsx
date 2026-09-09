@@ -169,6 +169,12 @@ export default async function EventDetailPage({
                     <span className="text-muted-foreground">Members going</span>
                     <span className="font-medium text-foreground">{event.rsvps.yes}</span>
                   </div>
+                  {(event.rsvps.waitlisted ?? 0) > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Members waitlisted</span>
+                      <span className="font-medium text-foreground">{event.rsvps.waitlisted}</span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Maybe</span>
                     <span className="font-medium text-foreground">{event.rsvps.maybe}</span>

@@ -25,6 +25,7 @@ type MakeupRow = {
   club_or_event: string;
   notes: string | null;
   clubrunner_logged: boolean;
+  voided?: boolean;
   members?: { name: string } | null;
 };
 
@@ -36,6 +37,7 @@ export type MakeupEntry = {
   clubOrEvent: string;
   notes: string | null;
   clubrunnerLogged: boolean;
+  voided?: boolean;
 };
 
 export type AttendanceSummary = {
@@ -58,6 +60,7 @@ function toMakeupEntry(row: MakeupRow): MakeupEntry {
     clubOrEvent: row.club_or_event,
     notes: row.notes,
     clubrunnerLogged: row.clubrunner_logged,
+    voided: row.voided ?? false,
   };
 }
 
@@ -84,6 +87,7 @@ export async function getMemberAttendanceSummary(memberId: string): Promise<Atte
         .from("makeups")
         .select("*, members!makeups_member_id_fkey(name)")
         .eq("member_id", memberId)
+        .eq("voided", false)
         .gte("attended_on", window.startDate)
         .lt("attended_on", window.endDate)
         .order("attended_on", { ascending: false })

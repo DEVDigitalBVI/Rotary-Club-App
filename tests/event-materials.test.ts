@@ -1,3 +1,4 @@
+import nextConfig from "../next.config";
 import { describe, expect, it } from "vitest";
 import {
   EVENT_MATERIAL_MAX_BYTES,
@@ -38,4 +39,10 @@ describe("event material cleanup paths", () => {
     expect(eventMaterialStoragePath("https://example.com/unrelated/file.pdf")).toBeNull();
     expect(eventMaterialStoragePath(null)).toBeNull();
   });
+});
+
+it("allows both maximum-size attachments through the action and proxy limits", () => {
+  const twoAttachments = EVENT_MATERIAL_MAX_BYTES * 2;
+  expect(nextConfig.experimental?.serverActions?.bodySizeLimit).toBeGreaterThan(twoAttachments);
+  expect(nextConfig.experimental?.proxyClientMaxBodySize).toBeGreaterThan(twoAttachments);
 });

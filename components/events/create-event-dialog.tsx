@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { validateEventMaterial } from "@/lib/event-materials";
 import { createEventAction } from "@/app/(app)/events/actions";
 
 export function CreateEventDialog() {
@@ -73,13 +74,27 @@ export function CreateEventDialog() {
             e.preventDefault();
             setError(null);
             const formData = new FormData(e.currentTarget);
+            for (const kind of ["flyer", "agenda"] as const) {
+              const file = formData.get(kind);
+              if (file instanceof File && file.size > 0) {
+                const validationError = validateEventMaterial(file, kind);
+                if (validationError) {
+                  setError(validationError);
+                  return;
+                }
+              }
+            }
             startTransition(async () => {
-              const result = await createEventAction(undefined, formData);
-              if (result?.error) {
-                setError(result.error);
-              } else {
-                setOpen(false);
-                resetForm();
+              try {
+                const result = await createEventAction(undefined, formData);
+                if (result?.error) {
+                  setError(result.error);
+                } else {
+                  setOpen(false);
+                  resetForm();
+                }
+              } catch {
+                setError("Couldn't finish publishing. Please check Events before trying again.");
               }
             });
           }}

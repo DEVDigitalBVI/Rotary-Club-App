@@ -25,7 +25,7 @@ export function RiProjectSummary({ project }: { project: ServiceProject }) {
     `AMOUNT STILL NEEDED\n${project.estimatedBudget == null ? "—" : amount(Math.max(0, project.estimatedBudget - (project.amountPledged ?? 0)), project.currency)}`,
     `ROTARY GRANT\n${project.isRotaryGrant ? [project.grantType, project.grantNumber, amount(project.grantAmount, project.currency)].filter(Boolean).join(" · ") : "No"}`,
     `PARTNERS\n${list(project.partnerOrganizations)}`, `CONTACTS\n${list(project.projectContacts)}`, `COLLABORATION NEEDS\n${list(project.collaborationNeeds)}`,
-    `ENGAGEMENT\n${project.volunteerIds.length} volunteers · ${project.approvedHours} approved hours · ${project.beneficiariesReached ?? "—"} beneficiaries`,
+    `ENGAGEMENT\n${project.volunteerIds.length} volunteers · ${project.approvedHours} service hours · ${project.beneficiariesReached ?? "—"} beneficiaries`,
     `CONTRIBUTIONS\nCash: ${amount(project.cashContributions, project.currency)} · In-kind: ${amount(project.inKindContributions, project.currency)}`,
     `RELATED LINKS\n${list([...project.relatedLinks, ...project.videoLinks])}`,
   ].join("\n\n"), [project]);

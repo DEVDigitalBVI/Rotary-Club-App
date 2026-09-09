@@ -43,22 +43,31 @@ export async function updateSession(request: NextRequest) {
   const issuedInFuture = issuedAt !== null && issuedAt > Math.floor(Date.now() / 1000);
   const user = claimsError || issuedInFuture ? null : claims;
 
-  // /auth (route handlers for emailed links — e.g. password reset) is
-  // public because the visitor has no session yet; the handler itself is
-  // what establishes one via verifyOtp. /update-password is deliberately
-  // NOT public — it requires the session that /auth/confirm just set.
-  const publicRoutes = ["/login", "/signup", "/forgot-password", "/auth"];
-  const isPublicRoute = publicRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
+  // Confirmation links must reach verifyOtp even when another session exists.
+  // Password updates remain protected until the confirmation establishes one.
+  const pathname = request.nextUrl.pathname;
+  const isAuthConfirmation = pathname === "/auth/confirm";
+  const isGuestPage = ["/login", "/signup", "/forgot-password"].includes(pathname);
+  const isPublicRoute = isGuestPage || isAuthConfirmation;
+
+  function redirectWithSession(path: string) {
+    const url = request.nextUrl.clone();
+    url.pathname = path;
+    const response = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie));
+    // Preserve refresh cache headers as well as cookies on redirects.
+    for (const name of ["cache-control", "expires", "pragma"]) {
+      const value = supabaseResponse.headers.get(name);
+      if (value) response.headers.set(name, value);
+    }
+    return response;
+  }
 
   // A corrupt, expired, or future-issued token must be removed before the
   // redirect. Otherwise /login sees the same cookie on the next request and
   // can bounce the visitor straight back into the authenticated app.
   if ((claimsError || issuedInFuture) && !isPublicRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    const response = NextResponse.redirect(url);
+    const response = redirectWithSession("/login");
     request.cookies
       .getAll()
       .filter(({ name }) => name.startsWith("sb-"))
@@ -67,15 +76,11 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (!user && !isPublicRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return redirectWithSession("/login");
   }
 
-  if (user && isPublicRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+  if (user && isGuestPage) {
+    return redirectWithSession("/dashboard");
   }
 
   // Must return supabaseResponse as-is (or copy its cookies onto a new

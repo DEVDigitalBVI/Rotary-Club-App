@@ -68,6 +68,7 @@ export function formatDate(iso: string, opts: Intl.DateTimeFormatOptions = {}) {
 export function formatDateTime(iso: string) {
   const date = new Date(iso);
   return date.toLocaleString("en-US", {
+    timeZone: CLUB_TIME_ZONE,
     month: "short",
     day: "numeric",
     hour: "numeric",
@@ -77,6 +78,7 @@ export function formatDateTime(iso: string) {
 
 export function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-US", {
+    timeZone: CLUB_TIME_ZONE,
     hour: "numeric",
     minute: "2-digit",
   });

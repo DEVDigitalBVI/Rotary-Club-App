@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { EVENT_FORM_MAX_BYTES } from "./lib/event-materials";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.0.24"],
@@ -8,10 +9,10 @@ const nextConfig: NextConfig = {
     // caches so development and production builds stay reliable on this volume.
     turbopackFileSystemCacheForDev: false,
     turbopackFileSystemCacheForBuild: false,
+    proxyClientMaxBodySize: EVENT_FORM_MAX_BYTES,
     serverActions: {
-      // Profile photos are capped at 3 MB; leave a small allowance for the
-      // rest of the multipart form while retaining a strict request ceiling.
-      bodySizeLimit: "4mb",
+      // Allow both 10 MB event attachments plus multipart overhead.
+      bodySizeLimit: EVENT_FORM_MAX_BYTES,
     },
   },
 };

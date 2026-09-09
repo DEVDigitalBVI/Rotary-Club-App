@@ -1,13 +1,14 @@
-import { CalendarDays, Clock3, HandHeart, MapPin, Users } from "lucide-react";
+import { getLedProjectIds } from "@/lib/data/project-slots";
+import Link from "next/link";
+import { CalendarDays, HandHeart, MapPin, Users } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { getServiceProjects } from "@/lib/data/projects";
 import { getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
-import { committeeManageRight } from "@/lib/mock-data";
-import { deleteProjectAction, joinProjectAction, leaveProjectAction, logVolunteerHoursAction } from "./actions";
+import { committeeManageRight, canAssignRoles } from "@/lib/mock-data";
+import { deleteProjectAction } from "./actions";
 import { PageContainer } from "@/components/page-container";
 import { DeleteRecordButton } from "@/components/delete-record-button";
 import { ProjectFormDialog } from "@/components/projects/project-form-dialog";
@@ -24,18 +25,19 @@ export default async function ProjectsPage() {
   const [projects, member, committees] = await Promise.all([getServiceProjects(), getCurrentMember(), getCommittees()]);
   const community = committees.find((committee) => committee.id === "community-service");
   const canManage = Boolean(member && community && committeeManageRight(member, community));
-  const visibleProjects = canManage ? projects : projects.filter((project) => project.status === "open" || project.status === "completed");
+  const ledProjects = member ? await getLedProjectIds(member.id) : [];
+  const visibleProjects = canManage ? projects : projects.filter((project) => project.status === "open" || project.status === "completed" || ledProjects.includes(project.id));
 
   return (
     <div>
       <PageHeader title="Service projects" description="Plan measurable service, mobilize members, and keep every project ready for Rotary International." actions={canManage && visibleProjects.length > 0 ? <ProjectFormDialog /> : undefined} />
       <PageContainer className="max-w-6xl space-y-6">
+        {member && canAssignRoles(member) && <Link href="/projects/makeups" className="inline-block text-sm font-semibold text-primary hover:underline">Meeting makeups · ClubRunner entry →</Link>}
         {visibleProjects.length === 0 ? (
           <EmptyState icon={HandHeart} title="The next act of service starts here" description={canManage ? "Create a project when the club is ready to mobilize volunteers and measure its impact." : "No service projects are open right now. Check back for the club’s next opportunity to help."} action={canManage ? <ProjectFormDialog /> : undefined} />
         ) : (
           <div className="grid gap-5 lg:grid-cols-2">
             {visibleProjects.map((project) => {
-              const joined = Boolean(member && project.volunteerIds.includes(member.id));
               const volunteerProgress = project.volunteerGoal ? Math.min(100, project.volunteerIds.length / project.volunteerGoal * 100) : 0;
               const readiness = projectReadiness(project);
               return (
@@ -61,20 +63,13 @@ export default async function ProjectsPage() {
                   <div className="space-y-5 p-6">
                     <Progress value={volunteerProgress}><span className="flex items-center gap-1.5 text-xs font-bold"><Users className="size-3.5" />{project.volunteerIds.length}{project.volunteerGoal ? ` of ${project.volunteerGoal}` : ""} volunteers</span></Progress>
                     <div className="flex flex-wrap gap-2">
-                      <form action={joined ? leaveProjectAction.bind(null, project.id) : joinProjectAction.bind(null, project.id)}><Button type="submit" variant={joined ? "outline" : "default"} className="rounded-full">{joined ? "Leave project" : "I’ll volunteer"}</Button></form>
+                      <Button nativeButton={false} render={<Link href={`/projects/${project.id}`} />}>{project.status === "open" ? "Choose a time slot" : "View slots & attendance"}</Button>
                       <ProjectImpactDialog project={project} />
                       {canManage && (
                         <div className="ml-auto flex flex-wrap gap-2"><ProjectFormDialog project={project} /><RiProjectSummary project={project} /><DeleteRecordButton label="Delete" title={`Delete ${project.title}?`} description="This permanently removes the project, its volunteer roster, and all logged hours. This cannot be undone." deleteAction={deleteProjectAction.bind(null, project.id)} className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive" /></div>
                       )}
                     </div>
-                    {joined && (
-                      <form action={logVolunteerHoursAction.bind(null, project.id)} className="grid gap-2 border-t border-border pt-5 sm:grid-cols-[1fr_1fr_auto]">
-                        <Input name="servedOn" type="date" required aria-label="Date served" />
-                        <Input name="hours" type="number" min="0.25" max="24" step="0.25" placeholder="Hours" required aria-label="Hours served" />
-                        <Button type="submit" variant="secondary"><Clock3 className="size-4" />Log hours</Button>
-                      </form>
-                    )}
-                    {project.approvedHours > 0 && <p className="text-xs text-muted-foreground">{project.approvedHours} approved service hours contributed.</p>}
+                    {project.approvedHours > 0 && <p className="text-xs text-muted-foreground">{project.approvedHours} service hours contributed.</p>}
                   </div>
                 </article>
               );

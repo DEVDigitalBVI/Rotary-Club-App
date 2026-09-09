@@ -5,13 +5,8 @@ function escapeIcs(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
 }
 
-function utcStamp(date: string, time: string) {
-  const match = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-  let hour = match ? Number(match[1]) % 12 : 12;
-  if (match?.[3].toUpperCase() === "PM") hour += 12;
-  const minute = match?.[2] ?? "00";
-  const value = new Date(`${date}T${String(hour).padStart(2, "0")}:${minute}:00-04:00`);
-  return value.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+function utcStamp(instant: string) {
+  return new Date(instant).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
 }
 
 export async function GET() {
@@ -29,7 +24,8 @@ export async function GET() {
       "BEGIN:VEVENT",
       `UID:${event.id}@rotaryroadtown.app`,
       `DTSTAMP:${now}`,
-      `DTSTART:${utcStamp(event.date, event.time)}`,
+      `DTSTART:${utcStamp(event.startsAt)}`,
+      ...(event.endsAt ? [`DTEND:${utcStamp(event.endsAt)}`] : []),
       `SUMMARY:${escapeIcs(event.title)}`,
       ...(event.location ? [`LOCATION:${escapeIcs(event.location)}`] : []),
       ...(event.description ? [`DESCRIPTION:${escapeIcs(event.description)}`] : []),

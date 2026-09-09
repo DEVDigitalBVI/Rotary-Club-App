@@ -4,7 +4,8 @@ import { getMembers, getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
 import { OnboardingVisitTracker } from "@/components/directory/onboarding-visit-tracker";
 
-export default async function DirectoryPage() {
+export default async function DirectoryPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams;
   const [members, committees, currentMember] = await Promise.all([
     getMembers(),
     getCommittees(),
@@ -20,6 +21,8 @@ export default async function DirectoryPage() {
       />
       {currentMember ? (
         <MemberDirectory
+          key={tab === "committees" ? "committees" : "members"}
+          initialTab={tab === "committees" ? "committees" : "members"}
           members={members}
           committees={committees}
           currentMember={currentMember}

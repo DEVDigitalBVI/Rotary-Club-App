@@ -66,11 +66,16 @@ export async function getServiceProjects(): Promise<ServiceProject[]> {
   const supabase = await createClient();
   const [projectsResult, volunteersResult, hoursResult] = await Promise.all([
     supabase.from("service_projects").select("*").order("starts_at", { nullsFirst: false }).returns<ProjectRow[]>(),
-    supabase.from("project_volunteers").select("project_id, member_id").returns<{ project_id: string; member_id: string }[]>(),
+    supabase.rpc("project_participants"),
     supabase.rpc("get_project_approved_hours"),
   ]);
   throwOnSupabaseError(projectsResult.error, "Unable to load service projects");
-  throwOnSupabaseError(volunteersResult.error, "Unable to load project volunteers");
+  // Keep the existing app usable until the scheduling migration is activated.
+  const participants = volunteersResult.error && ["PGRST202", "42883"].includes(volunteersResult.error.code)
+    ? await supabase.from("project_volunteers").select("project_id, member_id")
+    : volunteersResult;
+  throwOnSupabaseError(participants.error, "Unable to load project volunteers");
+  const participantRows = (participants.data ?? []) as { project_id: string; member_id: string }[];
   throwOnSupabaseError(hoursResult.error, "Unable to load volunteer hours");
   const approvedHourRows = (hoursResult.data ?? []) as {
     project_id: string;
@@ -87,7 +92,7 @@ export async function getServiceProjects(): Promise<ServiceProject[]> {
     volunteerGoal: project.volunteer_goal,
     hoursGoal: project.hours_goal == null ? null : Number(project.hours_goal),
     status: project.status,
-    volunteerIds: (volunteersResult.data ?? []).filter((row) => row.project_id === project.id).map((row) => row.member_id),
+    volunteerIds: participantRows.filter((row) => row.project_id === project.id).map((row) => row.member_id),
     approvedHours: approvedHourRows.filter((row) => row.project_id === project.id).reduce((sum, row) => sum + Number(row.hours), 0),
     detailedDescription: project.detailed_description,
     language: project.language,

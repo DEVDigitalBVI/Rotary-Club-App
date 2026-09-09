@@ -581,6 +581,8 @@ export type EventAgenda = {
 export type EventItem = {
   id: string;
   title: string;
+  startsAt?: string; // Original absolute instant for calendar exports
+  endsAt?: string;
   date: string; // ISO date
   time: string;
   location: string;
@@ -588,7 +590,7 @@ export type EventItem = {
   description: string;
   speaker?: { name: string; topic: string };
   rsvpDeadline?: string;
-  rsvps: { yes: number; no: number; maybe: number; guests?: number };
+  rsvps: { yes: number; no: number; maybe: number; guests?: number; waitlisted?: number };
   myRsvp: RsvpStatus;
   registration?: {
     guestCount: number;

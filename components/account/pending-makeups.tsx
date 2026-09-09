@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { markMakeupClubrunnerLoggedAction } from "@/app/(app)/account/actions";
 
 export function PendingMakeups({ makeups }: { makeups: MakeupEntry[] }) {
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string>();
 
   return (
     <Card>
@@ -22,6 +23,7 @@ export function PendingMakeups({ makeups }: { makeups: MakeupEntry[] }) {
             <span className="text-xs text-muted-foreground">{makeups.length}</span>
           )}
         </div>
+        {error && <p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
         {makeups.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">All caught up.</p>
         ) : (
@@ -36,7 +38,7 @@ export function PendingMakeups({ makeups }: { makeups: MakeupEntry[] }) {
                     {m.memberName}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {m.clubOrEvent} · {formatDate(m.attendedOn)}
+                    {m.voided ? "Remove makeup: " : "Add makeup: "}{m.clubOrEvent} · {formatDate(m.attendedOn)}
                   </p>
                   {m.notes && (
                     <p className="mt-0.5 text-xs text-muted-foreground">{m.notes}</p>
@@ -49,12 +51,14 @@ export function PendingMakeups({ makeups }: { makeups: MakeupEntry[] }) {
                   disabled={pending}
                   onClick={() =>
                     startTransition(async () => {
-                      await markMakeupClubrunnerLoggedAction(m.id);
+                      setError(undefined);
+                      const result = await markMakeupClubrunnerLoggedAction(m.id);
+                      setError(result?.error);
                     })
                   }
                 >
                   <Check />
-                  Logged
+                  {m.voided ? "Correction done" : "Logged"}
                 </Button>
               </li>
             ))}

@@ -61,10 +61,12 @@ export function MemberDirectory({
   members,
   committees,
   currentMember,
+  initialTab = "members",
 }: {
   members: Member[];
   committees: Committee[];
   currentMember: Member;
+  initialTab?: "members" | "committees";
 }) {
   const [query, setQuery] = useState("");
   const [committeeFilter, setCommitteeFilter] = useState("all");
@@ -122,7 +124,7 @@ export function MemberDirectory({
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 p-4 sm:p-8">
-      <Tabs defaultValue="members">
+      <Tabs defaultValue={initialTab}>
         <TabsList>
           <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
           <TabsTrigger value="committees">

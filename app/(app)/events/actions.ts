@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentMember } from "@/lib/data/members";
@@ -138,10 +139,50 @@ export async function createEventAction(
     return { error: "Enter a valid date and time." };
   }
 
+  const attachments = [
+    { kind: "flyer" as const, file: flyer },
+    { kind: "agenda" as const, file: agenda },
+  ].filter((item): item is { kind: "flyer" | "agenda"; file: File } =>
+    item.file instanceof File && item.file.size > 0
+  );
+  // Validate every file before uploading anything or creating an event.
+  for (const { kind, file } of attachments) {
+    const error = validateEventMaterial(file, kind);
+    if (error) return { error };
+  }
+
   const supabase = await createClient();
-  const { data: inserted, error } = await supabase
-    .from("events")
-    .insert({
+  const eventId = randomUUID();
+  const storage = supabase.storage.from(EVENT_MATERIALS_BUCKET);
+  const uploadedPaths: string[] = [];
+  const materials: {
+    flyer_url?: string; flyer_alt?: string;
+    agenda_url?: string; agenda_file_name?: string;
+    agenda_uploaded_at?: string; agenda_size_label?: string;
+  } = {};
+  let published = false;
+  try {
+    // Storage policies authorize officers independently of an event row.
+    // Publish once, with all URLs attached, only after every upload succeeds.
+    for (const { kind, file } of attachments) {
+      const path = `${eventId}/${kind}${eventMaterialExtension(file.type)}`;
+      uploadedPaths.push(path);
+      const { error } = await storage.upload(path, file, { contentType: file.type });
+      if (error) return { error: `Couldn't upload the ${kind}. The event has not been published.` };
+      const { data: { publicUrl } } = storage.getPublicUrl(path);
+      if (kind === "flyer") {
+        materials.flyer_url = publicUrl;
+        materials.flyer_alt = file.name;
+      } else {
+        materials.agenda_url = publicUrl;
+        materials.agenda_file_name = file.name;
+        materials.agenda_uploaded_at = new Date().toISOString();
+        materials.agenda_size_label = `${Math.max(1, Math.round(file.size / 1024))} KB`;
+      }
+    }
+
+    const { error } = await supabase.from("events").insert({
+      id: eventId,
       title,
       starts_at: startsAt.toISOString(),
       location: location || null,
@@ -151,24 +192,25 @@ export async function createEventAction(
       allow_guests: allowGuests,
       waitlist_enabled: waitlistEnabled,
       dietary_notes_enabled: dietaryNotesEnabled,
-    })
-    .select("id")
-    .single();
-
-  if (error || !inserted) {
-    return { error: "Couldn't create the event — you may not have permission." };
-  }
-
-  if (flyer instanceof File && flyer.size > 0) {
-    const result = await uploadFlyer(supabase, inserted.id, flyer);
-    if (result.error) return result;
-  }
-  if (agenda instanceof File && agenda.size > 0) {
-    const result = await uploadAgenda(supabase, inserted.id, agenda);
-    if (result.error) return result;
+      ...materials,
+    });
+    if (error) return { error: "Couldn't create the event — you may not have permission." };
+    published = true;
+  } catch {
+    return { error: "Couldn't finish publishing the event. Please check Events before trying again." };
+  } finally {
+    if (!published && uploadedPaths.length > 0) {
+      try {
+        const { error } = await storage.remove(uploadedPaths);
+        if (error) console.error("Unable to clean up unpublished event attachments.");
+      } catch {
+        console.error("Unable to clean up unpublished event attachments.");
+      }
+    }
   }
 
   revalidatePath("/events");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -225,6 +267,7 @@ export async function updateRsvpAction(
 
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/events");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -242,6 +285,7 @@ export async function uploadEventFlyerAction(
   if (!result.error) {
     revalidatePath(`/events/${eventId}`);
     revalidatePath("/events");
+  revalidatePath("/dashboard");
   }
   return result;
 }
@@ -267,6 +311,7 @@ export async function removeEventFlyerAction(eventId: string): Promise<EventForm
 
   revalidatePath(`/events/${eventId}`);
   revalidatePath("/events");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 

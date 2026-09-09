@@ -1,6 +1,9 @@
 export const EVENT_MATERIALS_BUCKET = "event-materials";
 export const EVENT_MATERIAL_MAX_BYTES = 10 * 1024 * 1024;
 
+// Two attachments plus multipart fields and headers.
+export const EVENT_FORM_MAX_BYTES = 2 * EVENT_MATERIAL_MAX_BYTES + 1024 * 1024;
+
 export type EventMaterialKind = "flyer" | "agenda";
 
 const MIME_EXTENSIONS: Record<string, string> = {

@@ -36,17 +36,22 @@ function toEventItem(
   row: EventRow,
   rsvps: RsvpRow[],
   currentMemberId: string | null
-): EventItem {
+): EventItem & { startsAt: string } {
   const own = currentMemberId ? rsvps.find((r) => r.member_id === currentMemberId) : undefined;
-  const counts = { yes: 0, no: 0, maybe: 0 };
-  for (const r of rsvps) counts[r.status]++;
-  const guests = rsvps
-    .filter((r) => r.status === "yes")
+  const confirmed = rsvps.filter((r) => r.status === "yes" && r.registration_status === "registered");
+  const counts = { yes: confirmed.length, no: 0, maybe: 0 };
+  for (const r of rsvps) {
+    if (r.status !== "yes") counts[r.status]++;
+  }
+  const waitlisted = rsvps.filter((r) => r.status === "yes" && r.registration_status === "waitlisted").length;
+  const guests = confirmed
     .reduce((total, rsvp) => total + Number(rsvp.guest_count), 0);
 
   return {
     id: row.id,
     title: row.title,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at ?? undefined,
     date: toClubDateString(row.starts_at),
     time: row.ends_at
       ? `${formatTime(row.starts_at)} – ${formatTime(row.ends_at)}`
@@ -59,7 +64,7 @@ function toEventItem(
       ? { name: row.speaker_name, topic: row.speaker_topic ?? "" }
       : undefined,
     rsvpDeadline: row.rsvp_deadline ?? undefined,
-    rsvps: { ...counts, guests },
+    rsvps: { ...counts, guests, waitlisted },
     myRsvp: own?.status ?? "none",
     registration: own ? { guestCount: own.guest_count, dietaryNotes: own.dietary_notes ?? "", status: own.registration_status } : undefined,
     capacity: row.capacity ?? undefined,
@@ -70,12 +75,11 @@ function toEventItem(
       row.attendance_present != null && row.attendance_total != null
         ? { present: row.attendance_present, total: row.attendance_total }
         : undefined,
-    // Before attendance is finalized, "who's confirmed" is approximated as
-    // everyone who RSVP'd yes. The detail page replaces this with real rows.
-    attendeeIds: rsvps.filter((r) => r.status === "yes").map((r) => r.member_id),
+    // Only registered members are confirmed; waitlisted RSVPs have no seat.
+    attendeeIds: confirmed.map((r) => r.member_id),
     attendeeGuestCounts: Object.fromEntries(
-      rsvps
-        .filter((r) => r.status === "yes" && Number(r.guest_count) > 0)
+      confirmed
+        .filter((r) => Number(r.guest_count) > 0)
         .map((r) => [r.member_id, Number(r.guest_count)])
     ),
     flyer: row.flyer_url ? { url: row.flyer_url, alt: row.flyer_alt ?? row.title } : undefined,
@@ -100,7 +104,7 @@ function groupByEvent(rows: RsvpRow[]) {
   return byEvent;
 }
 
-export async function getEvents(): Promise<EventItem[]> {
+export async function getEvents(): Promise<(EventItem & { startsAt: string })[]> {
   const supabase = await createClient();
   const [eventsResult, rsvpsResult, currentMember] = await Promise.all([
     supabase.from("events").select("*").order("starts_at").returns<EventRow[]>(),

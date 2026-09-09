@@ -38,6 +38,7 @@ export async function logMakeupAction(
   }
 
   revalidatePath("/account");
+  revalidatePath("/projects/makeups");
   return { success: true };
 }
 
@@ -47,19 +48,20 @@ export async function markMakeupClubrunnerLoggedAction(
 ): Promise<AccountFormState> {
   const currentMember = await getCurrentMember();
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("makeups")
     .update({
       clubrunner_logged: true,
       clubrunner_logged_at: new Date().toISOString(),
       clubrunner_logged_by: currentMember?.id ?? null,
     })
-    .eq("id", makeupId);
+    .eq("id", makeupId).select("id").maybeSingle();
 
-  if (error) {
+  if (error || !data) {
     return { error: "Couldn't update that makeup — you may not have permission." };
   }
 
   revalidatePath("/account");
+  revalidatePath("/projects/makeups");
   return { success: true };
 }
