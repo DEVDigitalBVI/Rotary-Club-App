@@ -1,3 +1,4 @@
+import { decodeXml, element } from "./rss";
 import type { NewsPost } from "@/lib/club";
 
 export const DISTRICT_NEWS_RSS_URL =
@@ -11,21 +12,6 @@ type DistrictStoryPreview = {
   body: string;
   imageUrl?: string;
 };
-
-function decodeXml(value: string) {
-  return value
-    .replace(/^<!\[CDATA\[|\]\]>$/g, "")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">");
-}
-
-function element(item: string, tag: string) {
-  const match = item.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, "i"));
-  return match ? decodeXml(match[1].trim()) : "";
-}
 
 /**
  * Parse the narrowly filtered news index for District 7020. The district's

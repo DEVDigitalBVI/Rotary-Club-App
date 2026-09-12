@@ -252,20 +252,10 @@ export async function updateRsvpAction(
   if (!member) return { error: "You must be signed in." };
   const supabase = await createClient();
   const guestCount = Math.max(0, Math.min(10, Math.floor(details?.guestCount ?? 0)));
-  let { error } = await supabase.rpc("change_event_rsvp", {
+  const { error } = await supabase.rpc("change_event_rsvp", {
     p_event: eventId, p_status: status, p_guests: guestCount,
     p_dietary: details?.dietaryNotes?.trim() || null,
   });
-  // Preserve the existing RSVP path until this environment applies the migration.
-  if (error && ["PGRST202", "42883"].includes(error.code)) {
-    const legacy = await supabase.from("event_rsvps").upsert({
-      event_id: eventId, member_id: member.id, status,
-      guest_count: status === "yes" ? guestCount : 0,
-      dietary_notes: details?.dietaryNotes?.trim() || null,
-      registration_status: "registered",
-    }, { onConflict: "event_id,member_id" });
-    error = legacy.error;
-  }
   if (error) return { error: error.code === "P0001" ? error.message : "Couldn't update your RSVP." };
 
   revalidatePath(`/events/${eventId}`);

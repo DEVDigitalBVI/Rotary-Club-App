@@ -1,5 +1,7 @@
 "use server";
 
+import { toMessage } from "@/lib/chat-message";
+
 import { revalidatePath } from "next/cache";
 import { getCurrentMember } from "@/lib/data/members";
 import { createClient } from "@/lib/supabase/server";
@@ -110,17 +112,5 @@ export async function loadEarlierChatMessagesAction(channelId: string, before: s
   if (reactionResult.error) throw new Error("Unable to load message reactions.", { cause: reactionResult.error });
   const reactions = (reactionResult.data ?? []) as { message_id: string; member_id: string; emoji: string }[];
 
-  return rows.reverse().map((row) => ({
-    id: row.id,
-    channelId: row.channel_id,
-    senderId: row.sender_id,
-    body: row.body,
-    replyToId: row.reply_to_id ?? undefined,
-    editedAt: row.edited_at ?? undefined,
-    deletedAt: row.deleted_at ?? undefined,
-    createdAt: row.created_at,
-    reactions: reactions.filter((reaction) => reaction.message_id === row.id).map((reaction) => ({
-      messageId: reaction.message_id, memberId: reaction.member_id, emoji: reaction.emoji,
-    })),
-  }));
+  return rows.reverse().map((row) => toMessage(row, reactions));
 }

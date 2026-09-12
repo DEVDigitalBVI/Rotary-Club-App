@@ -147,7 +147,7 @@
   --card-foreground: oklch(0.94 0.006 262);
   --popover: oklch(0.208 0.017 262);
   --popover-foreground: oklch(0.94 0.006 262);
-  --primary: color-mix(in oklch, var(--rotary-blue) 75%, white);
+  --primary: #8eb8ff;
   --primary-foreground: oklch(0.15 0.02 262);
   --secondary: var(--rotary-gold);
   --secondary-foreground: oklch(0.2 0.03 70);
@@ -246,9 +246,9 @@
   .font-label {
     font-family: var(--font-sans);
     font-weight: 700;
-    letter-spacing: 0.13em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    font-size: max(0.7rem, 11px);
+    font-size: max(0.75rem, 12px);
     line-height: 1.35;
   }
 }
@@ -352,4 +352,24 @@
    with real edges and no fade to draw. */
 @utility mask-fade-none {
   mask-image: none;
+}
+
+/* Long forms keep actions visible while only their fields scroll. */
+@media (max-width: 639px) {
+  [data-slot="dialog-content"].form-dialog {
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    transform: none;
+    translate: none;
+    --tw-translate-x: 0;
+    --tw-translate-y: 0;
+    animation: none;
+    border-radius: 0;
+    padding-top: env(safe-area-inset-top);
+  }
+  .form-dialog input, .form-dialog textarea, .form-dialog select { font-size: 1rem; }
 }

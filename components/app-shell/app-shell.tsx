@@ -21,9 +21,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex h-28 items-center px-6">
           <BrandLockup className="-ml-3" logoClassName="h-[5.5rem]" />
         </div>
-        <p className="font-label px-6 pb-5 text-[0.62rem] text-white/45">Member house · Road Town</p>
+        <p className="font-label px-6 pb-5 text-sm text-sidebar-foreground/75">Member house · Road Town</p>
         <SidebarNav unreadChatCount={unreadChatCount} />
-        <div className="flex items-center gap-2 border-t border-sidebar-border p-4">
+        <div className="space-y-3 border-t border-sidebar-border p-4">
           <div className="min-w-0 flex-1">
             {currentMember ? (
               <UserMenu member={currentMember} variant="expanded" />
@@ -33,6 +33,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               </p>
             )}
           </div>
+          <div className="flex items-center justify-between border-t border-sidebar-border pt-3">
+            <span className="text-sm text-sidebar-foreground/80">Notifications & theme</span>
+            <div className="flex items-center gap-2">
           {currentMember && (
             <NotificationBell
               notifications={notifications}
@@ -40,7 +43,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
               className="shrink-0 text-sidebar-foreground hover:bg-sidebar-accent"
             />
           )}
-          <ThemeToggle className="shrink-0" />
+          <ThemeToggle className="shrink-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-white" />
+            </div>
+          </div>
         </div>
       </aside>
 

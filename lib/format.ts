@@ -1,10 +1,3 @@
-export function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
-}
-
 // The club meets in the British Virgin Islands, so "today" for birthday
 // recognition is BVI local time — not the server's timezone (Vercel runs
 // UTC), which would flip the day at the wrong hour for anyone here.

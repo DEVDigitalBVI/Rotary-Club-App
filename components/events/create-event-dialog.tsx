@@ -60,8 +60,8 @@ export function CreateEventDialog() {
         <Plus />
         Create event
       </Button>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="form-dialog overflow-hidden p-0 sm:max-w-xl" contentClassName="flex min-h-0 flex-col gap-0 overflow-hidden">
+        <DialogHeader className="shrink-0 border-b border-border px-5 py-5 pr-12">
           <DialogTitle>Create event</DialogTitle>
           <DialogDescription>
             Members will see this on their Events tab right away.
@@ -69,7 +69,7 @@ export function CreateEventDialog() {
         </DialogHeader>
 
         <form
-          className="flex flex-col gap-3"
+          className="flex min-h-0 flex-1 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
             setError(null);
@@ -99,11 +99,13 @@ export function CreateEventDialog() {
             });
           }}
         >
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
           {error && (
             <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
               {error}
             </p>
           )}
+          <fieldset className="space-y-4"><legend className="font-heading mb-3 text-xl font-semibold">Event details</legend>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="event-title">Title</Label>
             <Input id="event-title" name="title" placeholder="Weekly Club Meeting" required />
@@ -114,7 +116,7 @@ export function CreateEventDialog() {
               <Input id="event-date" name="date" type="date" required />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="event-time">Time</Label>
+              <Label htmlFor="event-time">Time (BVI)</Label>
               <Input id="event-time" name="time" type="time" required />
             </div>
           </div>
@@ -127,18 +129,20 @@ export function CreateEventDialog() {
             <Textarea id="event-description" name="description" rows={3} />
           </div>
 
+          </fieldset>
+          <fieldset className="space-y-4 border-t border-border pt-4"><legend className="font-heading pr-3 text-xl font-semibold">Attendance</legend>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="event-capacity">Capacity</Label>
             <Input id="event-capacity" name="capacity" type="number" min="1" placeholder="Leave blank for unlimited" />
           </div>
 
           <div className="grid gap-2 rounded-lg border border-border p-3 text-sm">
-            <label className="flex items-center gap-2"><input type="checkbox" name="allowGuests" className="size-4 accent-primary" />Allow guests</label>
-            <label className="flex items-center gap-2"><input type="checkbox" name="waitlistEnabled" className="size-4 accent-primary" />Enable waitlist when capacity is reached</label>
-            <label className="flex items-center gap-2"><input type="checkbox" name="dietaryNotesEnabled" className="size-4 accent-primary" />Collect dietary requirements</label>
+            <label className="flex min-h-11 items-center gap-3"><input type="checkbox" name="allowGuests" className="size-4 accent-primary" />Allow guests</label>
+            <label className="flex min-h-11 items-center gap-3"><input type="checkbox" name="waitlistEnabled" className="size-4 accent-primary" />Enable waitlist when capacity is reached</label>
+            <label className="flex min-h-11 items-center gap-3"><input type="checkbox" name="dietaryNotesEnabled" className="size-4 accent-primary" />Collect dietary requirements</label>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-foreground">
+          <label className="flex min-h-11 items-center gap-3 text-sm text-foreground">
             <input
               type="checkbox"
               name="countsTowardAttendance"
@@ -148,6 +152,8 @@ export function CreateEventDialog() {
             Counts toward the 50% attendance requirement
           </label>
 
+          </fieldset>
+          <fieldset className="space-y-4 border-t border-border pt-4"><legend className="font-heading pr-3 text-xl font-semibold">Attachments <span className="font-sans text-sm font-normal text-muted-foreground">Optional</span></legend>
           <div className="flex flex-col gap-1.5">
             <Label>Flyer</Label>
             <input
@@ -233,7 +239,10 @@ export function CreateEventDialog() {
               <span className="truncate">{agendaName ?? "Add agenda"}</span>
             </Button>
           </div>
-          <DialogFooter className="mt-2">
+          </fieldset>
+          </div>
+          <DialogFooter className="m-0 shrink-0 flex-row items-center justify-between rounded-none bg-popover px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <Button type="button" variant="outline" disabled={pending} onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
             <Button type="submit" disabled={pending} className="font-heading">
               {pending ? "Publishing…" : "Publish event"}
             </Button>

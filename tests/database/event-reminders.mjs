@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import { authenticatedQuery } from './helpers.mjs';
 const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
 const db = new PGlite();
 await db.exec(`
@@ -31,11 +32,7 @@ for (const role of ['secretary','lead','member','waiting','outsider']) {
  await db.query('insert into auth.users(id,email) values($1,$2)',[ids[role],`${role}@example.test`]);
  await db.query('insert into public.members(id,user_id,name,email,join_date,position) values($1,$1,$2,$3,current_date,$4)',[ids[role],role,`${role}@example.test`,role==='secretary'?'secretary':null]);
 }
-async function as(who,sql,args=[]) {
- await db.exec(`set role authenticated`);
- await db.query("select set_config('request.jwt.claim.sub',$1,false)",[ids[who]]);
- try { return await db.query(sql,args); } finally { await db.exec('reset role'); await db.query("select set_config('request.jwt.claim.sub','',false)"); }
-}
+const as = authenticatedQuery(db, ids);
 async function rejects(who,sql,args,pattern) { await assert.rejects(()=>as(who,sql,args),pattern); }
 const event=(await db.query("insert into events(title,starts_at,capacity,allow_guests,waitlist_enabled) values('Test event',now()+interval '12 hours',3,true,true) returning id")).rows[0].id;
 const rsvp=(who,status,guests=0)=>as(who,'select public.change_event_rsvp($1,$2,$3) as registration',[event,status,guests]);
@@ -62,7 +59,7 @@ assert.equal((await db.query("select recipient_id from notifications where dedup
 await rsvp('member','yes');
 await db.query('update events set capacity=4 where id=$1',[event]);
 assert.equal((await db.query('select registration_status from event_rsvps where event_id=$1 and member_id=$2',[event,ids.member])).rows[0].registration_status,'registered');
-await db.query("update events set rsvp_deadline=current_date-1 where id=$1",[event]);
+await db.query("update events set rsvp_deadline=(now() at time zone 'America/Tortola')::date-1 where id=$1",[event]);
 await rejects('lead','select public.change_event_rsvp($1,\'yes\')',[event],/deadline/);
 await rsvp('member','no');
 // Rescheduling generates a new reminder; cancellation and waitlist receive none.

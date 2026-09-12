@@ -236,7 +236,7 @@ export function MemberDirectory({
             )}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 min-[1100px]:grid-cols-2 min-[1500px]:grid-cols-3">
             {filtered.map((member) => {
               const memberCommittees = committeesForMember(member.id, committees);
               const office = positionLabel(member.position);
@@ -245,21 +245,21 @@ export function MemberDirectory({
               const phf = paulHarrisLabel(recognition.paulHarrisCount, true);
               return (
                 <Link key={member.id} href={`/directory/${member.id}`}>
-                  <Card className="h-full p-4 transition-shadow hover:shadow-[var(--shadow-card-hover)]">
+                  <Card className="h-full gap-0 p-5 transition-shadow hover:shadow-[var(--shadow-card-hover)]">
                     <div className="flex items-start gap-3">
                       <MemberAvatar
                         member={member}
-                        className="size-12"
+                        className="size-16 shrink-0"
                         fallbackClassName="font-heading text-sm"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="font-heading truncate text-sm font-semibold text-foreground">
+                        <p className="font-heading break-words text-xl font-semibold text-foreground">
                           {member.name}
                         </p>
-                        <p className="truncate text-xs text-muted-foreground">
+                        <p className="mt-1 break-words text-sm leading-6 text-muted-foreground">
                           {member.classification}
                         </p>
-                        <div className="mt-1.5 flex flex-wrap gap-1">
+                        <div className="mt-3 flex flex-wrap gap-2">
                           {office && (
                             <StatusBadge tone="gold">{office}</StatusBadge>
                           )}
@@ -282,7 +282,7 @@ export function MemberDirectory({
                       </div>
                     </div>
                     {memberCommittees.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1">
+                      <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
                         {memberCommittees.map((committee) => (
                           <StatusBadge
                             key={committee.id}
@@ -297,7 +297,7 @@ export function MemberDirectory({
                       </div>
                     )}
                     {member.joinDate && (
-                      <p className="mt-3 text-xs text-muted-foreground">
+                      <p className="mt-4 text-sm text-muted-foreground">
                         Member since{" "}
                         {formatDate(member.joinDate, {
                           year: "numeric",

@@ -2,7 +2,7 @@ import { cache } from "react";
 // Request-scoped deduplication only: never share member data across requests.
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
-import { initialsFromName, todayMonthDay } from "@/lib/format";
+import { initialsFromName } from "@/lib/format";
 import type { Member } from "@/lib/club";
 
 type MemberRow = {
@@ -143,15 +143,3 @@ export const getMembers = cache(async function getMembers(): Promise<Member[]> {
     date_of_birth: birthdays.get(row.id) ?? null,
   }));
 });
-
-/**
- * Members whose birthday is today, club-local. The club is small enough that
- * fetching everyone with a date on file and filtering here is simpler than a
- * date-part index, and matches how getMembers() already fetches the whole
- * roster.
- */
-export async function getTodaysBirthdays(): Promise<Member[]> {
-  const monthDay = todayMonthDay();
-  return (await getMembers())
-    .filter((member) => member.dateOfBirth?.slice(5) === monthDay);
-}

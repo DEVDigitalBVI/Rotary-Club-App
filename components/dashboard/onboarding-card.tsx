@@ -14,7 +14,7 @@ export function OnboardingCard({ completed }: { completed: OnboardingKey[] }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="font-label text-primary/65">Your Rotary journey</p>
+              <p className="font-label text-primary">Your Rotary journey</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {completed.length} of {onboardingTasks.length} steps complete
               </p>

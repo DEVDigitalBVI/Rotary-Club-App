@@ -56,10 +56,10 @@ export function UserMenu({
         {variant === "expanded" && (
           <>
             <span className="flex min-w-0 flex-1 flex-col leading-tight">
-              <span className="font-heading truncate text-sm font-medium text-sidebar-foreground">
+              <span className="whitespace-normal break-words text-sm font-semibold text-sidebar-foreground">
                 {member.name}
               </span>
-              <span className="truncate text-xs text-muted-foreground">
+              <span className="whitespace-normal text-sm text-sidebar-foreground/80">
                 {positionLabel(member.position) ?? "Member"}
               </span>
             </span>

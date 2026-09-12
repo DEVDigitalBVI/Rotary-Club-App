@@ -71,21 +71,21 @@ export function ProjectFormDialog({ project }: { project?: ServiceProject }) {
     <Button type="button" variant={editing ? "outline" : "default"} onClick={() => setOpen(true)} className={editing ? "" : "font-heading"}>
       {editing ? <Pencil /> : <Plus />}{editing ? "Edit details" : "Create service project"}
     </Button>
-    <DialogContent className="max-h-[calc(100dvh-1rem)] max-w-[calc(100%-1rem)] overflow-hidden rounded-2xl p-0 sm:max-h-[92dvh] sm:max-w-4xl" contentClassName="flex min-h-0 flex-col overflow-hidden gap-0">
+    <DialogContent className="form-dialog max-h-[calc(100dvh-1rem)] max-w-[calc(100%-1rem)] overflow-hidden rounded-2xl p-0 sm:max-h-[92dvh] sm:max-w-4xl" contentClassName="flex min-h-0 flex-col overflow-hidden gap-0">
       <div className="shrink-0 border-b border-border px-4 pt-4 sm:px-7 sm:pt-5">
       <DialogHeader>
         <DialogTitle>{editing ? "Edit service project" : "Plan a service project"}</DialogTitle>
         <DialogDescription className="pr-7">One section at a time. Save whenever you need to stop and return later.</DialogDescription>
       </DialogHeader>
       <div className="mt-4 flex items-center gap-3 pb-4 sm:hidden">
-        <div className="shrink-0 text-center"><p className="font-heading text-lg font-semibold text-primary">{step + 1}</p><p className="text-[0.6rem] uppercase tracking-wider text-muted-foreground">of {steps.length}</p></div>
+        <div className="shrink-0 text-center"><p className="font-heading text-lg font-semibold text-primary">{step + 1}</p><p className="text-xs uppercase tracking-wider text-muted-foreground">of {steps.length}</p></div>
         <select aria-label="Project form section" value={step} onChange={(event) => goToStep(Number(event.target.value))} className={inputClass}>
           {steps.map((item, index) => <option key={item.label} value={index}>{item.label} · {item.eyebrow}</option>)}
         </select>
       </div>
       <div className="mt-5 hidden gap-1 overflow-x-auto pb-4 sm:flex" aria-label="Project form progress">
         {steps.map((item, index) => <button key={item.label} type="button" onClick={() => goToStep(index)} aria-current={index === step ? "step" : undefined} className={`group min-w-[7.5rem] flex-1 rounded-xl px-3 py-2 text-left transition-colors ${index === step ? "bg-primary text-primary-foreground" : index < step ? "bg-primary/10 text-primary" : "bg-muted/60 text-muted-foreground hover:bg-muted"}`}>
-          <span className="flex items-center gap-2 text-[0.62rem] font-bold uppercase tracking-[0.14em] opacity-75">{index < step ? <Check className="size-3" /> : `0${index + 1}`} {item.eyebrow}</span>
+          <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] opacity-75">{index < step ? <Check className="size-3" /> : `0${index + 1}`} {item.eyebrow}</span>
           <span className="mt-1 block text-xs font-semibold">{item.label}</span>
         </button>)}
       </div>

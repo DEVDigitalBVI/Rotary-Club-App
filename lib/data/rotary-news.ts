@@ -1,23 +1,9 @@
+import { decodeXml, element } from "./rss";
 import type { NewsPost } from "@/lib/club";
 import { normalizeTrustedArticleUrl } from "../security/news-urls";
 
 export const ROTARY_RSS_URL = "https://www.rotary.org/rss.xml";
 export const ROTARY_NEWS_LIMIT = 2;
-
-function decodeXml(value: string) {
-  return value
-    .replace(/^<!\[CDATA\[|\]\]>$/g, "")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">");
-}
-
-function element(item: string, tag: string) {
-  const match = item.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${tag}>`, "i"));
-  return match ? decodeXml(match[1].trim()) : "";
-}
 
 /** Parse only RI's small, trusted RSS surface; no article HTML is rendered. */
 export function parseRotaryRss(xml: string, limit = ROTARY_NEWS_LIMIT): NewsPost[] {

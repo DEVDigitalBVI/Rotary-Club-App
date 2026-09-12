@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import { authenticatedQuery } from './helpers.mjs';
 const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
 const db = new PGlite();
 await db.exec(`
@@ -33,11 +34,7 @@ for (const role of ['secretary','lead','member','waiting','outsider']) {
 }
 await db.query("insert into public.committee_members(committee_id,member_id) values('community-service',$1)",[ids.lead]);
 for(const project of ['project','other']) await db.query("insert into public.service_projects(id,title,summary,starts_at,status) values($1,$2,'Test',now()+interval '1 day','open')",[ids[project],project]);
-async function as(who,sql,args=[]) {
- await db.exec(`set role authenticated`);
- await db.query("select set_config('request.jwt.claim.sub',$1,false)",[ids[who]]);
- try { return await db.query(sql,args); } finally { await db.exec('reset role'); await db.query("select set_config('request.jwt.claim.sub','',false)"); }
-}
+const as = authenticatedQuery(db, ids);
 async function rejects(who,sql,args,pattern) { await assert.rejects(()=>as(who,sql,args),pattern); }
 await as('secretary','select public.assign_project_team($1,$2,$3,null)',[ids.project,'community-service',ids.lead]);
 assert.equal((await as('lead','select public.project_permissions($1) as p',[ids.project])).rows[0].p.canManage,true);

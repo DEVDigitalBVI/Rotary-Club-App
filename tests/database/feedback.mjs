@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import { authenticatedQuery } from './helpers.mjs';
 const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
 const db = new PGlite();
 await db.exec(`
@@ -31,11 +32,7 @@ for (const role of ['secretary','lead','member','waiting','outsider']) {
  await db.query('insert into auth.users(id,email) values($1,$2)',[ids[role],`${role}@example.test`]);
  await db.query('insert into public.members(id,user_id,name,email,join_date,position) values($1,$1,$2,$3,current_date,$4)',[ids[role],role,`${role}@example.test`,role==='secretary'?'secretary':null]);
 }
-async function as(who,sql,args=[]) {
- await db.exec(`set role authenticated`);
- await db.query("select set_config('request.jwt.claim.sub',$1,false)",[ids[who]]);
- try { return await db.query(sql,args); } finally { await db.exec('reset role'); await db.query("select set_config('request.jwt.claim.sub','',false)"); }
-}
+const as = authenticatedQuery(db, ids);
 async function rejects(who,sql,args,pattern) { await assert.rejects(()=>as(who,sql,args),pattern); }
 const feedback='10000000-0000-4000-8000-000000000001';
 const args=[feedback,'idea','Weekend service','Please add more weekend service opportunities.'];

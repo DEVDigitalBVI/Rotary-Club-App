@@ -1,5 +1,4 @@
 // Shared club types, reference options, and permission helpers.
-import { todayDateString } from "@/lib/format";
 /**
  * Shifts a YYYY-MM-DD string back by `days`, returning the same format.
  * Done entirely in UTC: parsing as local time and formatting back through
@@ -113,10 +112,6 @@ export function positionLabel(position: ClubPosition | undefined) {
 
 export function committeesForMember(memberId: string, roster: Committee[]) {
   return roster.filter((committee) => committee.memberIds.includes(memberId));
-}
-
-export function committeesDirectedBy(memberId: string, roster: Committee[]) {
-  return roster.filter((committee) => committee.directorId === memberId);
 }
 
 /**
@@ -262,11 +257,6 @@ export const actionGroupsByArea: { area: string; groups: string[] }[] = [
   },
 ];
 
-/** Flat list, for anything that just needs to know the valid values. */
-export const actionGroupOptions = actionGroupsByArea.flatMap(
-  (entry) => entry.groups
-);
-
 const emptyRecognition: FoundationRecognition = {
   paulHarrisCount: 0,
   polioPlusSociety: false,
@@ -290,15 +280,6 @@ export function paulHarrisLabel(count: number, short = false) {
   // Abbreviated it closes up ("PHF+3"); spelled out it takes a space
   // ("Paul Harris Fellow +3"), which is how RI sets it.
   return short ? `PHF+${count - 1}` : `Paul Harris Fellow +${count - 1}`;
-}
-
-export function hasAnyRecognition(member: Member) {
-  const recognition = foundationRecognition(member);
-  return (
-    recognition.paulHarrisCount > 0 ||
-    recognition.polioPlusSociety ||
-    recognition.actionGroups.length > 0
-  );
 }
 
 /**
@@ -389,68 +370,6 @@ export type EventItem = {
 };
 
 // ---------------------------------------------------------------------------
-// Accounts — mirrored from QuickBooks Online
-// ---------------------------------------------------------------------------
-
-// QuickBooks is the system of record for anything money-related: invoices
-// originate there and payments are applied against member accounts there. The
-// app never writes — it reads, and its job is to make the numbers legible to a
-// member who is not going to log into QuickBooks to decipher them.
-//
-// These shapes deliberately mirror the QBO Accounting API entities (Invoice,
-// its Lines, and Payment) rather than inventing a friendlier model, so that
-// replacing this file with real API responses is a data-source change and not
-// a redesign. Amounts are dollars; QBO returns them as decimals.
-
-export type InvoiceLine = {
-  id: string;
-  description: string;
-  /** The meeting or event the line covers, where there is one. */
-  serviceDate?: string;
-  amount: number;
-};
-
-export type Invoice = {
-  id: string;
-  /** QBO's human-facing invoice number (DocNumber) — what the member quotes. */
-  docNumber: string;
-  memberId: string;
-  /** QBO TxnDate: the date the invoice was issued. */
-  txnDate: string;
-  dueDate: string;
-  total: number;
-  /** Amount still outstanding. Zero once fully paid. */
-  balance: number;
-  lines: InvoiceLine[];
-  /**
-   * A QuickBooks Payments link, present only if the club has that product
-   * enabled — it is a separate subscription from QuickBooks Online itself and
-   * has not been confirmed for this club yet. While it is undefined the UI
-   * tells members how to pay in person instead of showing a dead button.
-   */
-  paymentLink?: string;
-};
-
-export type PaymentMethod = "cash" | "check" | "online";
-
-export type Payment = {
-  id: string;
-  memberId: string;
-  txnDate: string;
-  amount: number;
-  method: PaymentMethod;
-  /** Cheque number or similar — QBO's PaymentRefNum. */
-  reference?: string;
-  /** DocNumber of the invoice this payment was applied against. */
-  appliedTo?: string;
-};
-
-/** An invoice is overdue once its due date has passed with a balance left. */
-export function isOverdue(invoice: Invoice, today: string = todayDateString()) {
-  return invoice.balance > 0 && invoice.dueDate < today;
-}
-
-// ---------------------------------------------------------------------------
 // News
 // ---------------------------------------------------------------------------
 
@@ -520,23 +439,3 @@ export function visibleNewsPosts(posts: NewsPost[]) {
       return seen[post.source] <= FEED_POST_LIMIT;
     });
 }
-
-
-// ---------------------------------------------------------------------------
-// Chat
-// ---------------------------------------------------------------------------
-
-export type ChatMessage = {
-  id: string;
-  senderId: string;
-  body: string;
-  timestamp: string;
-};
-
-export type Channel = {
-  id: string;
-  name: string;
-  kind: "channel" | "dm";
-  memberIds: string[];
-  messages: ChatMessage[];
-};

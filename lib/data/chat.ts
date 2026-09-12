@@ -1,3 +1,4 @@
+import { toMessage, type MessageRow, type ReactionRow } from "@/lib/chat-message";
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
 
@@ -44,39 +45,6 @@ type ChannelRow = {
   archived_at: string | null;
   rotary_year: string | null;
 };
-type MessageRow = {
-  id: string;
-  channel_id: string;
-  sender_id: string;
-  body: string;
-  reply_to_id: string | null;
-  edited_at: string | null;
-  deleted_at: string | null;
-  created_at: string;
-  total_count: number;
-};
-type ReactionRow = { message_id: string; member_id: string; emoji: string };
-
-function toMessage(row: MessageRow, reactions: ReactionRow[]): ChatMessage {
-  return {
-    id: row.id,
-    channelId: row.channel_id,
-    senderId: row.sender_id,
-    body: row.body,
-    replyToId: row.reply_to_id ?? undefined,
-    editedAt: row.edited_at ?? undefined,
-    deletedAt: row.deleted_at ?? undefined,
-    createdAt: row.created_at,
-    reactions: reactions
-      .filter((reaction) => reaction.message_id === row.id)
-      .map((reaction) => ({
-        messageId: reaction.message_id,
-        memberId: reaction.member_id,
-        emoji: reaction.emoji,
-      })),
-  };
-}
-
 export async function getChatChannels(memberId: string): Promise<ChatChannel[]> {
   const supabase = await createClient();
   const [channelsResult, messagesResult, membersResult, readsResult] =
@@ -92,7 +60,7 @@ export async function getChatChannels(memberId: string): Promise<ChatChannel[]> 
   throwOnSupabaseError(membersResult.error, "Unable to load direct-message members");
   throwOnSupabaseError(readsResult.error, "Unable to load chat read state");
 
-  const messages = (messagesResult.data ?? []) as MessageRow[];
+  const messages = (messagesResult.data ?? []) as (MessageRow & { total_count: number })[];
   const messageIds = messages.map((message) => message.id);
   const reactionsResult = messageIds.length
     ? await supabase.from("chat_reactions").select("message_id, member_id, emoji").in("message_id", messageIds)
