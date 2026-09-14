@@ -1,11 +1,12 @@
 "use server";
 
+import { escapeChatSearch } from "@/lib/chat-display";
 import { toMessage } from "@/lib/chat-message";
 
 import { revalidatePath } from "next/cache";
 import { getCurrentMember } from "@/lib/data/members";
 import { createClient } from "@/lib/supabase/server";
-import type { ChatMessage, ChatReaction } from "@/lib/data/chat";
+import { getChatChannels, type ChatMessage, type ChatReaction } from "@/lib/data/chat";
 
 async function requireMember() {
   const member = await getCurrentMember();
@@ -13,16 +14,24 @@ async function requireMember() {
   return member;
 }
 
-export async function sendChatMessageAction(channelId: string, body: string, replyToId?: string) {
+export async function sendChatMessageAction(channelId: string, body: string, replyToId?: string, messageId?: string) {
   const member = await requireMember();
+  if (messageId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(messageId)) throw new Error("Invalid message ID.");
   const cleanBody = body.trim();
   if (!cleanBody || cleanBody.length > 4000) throw new Error("Messages must be 1–4,000 characters.");
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("chat_messages")
-    .insert({ channel_id: channelId, sender_id: member.id, body: cleanBody, reply_to_id: replyToId ?? null })
+    .insert({ ...(messageId ? { id: messageId } : {}), channel_id: channelId, sender_id: member.id, body: cleanBody, reply_to_id: replyToId ?? null })
     .select("id, channel_id, sender_id, body, reply_to_id, edited_at, deleted_at, created_at")
     .single();
+  // A retry after a lost response must not create a second message.
+  if (error?.code === "23505" && messageId) {
+    const existing = await supabase.from("chat_messages")
+      .select("id, channel_id, sender_id, body, reply_to_id, edited_at, deleted_at, created_at")
+      .eq("id", messageId).eq("channel_id", channelId).eq("sender_id", member.id).single();
+    if (!existing.error && existing.data?.body === cleanBody && existing.data.reply_to_id === (replyToId ?? null)) return existing.data;
+  }
   if (error) throw new Error("Unable to send that message.", { cause: error });
   return data;
 }
@@ -59,13 +68,14 @@ export async function toggleChatReactionAction(messageId: string, emoji: string)
   if (result.error) throw new Error("Unable to update that reaction.", { cause: result.error });
 }
 
-export async function markChatReadAction(channelId: string) {
+export async function markChatReadAction(channelId: string, through: string) {
   const member = await requireMember();
   const supabase = await createClient();
+  if (Number.isNaN(Date.parse(through)) || Date.parse(through) > Date.now() + 60_000) throw new Error("Invalid read time.");
   const { error } = await supabase.from("chat_channel_reads").upsert({
     channel_id: channelId,
     member_id: member.id,
-    last_read_at: new Date().toISOString(),
+    last_read_at: through,
   });
   if (error) throw new Error("Unable to update read status.", { cause: error });
 }
@@ -113,4 +123,39 @@ export async function loadEarlierChatMessagesAction(channelId: string, before: s
   const reactions = (reactionResult.data ?? []) as { message_id: string; member_id: string; emoji: string }[];
 
   return rows.reverse().map((row) => toMessage(row, reactions));
+}
+
+/** Session client keeps both search and context subject to message RLS. */
+export async function searchChatMessagesAction(channelId: string, query: string, offset = 0) {
+  await requireMember();
+  const needle = query.trim();
+  if (!needle || needle.length > 200 || !Number.isSafeInteger(offset) || offset < 0) throw new Error("Invalid search.");
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("chat_messages")
+    .select("id, channel_id, sender_id, body, reply_to_id, edited_at, deleted_at, created_at")
+    .eq("channel_id", channelId).is("deleted_at", null)
+    .ilike("body", `%${escapeChatSearch(needle)}%`)
+    .order("created_at", { ascending: false }).order("id", { ascending: false })
+    .range(offset, offset + 49);
+  if (error) throw new Error("Unable to search messages.", { cause: error });
+  return (data ?? []).map((row) => toMessage(row, []));
+}
+
+export async function loadChatContextAction(channelId: string, messageId: string) {
+  await requireMember();
+  const supabase = await createClient();
+  const columns = "id, channel_id, sender_id, body, reply_to_id, edited_at, deleted_at, created_at";
+  const { data: target, error } = await supabase.from("chat_messages").select(columns).eq("channel_id", channelId).eq("id", messageId).single();
+  if (error || !target) throw new Error("That message is no longer available.");
+  const [before, after] = await Promise.all([
+    supabase.from("chat_messages").select(columns).eq("channel_id", channelId).lt("created_at", target.created_at).order("created_at", { ascending: false }).limit(20),
+    supabase.from("chat_messages").select(columns).eq("channel_id", channelId).gte("created_at", target.created_at).neq("id", messageId).order("created_at").order("id").limit(20),
+  ]);
+  if (before.error || after.error) throw new Error("Unable to load surrounding messages.");
+  return [...(before.data ?? []).reverse(), target, ...(after.data ?? [])].map((row) => toMessage(row, []));
+}
+
+export async function refreshChatChannelsAction() {
+  const member = await requireMember();
+  return getChatChannels(member.id);
 }

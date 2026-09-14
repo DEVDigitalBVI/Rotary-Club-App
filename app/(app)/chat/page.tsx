@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/page-header";
 import { ChatApp } from "@/components/chat/chat-app";
 import { getChatChannels } from "@/lib/data/chat";
 import { getCurrentMember, getMembers } from "@/lib/data/members";
@@ -18,8 +17,8 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
   ]);
   return (
     <div>
-      <PageHeader title="Chat" description="Message the club or a fellow member directly." />
-      <PageContainer>
+      <header className="mx-auto hidden max-w-[1400px] items-baseline gap-4 px-8 pt-5 pb-3 md:flex"><h1 className="text-2xl font-semibold">Chat</h1><p className="text-sm text-muted-foreground">Your club, in conversation.</p></header>
+      <PageContainer className="md:px-8 md:pt-0 md:pb-5">
         <ChatApp
           key={channel ?? "default"}
           channels={channels}
