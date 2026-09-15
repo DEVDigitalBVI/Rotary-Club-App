@@ -64,6 +64,7 @@ export async function createProjectAction(_state: ProjectFormState, formData: Fo
   });
   if (error) return { error: "Unable to create the project — check the details or your permissions." };
   revalidatePath("/projects");
+  revalidatePath("/projects/[id]", "page");
   revalidatePath("/dashboard");
   return { success: true };
 }
@@ -76,6 +77,7 @@ export async function updateProjectAction(projectId: string, _state: ProjectForm
   const { data, error } = await supabase.from("service_projects").update(values).eq("id", projectId).select("id").maybeSingle();
   if (error || !data) return { error: "Unable to save this project — you may not have permission." };
   revalidatePath("/projects");
+  revalidatePath("/projects/[id]", "page");
   revalidatePath("/dashboard");
   return { success: true };
 }
@@ -92,6 +94,7 @@ export async function deleteProjectAction(projectId: string) {
   if (error?.code === "23503") return { error: "Projects with time slots or attendance must be retained. Change the project status to cancelled instead." };
   if (error || !data) return { error: "Unable to delete this project — you may not have permission." };
   revalidatePath("/projects");
+  revalidatePath("/projects/[id]", "page");
   revalidatePath("/dashboard");
   return { success: true };
 }

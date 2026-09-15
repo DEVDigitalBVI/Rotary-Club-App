@@ -1,8 +1,8 @@
 import { beforeEach, expect, it, vi } from "vitest";
 const mocks=vi.hoisted(()=>({calls:[] as {table:string;filters:unknown[][];range:number[]}[],fail:false}));
-vi.mock("@/lib/supabase/server",()=>({createClient:async()=>({from:(table:string)=>{
+vi.mock("@/lib/supabase/server",()=>({createClient:async()=>({rpc:async()=>({data:[{year_start:"2026-07-01"}],error:null}),from:(table:string)=>{
  const call={table,filters:[] as unknown[][],range:[] as number[]}; mocks.calls.push(call);
- const chain={select:()=>chain,eq:(...args:unknown[])=>{call.filters.push(args);return chain;},lte:()=>chain,not:()=>chain,order:()=>chain,range:(a:number,b:number)=>{call.range=[a,b];return chain;},returns:()=>chain,then:(resolve:(value:unknown)=>unknown)=>Promise.resolve({data:[],error:mocks.fail?{message:'unavailable'}:null}).then(resolve)};return chain;
+ const chain={select:()=>chain,eq:(...args:unknown[])=>{call.filters.push(args);return chain;},lte:()=>chain,gte:(...args:unknown[])=>{call.filters.push(["gte",...args]);return chain;},lt:(...args:unknown[])=>{call.filters.push(["lt",...args]);return chain;},not:()=>chain,order:()=>chain,range:(a:number,b:number)=>{call.range=[a,b];return chain;},returns:()=>chain,then:(resolve:(value:unknown)=>unknown)=>Promise.resolve({data:[],error:mocks.fail?{message:'unavailable'}:null}).then(resolve)};return chain;
 }})}));
 import {getPersonalServiceRecord, getMemberServiceHistory} from '../lib/data/service-record';
 beforeEach(()=>{mocks.calls=[];mocks.fail=false;});
@@ -20,4 +20,13 @@ it('loads the viewed member contribution history without querying private attend
  expect(mocks.calls).toHaveLength(1);
  expect(mocks.calls[0].table).toBe('volunteer_hours');
  expect(mocks.calls[0].filters).toContainEqual(['member_id','profile-member']);
+});
+
+it('bounds the displayed year at the database while full export remains explicit',async()=>{
+ await getPersonalServiceRecord('member-id','2025-07-01');
+ expect(mocks.calls[0].filters).toContainEqual(['gte','served_on','2025-07-01']);
+ expect(mocks.calls[0].filters).toContainEqual(['lt','served_on','2026-07-01']);
+ mocks.calls=[];
+ await getPersonalServiceRecord('member-id',null);
+ expect(mocks.calls[0].filters).toContainEqual(['gte','served_on','0001-01-01']);
 });

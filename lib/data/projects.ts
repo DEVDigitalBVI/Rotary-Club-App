@@ -12,6 +12,7 @@ export type ServiceProject = {
   hoursGoal: number | null;
   status: "draft" | "open" | "completed" | "cancelled";
   volunteerIds: string[];
+  volunteerCount?: number;
   approvedHours: number;
   detailedDescription: string | null;
   language: string;
@@ -64,13 +65,16 @@ type ProjectRow = {
 
 export async function getServiceProjects(options: { id?: string; limit?: number; status?: ServiceProject["status"]; summary?: boolean } = {}): Promise<ServiceProject[]> {
   const supabase = await createClient();
-  let query = supabase.from("service_projects").select(options.summary ? "id,title,summary,status,starts_at,ends_at,location,city,volunteer_goal,hours_goal,area_of_focus,cover_image_url" : "*").order("starts_at", { nullsFirst: false }).order("id");
+  let query = supabase.from("service_projects").select(options.summary ? "id,title,summary,status,starts_at,ends_at,location,city,volunteer_goal,hours_goal,area_of_focus,cover_image_url,tags" : "*").order("starts_at", { nullsFirst: false }).order("id");
   if (options.id) query = query.eq("id", options.id);
   if (options.status) query = query.eq("status", options.status);
   if (options.limit) query = query.limit(options.limit);
   const projectsResult = await query.returns<ProjectRow[]>();
   const ids = (projectsResult.data ?? []).map(project => project.id);
-  const [volunteersResult, hoursResult] = ids.length ? await Promise.all([
+  const totals = options.summary && ids.length ? await supabase.rpc("project_card_totals", { p_ids: ids }) : { data: [], error: null };
+  throwOnSupabaseError(totals.error, "Unable to load project totals");
+  const byId = new Map(((totals.data ?? []) as { project_id: string; volunteers: number; hours: number }[]).map(row => [row.project_id, row]));
+  const [volunteersResult, hoursResult] = ids.length && !options.summary ? await Promise.all([
     supabase.rpc("project_participants").in("project_id", ids),
     supabase.rpc("get_project_approved_hours").in("project_id", ids),
   ]) : [{ data: [], error: null }, { data: [], error: null }];
@@ -97,8 +101,9 @@ export async function getServiceProjects(options: { id?: string; limit?: number;
     volunteerGoal: project.volunteer_goal,
     hoursGoal: project.hours_goal == null ? null : Number(project.hours_goal),
     status: project.status,
+    volunteerCount: options.summary ? Number(byId.get(project.id)?.volunteers ?? 0) : undefined,
     volunteerIds: participantRows.filter((row) => row.project_id === project.id).map((row) => row.member_id),
-    approvedHours: approvedHourRows.filter((row) => row.project_id === project.id).reduce((sum, row) => sum + Number(row.hours), 0),
+    approvedHours: options.summary ? Number(byId.get(project.id)?.hours ?? 0) : approvedHourRows.filter((row) => row.project_id === project.id).reduce((sum, row) => sum + Number(row.hours), 0),
     detailedDescription: project.detailed_description,
     language: project.language,
     areaOfFocus: project.area_of_focus,

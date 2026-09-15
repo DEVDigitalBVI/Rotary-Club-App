@@ -62,3 +62,19 @@ $$;
 revoke all on function public.complete_makeup_batch(jsonb) from public,anon;
 grant execute on function public.complete_makeup_batch(jsonb) to authenticated;
 notify pgrst,'reload schema';
+
+create function public.project_card_totals(p_ids uuid[])
+returns table(project_id uuid,volunteers bigint,hours numeric)
+language sql stable security invoker set search_path='' as $$
+ with participants as materialized (
+   select v.project_id,count(*) n from public.project_participants() v where v.project_id=any(p_ids) group by v.project_id
+ ), totals as materialized (
+   select h.project_id,h.hours from public.get_project_approved_hours() h where h.project_id=any(p_ids)
+ )
+ select p.id,coalesce(v.n,0),coalesce(h.hours,0)
+ from public.service_projects p left join participants v on v.project_id=p.id left join totals h on h.project_id=p.id
+ where p.id=any(p_ids);
+$$;
+revoke all on function public.project_card_totals(uuid[]) from public,anon;
+grant execute on function public.project_card_totals(uuid[]) to authenticated;
+notify pgrst,'reload schema';

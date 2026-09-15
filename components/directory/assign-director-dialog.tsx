@@ -115,6 +115,7 @@ export function AssignDirectorDialog({
           </Select>
         </div>
 
+        <p className="rounded-xl border border-border p-3 text-sm">Director: {members.find(member => member.id === committee.directorId)?.name ?? "Vacant"} → {members.find(member => member.id === value)?.name ?? "Vacant"}. A new director also joins this committee’s roster.</p>
         <DialogFooter className="mt-2">
           <Button type="button" disabled={pending} className="font-heading" onClick={save}>
             {pending ? "Saving…" : "Save director"}

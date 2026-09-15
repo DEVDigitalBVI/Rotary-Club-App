@@ -8,13 +8,8 @@ import { getServiceProjects } from "@/lib/data/projects";
 import { getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
 import { committeeManageRight, canAssignRoles } from "@/lib/club";
-import { deleteProjectAction } from "./actions";
 import { PageContainer } from "@/components/page-container";
-import { DeleteRecordButton } from "@/components/delete-record-button";
 import { ProjectFormDialog } from "@/components/projects/project-form-dialog";
-import { RiProjectSummary } from "@/components/projects/ri-project-summary";
-import { projectReadiness } from "@/lib/project-readiness";
-import { ProjectImpactDialog } from "@/components/projects/project-impact-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 
 function dateLabel(value: string) {
@@ -22,7 +17,7 @@ function dateLabel(value: string) {
 }
 
 export default async function ProjectsPage() {
-  const [projects, member, committees] = await Promise.all([getServiceProjects(), getCurrentMember(), getCommittees()]);
+  const [projects, member, committees] = await Promise.all([getServiceProjects({ summary: true }), getCurrentMember(), getCommittees()]);
   const community = committees.find((committee) => committee.id === "community-service");
   const canManage = Boolean(member && community && committeeManageRight(member, community));
   const ledProjects = member ? await getLedProjectIds(member.id) : [];
@@ -39,8 +34,7 @@ export default async function ProjectsPage() {
         ) : (
           <div className="grid gap-5 lg:grid-cols-2">
             {visibleProjects.map((project) => {
-              const volunteerProgress = project.volunteerGoal ? Math.min(100, project.volunteerIds.length / project.volunteerGoal * 100) : 0;
-              const readiness = projectReadiness(project);
+              const volunteerProgress = project.volunteerGoal ? Math.min(100, (project.volunteerCount ?? project.volunteerIds.length) / project.volunteerGoal * 100) : 0;
               return (
                 <article key={project.id} className="overflow-hidden rounded-[1.5rem] border border-border bg-card">
                   {project.coverImageUrl && (
@@ -52,7 +46,7 @@ export default async function ProjectsPage() {
                     </div>
                   )}
                   <div className="border-b border-border p-6">
-                    <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-label text-[0.58rem] text-primary/60">{project.areaOfFocus ?? "Community service"}</p>{canManage && <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[0.65rem] font-bold text-primary">RI {readiness.percent}% ready</span>}</div>
+                    <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-label text-[0.58rem] text-primary/60">{project.areaOfFocus ?? "Community service"}</p></div>
                     <h2 className="font-heading mt-2 text-3xl font-semibold leading-tight">{project.title}</h2>
                     <p className="mt-3 text-sm leading-6 text-muted-foreground">{project.summary}</p>
                     <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted-foreground">
@@ -62,13 +56,10 @@ export default async function ProjectsPage() {
                     {project.tags.length > 0 && <div className="mt-4 flex flex-wrap gap-1.5">{project.tags.map((tag) => <span key={tag} className="rounded-full border border-border px-2 py-0.5 text-[0.65rem] text-muted-foreground">#{tag}</span>)}</div>}
                   </div>
                   <div className="space-y-5 p-6">
-                    <Progress value={volunteerProgress}><span className="flex items-center gap-1.5 text-xs font-bold"><Users className="size-3.5" />{project.volunteerIds.length}{project.volunteerGoal ? ` of ${project.volunteerGoal}` : ""} volunteers</span></Progress>
+                    <Progress value={volunteerProgress}><span className="flex items-center gap-1.5 text-xs font-bold"><Users className="size-3.5" />{(project.volunteerCount ?? project.volunteerIds.length)}{project.volunteerGoal ? ` of ${project.volunteerGoal}` : ""} volunteers</span></Progress>
                     <div className="flex flex-wrap gap-2">
                       <Button nativeButton={false} render={<Link href={`/projects/${project.id}`} />}>{project.status === "open" ? "Choose a time slot" : "View slots & attendance"}</Button>
-                      <ProjectImpactDialog project={project} />
-                      {canManage && (
-                        <div className="ml-auto flex flex-wrap gap-2"><ProjectFormDialog project={project} /><RiProjectSummary project={project} /><DeleteRecordButton label="Delete" title={`Delete ${project.title}?`} description="This permanently removes the project, its volunteer roster, and all logged hours. This cannot be undone." deleteAction={deleteProjectAction.bind(null, project.id)} className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive" /></div>
-                      )}
+                      <Link href={`/projects/${project.id}`} className="inline-flex items-center text-sm font-semibold text-primary">{canManage ? "Manage project & RI report" : "View impact"}</Link>
                     </div>
                     {project.approvedHours > 0 && <p className="text-xs text-muted-foreground">{project.approvedHours} service hours contributed.</p>}
                   </div>

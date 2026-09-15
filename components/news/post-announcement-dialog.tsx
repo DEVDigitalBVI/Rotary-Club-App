@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { postNewsAction } from "@/app/(app)/news/actions";
 
 export function PostAnnouncementDialog({ committees, events }: { committees: { id: string; name: string }[]; events: { id: string; title: string }[] }) {
-  const draft = useFormDraft("announcement");
+  const { attach: restoreDraft, onInput: saveDraft, clear: clearDraft } = useFormDraft("announcement");
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -43,7 +43,7 @@ export function PostAnnouncementDialog({ committees, events }: { committees: { i
           </DialogDescription>
         </DialogHeader>
 
-        <form ref={draft.ref} onInput={draft.onInput}
+        <form ref={restoreDraft} onInput={saveDraft}
           className="flex flex-col gap-3"
           onSubmit={(e) => {
             e.preventDefault();
@@ -54,7 +54,7 @@ export function PostAnnouncementDialog({ committees, events }: { committees: { i
               if (result?.error) {
                 setError(result.error);
               } else {
-                draft.clear(); setOpen(false);
+                clearDraft(); setOpen(false);
               }
               } catch { setError("Couldn’t confirm the announcement was saved. Your draft is kept in this tab. Check News before retrying."); }
             });

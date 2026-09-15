@@ -155,9 +155,9 @@ export async function loadChatContextAction(channelId: string, messageId: string
   return [...(before.data ?? []).reverse(), target, ...(after.data ?? [])].map((row) => toMessage(row, []));
 }
 
-export async function refreshChatChannelsAction() {
+export async function refreshChatChannelsAction(selectedId?: string) {
   const member = await requireMember();
-  return getChatChannels(member.id, null);
+  return getChatChannels(member.id, selectedId ?? null);
 }
 
 export async function loadChatThreadAction(channelId: string) {

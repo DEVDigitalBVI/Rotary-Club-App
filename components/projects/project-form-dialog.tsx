@@ -54,7 +54,7 @@ export function ProjectFormDialog({ project }: { project?: ServiceProject }) {
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
   const draft = useFormDraft(`project:${project?.id ?? "new"}`);
-  const draftRef = draft.ref;
+  const draftRef = draft.attach;
   const attachForm = useCallback((form: HTMLFormElement | null) => { formRef.current = form; draftRef(form); }, [draftRef]);
 
   function goToStep(next: number) {

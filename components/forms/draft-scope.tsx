@@ -9,7 +9,7 @@ export function useFormDraft(name: string) {
   const memberId = useContext(Scope);
   const key = `rotary-draft:${memberId}:${name}`;
   const clear = useCallback(() => { try { sessionStorage.removeItem(key); } catch {} }, [key]);
-  const ref = useCallback((form: HTMLFormElement | null) => {
+  const attach = useCallback((form: HTMLFormElement | null) => {
     if (!form || !memberId) return;
     try {
       const saved = JSON.parse(sessionStorage.getItem(key) ?? "null") as Record<string, string | boolean> | null;
@@ -32,5 +32,5 @@ export function useFormDraft(name: string) {
     }
     try { sessionStorage.setItem(key, JSON.stringify(values)); } catch {}
   }, [key, memberId]);
-  return { ref, onInput, clear };
+  return { attach, onInput, clear };
 }

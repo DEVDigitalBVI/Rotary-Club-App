@@ -21,7 +21,7 @@ export function NotificationProvider({ initial, children }: { initial: Inbox; ch
   const refresh = useCallback(async () => {
     const request = ++generation.current;
     const current = inboxRef.current;
-    const ids = current.notifications.slice(20).map(row => row.id);
+    const ids = current.notifications.map(row => row.id);
     const next = await loadNotificationInbox();
     const history = [];
     for (let offset=0; offset<ids.length; offset+=200) history.push(...await refreshNotificationRows(ids.slice(offset,offset+200)));

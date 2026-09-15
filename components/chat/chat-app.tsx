@@ -30,6 +30,8 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
   const [data, setData] = useState(channels);
   const router = useRouter();
   const [selectedId, setSelectedId] = useState(channels.some((item) => item.id === initialChannelId) ? initialChannelId! : channels[0]?.id ?? "");
+  const selectedRef = useRef(selectedId);
+  useEffect(() => { selectedRef.current = selectedId; }, [selectedId]);
   const [mobileShowThread, setMobileShowThread] = useState(Boolean(initialChannelId));
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [draftsReady, setDraftsReady] = useState(false);
@@ -106,18 +108,19 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
     let disposed = false;
     let refreshing = false;
     let subscribed = false;
-    const refresh = async () => {
+    const refresh = async (includeThread = false) => {
       if (refreshing || disposed) return;
       refreshing = true;
       try {
-        const fresh = await refreshChatChannelsAction();
+        const fresh = await refreshChatChannelsAction(includeThread ? selectedRef.current : undefined);
         fresh.forEach((channel) => knownChannels.add(channel.id));
         if (!disposed) setData((previous) => fresh.map((channel) => {
           const cached = previous.find((item) => item.id === channel.id);
           if (!cached) return channel;
+          if (channel.loaded && cached.messages.length && channel.messages[0]?.createdAt > cached.messages.at(-1)!.createdAt) return channel;
           const messages = new Map(cached.messages.map((message) => [message.id, message]));
           channel.messages.forEach((message) => messages.set(message.id, message));
-          return { ...channel, loaded: cached.loaded, messages: [...messages.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt)), hasEarlierMessages: cached.hasEarlierMessages, lastReadAt: (cached.lastReadAt ?? "") > (channel.lastReadAt ?? "") ? cached.lastReadAt : channel.lastReadAt };
+          return { ...channel, loaded: channel.loaded || cached.loaded, messages: [...messages.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt)), hasEarlierMessages: cached.hasEarlierMessages, lastReadAt: (cached.lastReadAt ?? "") > (channel.lastReadAt ?? "") ? cached.lastReadAt : channel.lastReadAt };
         }));
       } catch { /* Existing conversations remain usable during reconnects. */ }
       finally { refreshing = false; }
@@ -142,8 +145,8 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
           return { ...message, reactions: payload.eventType === "DELETE" ? without : [...without, reaction] };
         }) })));
       })
-      .subscribe((status) => { if (status === "SUBSCRIBED") { if (subscribed) void refresh(); subscribed = true; } });
-    const onFocus = () => { void refresh(); };
+      .subscribe((status) => { if (status === "SUBSCRIBED") { void refresh(subscribed); subscribed = true; } });
+    const onFocus = () => { void refresh(true); };
     window.addEventListener("focus", onFocus);
     return () => { disposed = true; window.removeEventListener("focus", onFocus); void supabase.removeChannel(subscription); };
   }, [currentMemberId, channels]);

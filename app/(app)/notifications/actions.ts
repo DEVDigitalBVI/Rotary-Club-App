@@ -51,7 +51,8 @@ export async function loadNotificationInbox(limit = 20) {
 export async function loadOlderNotifications(cursor: { createdAt: string; id: string }) {
   if (!/^[0-9a-f-]{36}$/i.test(cursor.id) || Number.isNaN(Date.parse(cursor.createdAt))) throw new Error("Invalid notification cursor.");
   const db = await createClient();
-  const date = new Date(cursor.createdAt).toISOString();
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(cursor.createdAt)) throw new Error("Invalid notification timestamp.");
+  const date = cursor.createdAt;
   const { data, error } = await db.from("notifications").select("*")
     .or(`created_at.lt.${date},and(created_at.eq.${date},id.lt.${cursor.id})`)
     .order("created_at", { ascending: false }).order("id", { ascending: false }).limit(21);
