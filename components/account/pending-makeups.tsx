@@ -1,70 +1,32 @@
 "use client";
-
 import { useState, useTransition } from "react";
-import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
 import type { MakeupEntry } from "@/lib/data/attendance";
-import { markMakeupClubrunnerLoggedAction } from "@/app/(app)/account/actions";
+import { markMakeupBatchLogged } from "@/app/(app)/account/actions";
+import { serviceRecordCsv } from "@/lib/service-record";
 
 export function PendingMakeups({ makeups }: { makeups: MakeupEntry[] }) {
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string>();
-
-  return (
-    <Card>
-      <CardContent>
-        <div className="flex items-center justify-between">
-          <h3 className="font-heading text-sm font-semibold text-foreground">
-            Makeups pending ClubRunner entry
-          </h3>
-          {makeups.length > 0 && (
-            <span className="text-xs text-muted-foreground">{makeups.length}</span>
-          )}
-        </div>
-        {error && <p role="alert" className="mt-2 text-sm text-destructive">{error}</p>}
-        {makeups.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">All caught up.</p>
-        ) : (
-          <ul className="mt-3 flex flex-col gap-2">
-            {makeups.map((m) => (
-              <li
-                key={m.id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-border p-2.5"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {m.memberName}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {m.voided ? "Remove makeup: " : "Add makeup: "}{m.clubOrEvent} · {formatDate(m.attendedOn)}
-                  </p>
-                  {m.notes && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{m.notes}</p>
-                  )}
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="font-heading shrink-0"
-                  disabled={pending}
-                  onClick={() =>
-                    startTransition(async () => {
-                      setError(undefined);
-                      const result = await markMakeupClubrunnerLoggedAction(m.id);
-                      setError(result?.error);
-                    })
-                  }
-                >
-                  <Check />
-                  {m.voided ? "Correction done" : "Logged"}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
-  );
+  const [pending, start] = useTransition();
+  const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [kind, setKind] = useState("all");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [review, setReview] = useState(false);
+  const visible = makeups.filter(row => `${row.memberName} ${row.clubOrEvent} ${row.attendedOn}`.toLowerCase().includes(query.toLowerCase()) && (kind === "all" || (kind === "corrections") === row.voided));
+  const chosen = visible.filter(row => selected.includes(row.id));
+  function download() {
+    const csv = serviceRecordCsv([], visible.map(row => ({ id: row.id, date: row.attendedOn, title: `${row.memberName}: ${row.clubOrEvent}`, projectId: null, voided: Boolean(row.voided), logged: row.clubrunnerLogged })));
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a"); link.href = url; link.download = "clubrunner-makeups.csv"; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  return <section className="rounded-2xl border border-border bg-card p-5"><h2 className="text-xl">Makeups pending ClubRunner entry</h2>
+    <div className="my-4 flex flex-wrap gap-3"><label className="text-sm">Search<input value={query} onChange={e => { setQuery(e.target.value); setReview(false); }} placeholder="Member, event or date" className="ml-2 rounded border bg-background p-2" /></label><label className="text-sm">Show<select className="ml-2 rounded border bg-background p-2" value={kind} onChange={e => { setKind(e.target.value); setReview(false); }}><option value="all">All</option><option value="additions">Additions</option><option value="corrections">Corrections</option></select></label><Button variant="outline" disabled={!visible.length} onClick={download}>Export filtered list</Button></div>
+    {error && <p role="alert" className="my-3 text-sm text-destructive">{error}</p>}
+    <p className="mb-3 text-sm text-muted-foreground">{visible.length} entries · {chosen.length} selected</p>
+    <label className="text-sm"><input type="checkbox" checked={visible.length > 0 && chosen.length === visible.length} onChange={e => { setSelected(e.target.checked ? visible.slice(0, 200).map(row => row.id) : []); setReview(false); }} /> Select visible entries (up to 200)</label>
+    <ul className="my-4 divide-y divide-border">{visible.map(row => <li key={row.id} className="flex items-center gap-3 py-3"><input aria-label={`Select ${row.memberName}: ${row.clubOrEvent}`} type="checkbox" disabled={pending} checked={selected.includes(row.id)} onChange={e => { setSelected(ids => e.target.checked ? [...ids, row.id] : ids.filter(id => id !== row.id)); setReview(false); }} /><div><p className="text-sm font-semibold">{row.memberName}</p><p className="text-sm">{row.voided ? "Remove from ClubRunner" : "Add to ClubRunner"}: {row.clubOrEvent} · {formatDate(row.attendedOn)}</p>{row.notes && <p className="text-xs text-muted-foreground">{row.notes}</p>}</div></li>)}</ul>
+    {!visible.length && <p className="py-5 text-sm text-muted-foreground">No entries match these filters.</p>}
+    {chosen.length > 0 && <div className="rounded-xl border border-border p-4"><label className="text-sm"><input type="checkbox" checked={review} onChange={e => setReview(e.target.checked)} /> I have entered {chosen.filter(row => !row.voided).length} additions and completed {chosen.filter(row => row.voided).length} corrections in ClubRunner.</label><Button className="mt-3" disabled={pending || !review || chosen.length > 200} onClick={() => start(async () => { setError(""); try { const result = await markMakeupBatchLogged(chosen.map(row => ({ id: row.id, voided: Boolean(row.voided) }))); if (result.error) setError(result.error); else { setSelected([]); setReview(false); } } catch { setError("Couldn’t confirm completion. Refresh before retrying."); } })}>{pending ? "Saving…" : "Confirm selected entries"}</Button></div>}
+  </section>;
 }

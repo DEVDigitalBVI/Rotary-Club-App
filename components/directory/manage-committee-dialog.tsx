@@ -192,6 +192,7 @@ export function ManageCommitteeDialog({
           )}
         </ul>
 
+        <section aria-label="Roster changes" className="rounded-xl border border-border p-3 text-sm"><p className="font-semibold">Changes to review</p><p className="mt-2">Add: {members.filter(m => selected.includes(m.id) && !committee.memberIds.includes(m.id)).map(m => m.name).join(", ") || "Nobody"}</p><p>Remove: {members.filter(m => committee.memberIds.includes(m.id) && !selected.includes(m.id)).map(m => m.name).join(", ") || "Nobody"}</p><p className="mt-2 text-muted-foreground">Roster size: {committee.memberIds.length} → {selected.length}</p></section>
         <DialogFooter className="mt-2">
           <Button
             type="button"

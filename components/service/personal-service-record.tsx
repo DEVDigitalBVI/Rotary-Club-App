@@ -1,17 +1,19 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowDownToLine, ArrowUpRight, HandHeart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatDecimal } from "@/lib/format";
 import { rotaryYear } from "@/lib/my-rotary";
-import { recordYears, serviceTotals, serviceRecordCsv, type ServiceEntry, type ServiceMakeup } from "@/lib/service-record";
+import { serviceTotals, serviceRecordCsv, type ServiceEntry, type ServiceMakeup } from "@/lib/service-record";
 
 const statusLabel = {present:"Present",absent:"Absent",excused:"Excused",legacy:"Recorded hours"};
-export function PersonalServiceRecord({ entries, makeups, today, memberName }: { entries: ServiceEntry[]; makeups: ServiceMakeup[]; today: string; memberName: string }) {
-  const [year,setYear] = useState(rotaryYear(today).start);
+export function PersonalServiceRecord({ entries, makeups, memberName, selectedYear, years }: { entries: ServiceEntry[]; makeups: ServiceMakeup[]; today: string; memberName: string; selectedYear: string; years: string[] }) {
+  const router = useRouter(); const pathname = usePathname(); const params = useSearchParams();
+  function changeYear(value: string) { const next = new URLSearchParams(params); next.set("year", value); router.push(`${pathname}?${next}`); }
+  const year = selectedYear;
   const [project,setProject] = useState("all");
-  const years = recordYears(entries,makeups,today);
   const projects = [...new Map(entries.map(row=>[row.projectId,row.project])).entries()].sort((a,b)=>a[1].localeCompare(b[1]));
   const matches = (date:string,projectId:string|null) => (year==="all" || rotaryYear(date).start===year) && (project==="all" || projectId===project);
   const visible = entries.filter(row=>matches(row.date,row.projectId));
@@ -23,7 +25,7 @@ export function PersonalServiceRecord({ entries, makeups, today, memberName }: {
     setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
   return <div className="mx-auto max-w-6xl space-y-7">
-    <div className="flex flex-wrap items-center justify-between gap-3"><Link href="/dashboard" className="text-sm font-semibold text-primary hover:underline">← My Rotary</Link><Button variant="outline" onClick={download} disabled={!visible.length && !credits.length}><ArrowDownToLine className="size-4" />Download CSV</Button></div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><Link href="/dashboard" className="text-sm font-semibold text-primary hover:underline">← My Rotary</Link><Link href="/service-record/export" className="text-sm font-semibold text-primary">Export all years</Link><Button variant="outline" onClick={download} disabled={!visible.length && !credits.length}><ArrowDownToLine className="size-4" />Download CSV</Button></div>
     <section className="overflow-hidden rounded-3xl bg-[var(--feature-surface)] text-white">
       <div className="grid gap-8 p-6 sm:p-9 md:grid-cols-[1.2fr_1fr]">
         <div><p className="font-label flex items-center gap-2 text-[var(--rotary-gold)]"><HandHeart className="size-4" />Service above self</p><p className="mt-5 text-sm text-white/75">{memberName} · {year==="all" ? "All Rotary years" : rotaryYear(year).label}</p><p className="font-heading mt-2 text-7xl font-semibold tracking-tight">{formatDecimal(totals.hours)}<span className="ml-2 text-2xl font-normal text-white/75">hours</span></p><p className="mt-3 max-w-md text-sm leading-6 text-white/75">Recorded service, credited as soon as your attendance is saved.</p></div>
@@ -31,7 +33,7 @@ export function PersonalServiceRecord({ entries, makeups, today, memberName }: {
       </div>
     </section>
     <div className="flex flex-wrap gap-4 rounded-xl border border-border bg-card p-4">
-      <label className="flex min-w-44 flex-1 flex-col gap-2 text-xs font-semibold text-muted-foreground">Rotary year<select value={year} onChange={e=>setYear(e.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground"><option value="all">All years</option>{years.map(value=><option key={value} value={value}>{rotaryYear(value).label}</option>)}</select></label>
+      <label className="flex min-w-44 flex-1 flex-col gap-2 text-xs font-semibold text-muted-foreground">Rotary year<select value={year} onChange={e=>changeYear(e.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground">{years.map(value=><option key={value} value={value}>{rotaryYear(value).label}</option>)}</select></label>
       <label className="flex min-w-44 flex-1 flex-col gap-2 text-xs font-semibold text-muted-foreground">Project<select value={project} onChange={e=>setProject(e.target.value)} className="h-10 rounded-lg border border-input bg-background px-3 text-sm text-foreground"><option value="all">All projects and makeups</option>{projects.map(([id,title])=><option key={id} value={id}>{title}</option>)}</select></label>
     </div>
     <section aria-labelledby="service-history"><div className="mb-4 flex items-end justify-between gap-3"><h2 id="service-history" className="font-heading text-2xl font-semibold">Service history</h2><span className="text-xs text-muted-foreground" aria-live="polite">{visible.length} records</span></div>

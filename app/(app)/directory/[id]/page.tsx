@@ -27,10 +27,10 @@ export default async function MemberProfilePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ edit?: string }>;
+  searchParams: Promise<{ edit?: string; year?: string }>;
 }) {
   const { id } = await params;
-  const { edit } = await searchParams;
+  const { edit, year } = await searchParams;
   const [member, currentMember, committees] = await Promise.all([
     getMemberById(id),
     getCurrentMember(),
@@ -38,7 +38,7 @@ export default async function MemberProfilePage({
   ]);
   if (!member) notFound();
 
-  const serviceHistory = await getMemberServiceHistory(member.id);
+  const serviceHistory = await getMemberServiceHistory(member.id, year);
   const isSelf = currentMember?.id === member.id;
   const memberCommittees = committeesForMember(member.id, committees);
   const office = positionLabel(member.position);
@@ -137,7 +137,7 @@ export default async function MemberProfilePage({
           </CardContent>
         </Card>
 
-        <MemberServiceRecord {...serviceHistory} isSelf={isSelf} />
+        <MemberServiceRecord key={serviceHistory.selectedYear} {...serviceHistory} isSelf={isSelf} />
 
         <RecognitionCard
           member={member}

@@ -46,7 +46,7 @@ function toNewsPost(row: NewsPostRow, acknowledgedAt?: string): NewsPost {
 export async function getVisibleNewsPosts(options: { clubOnly?: boolean; limit?: number } = {}): Promise<NewsPost[]> {
   const supabase = await createClient();
   const [{ data, error }, memberResult, latestRotaryNews, latestDistrictNews] = await Promise.all([
-    options.limit ? supabase.rpc("club_notice_page", { p_limit: options.limit, p_offset: 0 }).returns<NewsPostRow[]>() : supabase
+    options.limit ? supabase.rpc("club_notice_page", { p_limit: options.limit, p_offset: 0 }).then(result => ({ ...result, data: result.data as unknown as NewsPostRow[] | null })) : supabase
     .from("news_posts")
     .select("id, source, title, body, author, published_at, image_url, image_alt, source_url, audience_type, audience_id, priority, is_pinned, expires_at, requires_acknowledgement")
     .or(`expires_at.is.null,expires_at.gte.${todayDateString()}`)

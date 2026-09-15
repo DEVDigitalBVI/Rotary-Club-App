@@ -42,3 +42,23 @@ $$;
 revoke all on function public.event_card_summaries(uuid[]),public.club_notice_page(integer,integer),public.personal_service_total(uuid,date,date,date),public.service_record_years(uuid) from public,anon;
 grant execute on function public.event_card_summaries(uuid[]),public.club_notice_page(integer,integer),public.personal_service_total(uuid,date,date,date),public.service_record_years(uuid) to authenticated;
 notify pgrst,'reload schema';
+
+-- One transaction: reject the whole batch when the backlog changed after review.
+create function public.complete_makeup_batch(p_entries jsonb) returns integer
+language plpgsql security invoker set search_path='' as $$
+declare expected integer; changed integer;
+begin
+ if not public.can_assign_roles() then raise exception 'Only club officers can complete makeups'; end if;
+ expected:=jsonb_array_length(p_entries);
+ if expected<1 or expected>200 then raise exception 'Choose between 1 and 200 makeups'; end if;
+ update public.makeups m set clubrunner_logged=true,clubrunner_logged_at=now(),clubrunner_logged_by=public.current_member_id()
+ from jsonb_to_recordset(p_entries) as e(id uuid,voided boolean)
+ where m.id=e.id and m.voided is not distinct from e.voided and not m.clubrunner_logged;
+ get diagnostics changed=row_count;
+ if changed<>expected then raise exception 'The makeup list changed. Refresh and review it before retrying'; end if;
+ return changed;
+end;
+$$;
+revoke all on function public.complete_makeup_batch(jsonb) from public,anon;
+grant execute on function public.complete_makeup_batch(jsonb) to authenticated;
+notify pgrst,'reload schema';

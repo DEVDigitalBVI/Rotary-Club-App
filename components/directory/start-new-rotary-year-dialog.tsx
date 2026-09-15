@@ -28,6 +28,7 @@ export function StartNewRotaryYearDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [pending, startTransition] = useTransition();
+  const [reviewed, setReviewed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const outgoingPresident = members.find((m) => m.position === "president");
@@ -36,7 +37,7 @@ export function StartNewRotaryYearDialog({
   const incomingSecretary = members.find((m) => m.position === "secretary-elect");
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={value => { setReviewed(false); onOpenChange(value); }}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Start new Rotary year</DialogTitle>
@@ -72,6 +73,7 @@ export function StartNewRotaryYearDialog({
           </p>
         )}
 
+        <label className="flex items-start gap-2 rounded-xl border border-border p-3 text-sm"><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)} />I have reviewed the incoming officers and understand the current committee chats will be archived.</label>
         <DialogFooter className="mt-2">
           <Button
             type="button"
@@ -84,7 +86,7 @@ export function StartNewRotaryYearDialog({
           </Button>
           <Button
             type="button"
-            disabled={pending}
+            disabled={pending || !reviewed}
             className="font-heading"
             onClick={() => {
               setError(null);

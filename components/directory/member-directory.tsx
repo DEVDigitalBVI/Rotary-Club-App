@@ -1,4 +1,5 @@
 "use client";
+import { useSearchParams } from "next/navigation";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -68,12 +69,21 @@ export function MemberDirectory({
   currentMember: Member;
   initialTab?: "members" | "committees";
 }) {
-  const [query, setQuery] = useState("");
-  const [committeeFilter, setCommitteeFilter] = useState("all");
+  const params = useSearchParams();
+  function setFilter(key: string, value: string) {
+    const next = new URLSearchParams(window.location.search);
+    if (!value || value === "all") next.delete(key); else next.set(key, value);
+    window.history.replaceState(null, "", `${window.location.pathname}?${next}`);
+  }
+  const query = params.get("q") ?? "";
+  const setQuery = (value: string) => setFilter("q", value);
+  const committeeFilter = params.get("committee") ?? "all";
+  const setCommitteeFilter = (value: string) => setFilter("committee", value);
   // One control covers all three kinds of Foundation recognition. The
   // Foundation director's real need is a list they can act on — "who is in the
   // PolioPlus Society" — which a per-profile view can't answer.
-  const [recognitionFilter, setRecognitionFilter] = useState("all");
+  const recognitionFilter = params.get("recognition") ?? "all";
+  const setRecognitionFilter = (value: string) => setFilter("recognition", value);
   const [addOpen, setAddOpen] = useState(false);
   const [managing, setManaging] = useState<Committee | null>(null);
   const [assigningDirectorFor, setAssigningDirectorFor] = useState<Committee | null>(
@@ -124,7 +134,7 @@ export function MemberDirectory({
 
   return (
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 p-4 sm:p-8">
-      <Tabs defaultValue={initialTab}>
+      <Tabs value={params.get("tab") ?? initialTab} onValueChange={value => setFilter("tab", String(value))}>
         <TabsList>
           <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
           <TabsTrigger value="committees">

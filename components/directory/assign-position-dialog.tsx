@@ -135,6 +135,7 @@ export function AssignPositionDialog({
           )}
         </div>
 
+        <p className="rounded-xl border border-border p-3 text-sm">{member.name}: {positionLabel(member.position) ?? "No officer position"} → {value === NONE ? "No officer position" : positionLabel(value as ClubPosition)}</p>
         <DialogFooter className="mt-2">
           <Button type="button" disabled={pending} className="font-heading" onClick={save}>
             {pending ? "Saving…" : "Save role"}

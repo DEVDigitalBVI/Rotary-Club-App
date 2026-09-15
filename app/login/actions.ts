@@ -44,7 +44,8 @@ export async function signIn(
 
   // Link this login to the roster row an officer already added, if it
   // hasn't been claimed yet. Harmless no-op otherwise.
-  await supabase.rpc("claim_member");
+  const { error: linkError } = await supabase.rpc("claim_member");
+  if (linkError) return { error: "You signed in, but we couldn’t connect your club profile. Please try signing in again. If this continues, contact the club secretary." };
 
   redirect("/dashboard");
 }

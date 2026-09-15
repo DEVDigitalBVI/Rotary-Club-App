@@ -1,59 +1,28 @@
 "use client";
-
-import { useActionState, useState } from "react";
-import { AlertCircle, CheckCircle2, FileSpreadsheet, Upload } from "lucide-react";
+import { useActionState, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { parseClubRunnerCsv, type ClubRunnerCsvResult } from "@/lib/clubrunner-csv";
-import { importClubRunnerMembers, type ClubRunnerImportState } from "@/app/(app)/admin/clubrunner/actions";
-
+import { importClubRunnerMembers, previewClubRunnerImport, type ClubRunnerImportState } from "@/app/(app)/admin/clubrunner/actions";
+type Preview = Awaited<ReturnType<typeof previewClubRunnerImport>>;
 export function ClubRunnerImportForm() {
   const [state, action, pending] = useActionState<ClubRunnerImportState, FormData>(importClubRunnerMembers, undefined);
-  const [preview, setPreview] = useState<ClubRunnerCsvResult | null>(null);
-
-  return (
-    <form action={action} className="space-y-5">
-      <div className="space-y-2">
-        <Label htmlFor="clubrunner-roster">ClubRunner roster export</Label>
-        <Input
-          id="clubrunner-roster"
-          name="roster"
-          type="file"
-          accept=".csv,text/csv"
-          required
-          onChange={async (event) => {
-            const file = event.currentTarget.files?.[0];
-            setPreview(file ? parseClubRunnerCsv(await file.text()) : null);
-          }}
-          className="h-auto py-3 file:mr-3"
-        />
-        <p className="text-sm leading-6 text-muted-foreground">Up to 500 members and 1 MB. Required columns: name and email. First/last name columns are also accepted.</p>
-      </div>
-
-      {preview && preview.errors.length > 0 && (
-        <div className="flex gap-3 rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
-          <AlertCircle className="mt-0.5 size-5 shrink-0" />
-          <div><strong className="block">Fix the CSV before importing</strong><ul className="mt-1 list-disc space-y-1 pl-4">{preview.errors.slice(0, 5).map((error) => <li key={error}>{error}</li>)}</ul></div>
-        </div>
-      )}
-
-      {preview && preview.errors.length === 0 && (
-        <div className="rounded-xl border border-border bg-muted/35 p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground"><FileSpreadsheet className="size-4 text-primary" />{preview.rows.length} members ready</div>
-          <div className="mt-3 overflow-hidden rounded-lg border border-border bg-card">
-            {preview.rows.slice(0, 3).map((row) => <div key={row.email} className="flex items-center justify-between gap-4 border-b border-border px-3 py-2 text-sm last:border-0"><span className="font-medium">{row.name}</span><span className="truncate text-muted-foreground">{row.email}</span></div>)}
-          </div>
-          {preview.rows.length > 3 && <p className="mt-2 text-xs text-muted-foreground">And {preview.rows.length - 3} more.</p>}
-        </div>
-      )}
-
-      {state?.error && <p className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">{state.error}</p>}
-      {state?.success && <p className="flex items-start gap-2 rounded-xl border border-emerald-600/20 bg-emerald-600/10 p-4 text-sm text-emerald-800 dark:text-emerald-300"><CheckCircle2 className="mt-0.5 size-4 shrink-0" />{state.success}</p>}
-
-      <Button type="submit" disabled={pending || !preview || preview.errors.length > 0 || preview.rows.length === 0}>
-        <Upload />{pending ? "Updating roster…" : "Apply roster update"}
-      </Button>
-    </form>
-  );
+  const [preview, setPreview] = useState<Preview>();
+  const [loading, setLoading] = useState(false);
+  const [reviewed, setReviewed] = useState(false);
+  const generation = useRef(0);
+  return <form action={action} className="space-y-5"><label className="block text-sm font-semibold">ClubRunner roster export<Input className="mt-2" type="file" name="roster" accept=".csv,text/csv" required disabled={pending} onChange={async e => {
+    const file = e.target.files?.[0]; const request = ++generation.current;
+    setPreview(undefined); setReviewed(false);
+    if (!file) { setLoading(false); return; }
+    if (file.size > 1_000_000) { setLoading(false); setPreview({ error: "Choose a file smaller than 1 MB." }); return; }
+    setLoading(true); const data = new FormData(); data.set("roster", file);
+    try { const next = await previewClubRunnerImport(data); if (request === generation.current) setPreview(next); }
+    catch { if (request === generation.current) setPreview({ error: "Couldn’t load the preview. Reconnect and choose the file again." }); }
+    finally { if (request === generation.current) setLoading(false); }
+  }} /></label><p className="text-sm text-muted-foreground">Up to 500 members and 1 MB. Missing optional values preserve the existing roster. Membership status is changed separately in the member profile.</p>
+  {loading && <p role="status">Comparing with the current roster…</p>}
+  {(preview?.error || state?.error) && <p role="alert" className="text-sm text-destructive">{preview?.error || state?.error}</p>}
+  {preview?.plan && <><input type="hidden" name="fingerprint" value={preview.fingerprint}/><p className="text-sm font-semibold">{preview.plan.filter(row => row.kind === "added").length} additions · {preview.plan.filter(row => row.kind === "changed").length} changes · {preview.plan.filter(row => row.kind === "unchanged").length} unchanged</p><div className="max-h-96 space-y-3 overflow-y-auto rounded-xl border border-border p-4">{preview.plan.map(row => <article key={row.email}><h3 className="text-sm">{row.name} · {row.kind}</h3><p className="text-xs text-muted-foreground">{row.email}</p><ul className="mt-1 text-sm">{row.changes.map(change => <li key={change.field}>{change.field.replaceAll("_", " ")}: {change.before || "Empty"} → {change.after || "Empty"}</li>)}</ul></article>)}</div><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)}/>I have reviewed these changes.</label></>}
+  {state?.success && <p role="status" className="text-sm text-primary">{state.success}</p>}
+  <Button disabled={pending || loading || !preview?.plan || !reviewed}>{pending ? "Updating roster…" : "Apply reviewed changes"}</Button></form>;
 }

@@ -245,7 +245,8 @@ export function EditRecognitionDialog({
               </div>
             </div>
 
-            <DialogFooter className="mt-2">
+            <section aria-label="Recognition changes" className="rounded-xl border border-border p-3 text-sm"><p>Paul Harris recognitions: {recognition.paulHarrisCount} → {draft.paulHarrisCount}</p><p>PolioPlus Society: {recognition.polioPlusSociety ? "Yes" : "No"} → {draft.polioPlusSociety ? "Yes" : "No"}</p><p>Add groups: {draft.actionGroups.filter(group => !recognition.actionGroups.includes(group)).join(", ") || "None"}</p><p>Remove groups: {recognition.actionGroups.filter(group => !draft.actionGroups.includes(group)).join(", ") || "None"}</p></section>
+        <DialogFooter className="mt-2">
               <Button
                 type="button"
                 disabled={pending}

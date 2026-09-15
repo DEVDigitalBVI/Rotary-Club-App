@@ -29,3 +29,12 @@ export async function markMakeupClubrunnerLoggedAction(
   revalidatePath("/projects/makeups");
   return { success: true };
 }
+
+export async function markMakeupBatchLogged(entries: { id: string; voided: boolean }[]) {
+  if (!entries.length || entries.length > 200) return { error: "Select between 1 and 200 makeups." };
+  const db = await createClient();
+  const { error } = await db.rpc("complete_makeup_batch", { p_entries: entries });
+  if (error) return { error: "Unable to confirm the batch. Refresh the list and review it before trying again." };
+  revalidatePath("/projects/makeups");
+  return { success: true };
+}
