@@ -83,6 +83,8 @@ export function ArticleReaderDialog({
       .then(async (response) => {
         const result = await response.json() as { content?: string; url?: string; error?: string };
         if (!response.ok) throw new Error(result.error ?? "Unable to load story");
+        if (controller.signal.aborted) return;
+        setLoading(false);
         if (source === "district" && result.content) setDistrictContent(result.content);
         else if (source === "ri" && result.url) {
           const destination = normalizeTrustedArticleUrl(result.url, "ri");
@@ -91,7 +93,7 @@ export function ArticleReaderDialog({
         } else throw new Error("Unable to load story");
       })
       .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
+        if (controller.signal.aborted) return;
         setLoadError(error instanceof Error ? error.message : "Unable to load story");
       })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
@@ -111,7 +113,11 @@ export function ArticleReaderDialog({
     >
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setLoadError("");
+          setLoading(Boolean(requestUrl) && !(source === "district" ? districtContent : resolvedUrl));
+          setOpen(true);
+        }}
         className="inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-primary hover:underline"
       >
         Read the full story

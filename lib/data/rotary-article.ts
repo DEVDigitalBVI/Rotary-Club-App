@@ -25,7 +25,11 @@ export async function resolveRotaryArticle(value: string, signal: AbortSignal): 
   if (direct) return direct;
   const indexed = normalizeRotaryIndexUrl(value);
   if (!indexed) throw new Error("Invalid article URL");
-  const response = await fetch(indexed, { signal, redirect: "error", cache: "no-store" });
+  const indexRequest = new URL(indexed);
+  indexRequest.searchParams.set("hl", "en-US");
+  indexRequest.searchParams.set("gl", "US");
+  indexRequest.searchParams.set("ceid", "US:en");
+  const response = await fetch(indexRequest.toString(), { signal, redirect: "error", cache: "no-store" });
   if (!response.ok) throw new Error("Index unavailable");
   const html = await readResponseTextWithLimit(response, 1_000_000);
   const signature = html.match(/data-n-a-sg="([A-Za-z0-9_-]+)"/)?.[1];
