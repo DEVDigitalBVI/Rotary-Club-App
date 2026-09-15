@@ -38,3 +38,16 @@ export function normalizeTrustedArticleUrl(
     return null;
   }
 }
+
+/** Only Google News article links, never arbitrary Google redirect URLs. */
+export function normalizeRotaryIndexUrl(value: string): string | null {
+  try {
+    const url = new URL(value);
+    if (!hasSafeHttpsAuthority(url) || url.hostname !== "news.google.com" || url.hash) return null;
+    if (!/^\/rss\/articles\/[A-Za-z0-9_-]+$/.test(url.pathname)) return null;
+    if ([...url.searchParams].some(([key, value]) => key !== "oc" || value !== "5")) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}

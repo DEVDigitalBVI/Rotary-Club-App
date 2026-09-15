@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { NewsSource } from "@/lib/club";
-import { normalizeTrustedArticleUrl } from "@/lib/security/news-urls";
+import { normalizeTrustedArticleUrl, normalizeRotaryIndexUrl } from "@/lib/security/news-urls";
 
 function cleanInlineMarkdown(value: string) {
   return value
@@ -89,6 +89,13 @@ export function ArticleReaderDialog({
       .finally(() => setLoading(false));
     return () => controller.abort();
   }, [districtContent, open, source, trustedUrl]);
+
+  const indexedUrl = source === "ri" ? normalizeRotaryIndexUrl(url) : null;
+  if (indexedUrl) return (
+    <a href={indexedUrl} target="_blank" rel="noreferrer noopener" className="inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-primary hover:underline">
+      Read the full story <ExternalLink className="size-3.5" />
+    </a>
+  );
 
   return (
     <Dialog
