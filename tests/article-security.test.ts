@@ -36,7 +36,7 @@ describe("trusted syndicated article URLs", () => {
       "utf8"
     );
     expect(component).toContain("normalizeTrustedArticleUrl(url, source)");
-    expect(component).toContain('sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts"');
+    expect(component).toContain('sandbox="allow-forms allow-scripts"');
     expect(component).not.toContain("allow-same-origin");
   });
 });

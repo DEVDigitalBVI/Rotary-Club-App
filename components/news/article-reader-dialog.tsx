@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, ExternalLink, LoaderCircle, X } from "lucide-react";
+import { BookOpen, LoaderCircle, X } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -69,33 +69,34 @@ export function ArticleReaderDialog({
   const [districtContent, setDistrictContent] = useState("");
   const [loadError, setLoadError] = useState("");
   const publisher = source === "district" ? "District 7020" : "Rotary International";
-  const destination = source === "district" ? "District 7020" : "Rotary.org";
   const trustedUrl = normalizeTrustedArticleUrl(url, source);
+  const indexedUrl = source === "ri" ? normalizeRotaryIndexUrl(url) : null;
+  const requestUrl = trustedUrl ?? indexedUrl;
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    if (!open || source !== "district" || districtContent) return;
-    if (!trustedUrl) return;
+    if (!open || (source === "district" ? districtContent : resolvedUrl)) return;
+    if (!requestUrl) return;
     const controller = new AbortController();
-    fetch(`/api/district-article?url=${encodeURIComponent(trustedUrl)}`, { signal: controller.signal })
+    fetch(`/api/${source === "district" ? "district" : "rotary"}-article?url=${encodeURIComponent(requestUrl)}`, { signal: controller.signal })
       .then(async (response) => {
-        const result = await response.json() as { content?: string; error?: string };
-        if (!response.ok || !result.content) throw new Error(result.error ?? "Unable to load story");
-        setDistrictContent(result.content);
+        const result = await response.json() as { content?: string; url?: string; error?: string };
+        if (!response.ok) throw new Error(result.error ?? "Unable to load story");
+        if (source === "district" && result.content) setDistrictContent(result.content);
+        else if (source === "ri" && result.url) {
+          const destination = normalizeTrustedArticleUrl(result.url, "ri");
+          if (!destination) throw new Error("Unapproved article destination");
+          setResolvedUrl(destination);
+        } else throw new Error("Unable to load story");
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
         setLoadError(error instanceof Error ? error.message : "Unable to load story");
       })
-      .finally(() => setLoading(false));
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [districtContent, open, source, trustedUrl]);
-
-  const indexedUrl = source === "ri" ? normalizeRotaryIndexUrl(url) : null;
-  if (indexedUrl) return (
-    <a href={indexedUrl} target="_blank" rel="noreferrer noopener" className="inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-primary hover:underline">
-      Read the full story <ExternalLink className="size-3.5" />
-    </a>
-  );
+  }, [districtContent, open, source, requestUrl, resolvedUrl, retry]);
 
   return (
     <Dialog
@@ -103,7 +104,7 @@ export function ArticleReaderDialog({
       onOpenChange={(next) => {
         setOpen(next);
         if (next) {
-          setLoading(Boolean(trustedUrl) && (source === "ri" || !districtContent));
+          setLoading(Boolean(requestUrl) && !(source === "district" ? districtContent : resolvedUrl));
           setLoadError("");
         }
       }}
@@ -132,17 +133,6 @@ export function ArticleReaderDialog({
               {publisher} article displayed inside the app.
             </DialogDescription>
           </div>
-          {trustedUrl && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="hidden rounded-full sm:inline-flex"
-              nativeButton={false}
-              render={<a href={trustedUrl} target="_blank" rel="noreferrer noopener" />}
-            >
-              Open on {destination} <ExternalLink className="size-3.5" />
-            </Button>
-          )}
           <DialogClose
             className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-10"
             aria-label="Close article"
@@ -158,41 +148,24 @@ export function ArticleReaderDialog({
               Loading story from {publisher}…
             </div>
           )}
-          {(loadError || !trustedUrl) && source === "district" && !loading && (
+          {(loadError || !requestUrl) && !loading && (
             <div className="mx-auto flex h-full max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
               <p className="text-sm text-muted-foreground">
                 {loadError || "This article link is not from an approved publisher."}
               </p>
-              {trustedUrl && (
-                <Button variant="outline" nativeButton={false} render={<a href={trustedUrl} target="_blank" rel="noreferrer noopener" />}>
-                  Open on District 7020 <ExternalLink className="size-4" />
-                </Button>
-              )}
+              {requestUrl && <Button variant="outline" onClick={() => { setLoadError(""); setLoading(true); setRetry(value => value + 1); }}>Try again</Button>}
             </div>
           )}
           {source === "district" && districtContent && <DistrictArticle content={districtContent} />}
-          {open && source === "ri" && trustedUrl && (
+          {open && source === "ri" && resolvedUrl && (
             <iframe
-              src={trustedUrl}
+              src={resolvedUrl}
               title={`${title} — ${publisher}`}
               className="size-full border-0"
-              sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts"
+              sandbox="allow-forms allow-scripts"
               referrerPolicy="no-referrer"
               onLoad={() => setLoading(false)}
             />
-          )}
-          {open && source === "ri" && !trustedUrl && (
-            <div className="mx-auto flex h-full max-w-md items-center justify-center px-6 text-center">
-              <p className="text-sm text-muted-foreground">This article link is not from an approved publisher.</p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex shrink-0 border-t border-border bg-card px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:hidden">
-          {trustedUrl && (
-            <Button className="w-full rounded-full" variant="outline" nativeButton={false} render={<a href={trustedUrl} target="_blank" rel="noreferrer noopener" />}>
-              Open on {destination} <ExternalLink className="size-4" />
-            </Button>
           )}
         </div>
       </DialogContent>
