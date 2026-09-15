@@ -5,7 +5,6 @@ import { AlertTriangle, Newspaper, Pencil, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { NewsSourceBadge } from "@/components/news-source-badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EditNewsDialog } from "@/components/news/edit-news-dialog";
 import { formatDate } from "@/lib/format";
 import { NoticeAcknowledgement } from "@/components/news/notice-acknowledgement";
@@ -22,28 +21,20 @@ export function NewsFeed({
   posts,
   canEdit = false,
   acknowledgementSummary = {},
+  filter = "all",
 }: {
   posts: NewsPost[];
+  filter?: NewsSource | "all";
   /** Officers and committee directors can correct their own club's posts. */
   canEdit?: boolean;
   acknowledgementSummary?: Record<string, string[]>;
 }) {
-  const [filter, setFilter] = useState<NewsSource | "all">("all");
   const [editing, setEditing] = useState<NewsPost | null>(null);
 
   const filtered = posts.filter((p) => filter === "all" || p.source === filter);
 
   return (
     <div className="flex flex-col gap-4">
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as NewsSource | "all")}>
-        <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="club">Club</TabsTrigger>
-          <TabsTrigger value="district">District</TabsTrigger>
-          <TabsTrigger value="ri">Rotary Intl.</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
       {filter !== "all" && filter !== "club" && (
         <p className="text-xs text-muted-foreground">
           Pulled from {newsFeeds[filter].name}. The club doesn&apos;t edit these
@@ -130,8 +121,8 @@ export function NewsFeed({
           <EmptyState
             icon={Newspaper}
             title="No updates in this category"
-            description="Choose another source to continue reading club, district, and Rotary International updates."
-            action={<Button type="button" variant="outline" onClick={() => setFilter("all")}>Show all news</Button>}
+            description={filter === "ri" || filter === "district" ? "This news source is temporarily unavailable. You can read updates on the publisher’s website." : "There are no announcements to show."}
+            action={filter === "ri" || filter === "district" ? <a href={newsFeeds[filter].homeUrl} target="_blank" rel="noreferrer noopener" className="text-sm font-semibold text-primary hover:underline">Visit {newsFeeds[filter].name}</a> : undefined}
           />
         )}
       </div>

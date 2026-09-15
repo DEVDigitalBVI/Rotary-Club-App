@@ -406,7 +406,7 @@ export const newsFeeds: Record<
   },
   ri: {
     name: "Rotary International",
-    homeUrl: "https://www.rotary.org/en/news-features",
+    homeUrl: "https://www.rotary.org/news-and-stories",
   },
 };
 
