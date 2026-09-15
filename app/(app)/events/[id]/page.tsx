@@ -7,7 +7,7 @@ import { RsvpControl } from "@/components/events/rsvp-control";
 import { EventMaterials } from "@/components/events/event-materials";
 import { TakeAttendanceDialog } from "@/components/events/take-attendance-dialog";
 import { getEventById } from "@/lib/data/events";
-import { getCurrentMember, getMembers } from "@/lib/data/members";
+import { getCurrentMember, getMemberSummaries } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
 import { getEventAttendance } from "@/lib/data/attendance";
 import { canManageEvents, canAssignRoles } from "@/lib/club";
@@ -23,7 +23,7 @@ export default async function EventDetailPage({
   const { id } = await params;
   const [event, members, currentMember, committees, attendanceRecord] = await Promise.all([
     getEventById(id),
-    getMembers(),
+    getMemberSummaries(),
     getCurrentMember(),
     getCommittees(),
     getEventAttendance(id),
