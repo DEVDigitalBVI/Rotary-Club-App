@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentMember } from "@/lib/data/members";
-import { onboardingTasks, type OnboardingKey } from "@/lib/data/onboarding";
+import type { OnboardingKey } from "@/lib/data/onboarding";
 
 export async function recordOnboardingTaskAction(taskKey: OnboardingKey) {
-  if (!onboardingTasks.some((task) => task.key === taskKey)) throw new Error("Unknown onboarding task.");
+  if (taskKey !== "directory") throw new Error("This step is completed automatically when you participate.");
   const member = await getCurrentMember();
   if (!member) throw new Error("You must be signed in.");
   const supabase = await createClient();

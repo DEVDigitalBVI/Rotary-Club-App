@@ -1,34 +1,6 @@
-import { cache } from "react";
-// Request-scoped deduplication only: never share member data across requests.
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
-import { defaultNotificationPreferences, toNotification, type Notification, type NotificationPreferences, type NotificationRow } from "@/lib/notifications";
-export type { Notification, NotificationPreferences } from "@/lib/notifications";
-
-/** RLS (notifications_select) already scopes this to the signed-in member's own inbox. */
-export const getNotifications = cache(async function getNotifications(limit = 20): Promise<Notification[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("notifications")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(limit)
-    .returns<NotificationRow[]>();
-  throwOnSupabaseError(error, "Unable to load notifications");
-
-  return (data ?? []).map(toNotification);
-});
-
-export const getUnreadNotificationCount = cache(async function getUnreadNotificationCount(): Promise<number> {
-  const supabase = await createClient();
-  const { count, error } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .is("read_at", null);
-  throwOnSupabaseError(error, "Unable to load the unread notification count");
-
-  return count ?? 0;
-});
+import { defaultNotificationPreferences, type NotificationPreferences } from "@/lib/notifications";
 
 export async function getNotificationPreferences(): Promise<NotificationPreferences> {
   const supabase = await createClient();

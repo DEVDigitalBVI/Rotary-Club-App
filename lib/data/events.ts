@@ -156,10 +156,11 @@ export async function getEventPage(period: "upcoming" | "past" = "upcoming", pag
 
 export async function getPersonalEventPreview(memberId: string) {
   const db = await createClient();
-  const { data, error } = await db.from("event_rsvps").select("event_id,member_id,status,guest_count,dietary_notes,registration_status,events!inner(*)")
-    .eq("member_id", memberId).in("status", ["yes", "maybe"]).gte("events.starts_at", new Date().toISOString())
-    .order("starts_at", { referencedTable: "events", ascending: true }).limit(4)
-    .returns<(RsvpRow & { events: EventRow })[]>();
+  const now = new Date().toISOString();
+  const { data, error } = await db.from("events").select("*,event_rsvps!inner(event_id,member_id,status,guest_count,dietary_notes,registration_status)")
+    .eq("event_rsvps.member_id", memberId).in("event_rsvps.status", ["yes", "maybe"])
+    .or(`ends_at.gte.${now},and(ends_at.is.null,starts_at.gte.${now})`)
+    .order("starts_at").order("id").limit(4).returns<(EventRow & { event_rsvps: RsvpRow[] })[]>();
   throwOnSupabaseError(error, "Unable to load your upcoming events");
-  return (data ?? []).map(row => toEventItem(row.events, [row], memberId));
+  return (data ?? []).map(row => toEventItem(row, row.event_rsvps, memberId));
 }

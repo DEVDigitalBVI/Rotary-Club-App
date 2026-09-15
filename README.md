@@ -10,7 +10,7 @@ Install dependencies with `npm ci`. Configure `.env.local` with `NEXT_PUBLIC_SUP
 
 - `npm run lint`
 - `npm test`
-- `npm run build -- --webpack`
+- `npm run build`
 
 Database integration checks live in `tests/database/`. Set `PGLITE_MODULE` to an installed `@electric-sql/pglite/dist/index.js` module and run each script with Node. These tests use an isolated database.
 
@@ -19,3 +19,10 @@ Database integration checks live in `tests/database/`. Set `PGLITE_MODULE` to an
 Schema history lives in `supabase/migrations/`. Apply migrations deliberately to the intended Supabase environment; local feature files may precede remote activation.
 
 Mobile installation instructions are at `/install`. Phone installation requires a trusted HTTPS site. The offline worker runs in production and caches only the public offline screen, not member records or chat.
+
+## Feature improvements
+
+See [the implementation and verification notes](docs/feature-improvements.md) for
+query changes, officer workflows, Supabase activation and validation limits.
+The new database regression suite is `tests/database/feature-efficiency.mjs`.
+It uses the same `PGLITE_MODULE` setup described above.
