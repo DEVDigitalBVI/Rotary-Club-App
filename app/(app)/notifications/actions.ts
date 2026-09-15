@@ -40,10 +40,30 @@ export async function loadNotificationInbox(limit = 20) {
   const db = await createClient();
   const size = Math.min(1000, Math.max(20, Math.trunc(limit) || 20));
   const [rows, unread, chat] = await Promise.all([
-    db.from("notifications").select("*").order("created_at", { ascending: false }).order("id").limit(size + 1),
+    db.from("notifications").select("*").order("created_at", { ascending: false }).order("id", { ascending: false }).limit(size + 1),
     db.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null),
     db.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null).eq("type", "chat"),
   ]);
   for (const result of [rows, unread, chat]) if (result.error) throw new Error("Unable to refresh notifications.");
   return { notifications: (rows.data ?? []).slice(0, size).map(toNotification), unreadCount: unread.count ?? 0, unreadChatCount: chat.count ?? 0, hasMore: (rows.data?.length ?? 0) > size };
+}
+
+export async function loadOlderNotifications(cursor: { createdAt: string; id: string }) {
+  if (!/^[0-9a-f-]{36}$/i.test(cursor.id) || Number.isNaN(Date.parse(cursor.createdAt))) throw new Error("Invalid notification cursor.");
+  const db = await createClient();
+  const date = new Date(cursor.createdAt).toISOString();
+  const { data, error } = await db.from("notifications").select("*")
+    .or(`created_at.lt.${date},and(created_at.eq.${date},id.lt.${cursor.id})`)
+    .order("created_at", { ascending: false }).order("id", { ascending: false }).limit(21);
+  if (error) throw new Error("Unable to load older notifications.");
+  return { notifications: (data ?? []).slice(0, 20).map(toNotification), hasMore: (data?.length ?? 0) > 20 };
+}
+
+export async function refreshNotificationRows(ids: string[]) {
+  if (ids.length > 200) throw new Error("Refresh notifications in pages.");
+  if (!ids.length) return [];
+  const db = await createClient();
+  const { data, error } = await db.from("notifications").select("*").in("id", ids);
+  if (error) throw new Error("Unable to refresh notification history.");
+  return (data ?? []).map(toNotification);
 }

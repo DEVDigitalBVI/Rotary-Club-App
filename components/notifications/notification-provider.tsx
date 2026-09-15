@@ -2,7 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { loadNotificationInbox, markAllNotificationsReadAction, markNotificationReadAction } from "@/app/(app)/notifications/actions";
+import { loadNotificationInbox, loadOlderNotifications, refreshNotificationRows, markAllNotificationsReadAction, markNotificationReadAction } from "@/app/(app)/notifications/actions";
+
+import { mergeNotifications } from "@/lib/notification-state";
 
 type Inbox = Awaited<ReturnType<typeof loadNotificationInbox>>;
 type InboxContext = Inbox & { pending: boolean; error: string; markRead: (id?: string) => Promise<void>; loadMore: () => Promise<void> };
@@ -12,13 +14,18 @@ export function NotificationProvider({ initial, children }: { initial: Inbox; ch
   const [inbox, setInbox] = useState(initial);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  const limit = useRef(20);
+  const inboxRef = useRef(inbox);
+  useEffect(() => { inboxRef.current = inbox; }, [inbox]);
   const generation = useRef(0);
   const busy = useRef(false);
   const refresh = useCallback(async () => {
     const request = ++generation.current;
-    const next = await loadNotificationInbox(limit.current);
-    if (request === generation.current) { setInbox(next); setError(""); }
+    const current = inboxRef.current;
+    const ids = current.notifications.slice(20).map(row => row.id);
+    const next = await loadNotificationInbox();
+    const history = [];
+    for (let offset=0; offset<ids.length; offset+=200) history.push(...await refreshNotificationRows(ids.slice(offset,offset+200)));
+    if (request === generation.current) { setInbox({ ...next, notifications: mergeNotifications(history, next.notifications), hasMore: ids.length ? current.hasMore : next.hasMore }); setError(""); }
   }, []);
   useEffect(() => {
     let disposed = false;
@@ -34,7 +41,7 @@ export function NotificationProvider({ initial, children }: { initial: Inbox; ch
       .subscribe(status => { if (status === "SUBSCRIBED") { if (subscribed) reconcile(); subscribed = true; } });
     window.addEventListener("focus", reconcile);
     window.addEventListener("online", reconcile);
-    return () => { disposed = true; generation.current++; clearTimeout(timer); window.removeEventListener("focus", reconcile); window.removeEventListener("online", reconcile); void db.removeChannel(channel); };
+    return () => { disposed = true; clearTimeout(timer); window.removeEventListener("focus", reconcile); window.removeEventListener("online", reconcile); void db.removeChannel(channel); };
   }, [refresh]);
   async function perform(operation: () => Promise<void>) {
     if (busy.current) return;
@@ -49,7 +56,12 @@ export function NotificationProvider({ initial, children }: { initial: Inbox; ch
       await refresh();
     });
   }
-  async function loadMore() { await perform(async () => { limit.current += 20; await refresh(); }); }
+  async function loadMore() { await perform(async () => {
+    const last = inboxRef.current.notifications.at(-1); if (!last) return;
+    const page = await loadOlderNotifications({ createdAt: last.createdAt, id: last.id });
+    generation.current++;
+    setInbox(current => ({ ...current, notifications: mergeNotifications(current.notifications, page.notifications), hasMore: page.hasMore }));
+  }); }
   return <Context.Provider value={{ ...inbox, pending, error, markRead, loadMore }}>{children}</Context.Provider>;
 }
 
