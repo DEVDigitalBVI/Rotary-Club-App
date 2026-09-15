@@ -1,15 +1,4 @@
 // Shared club types, reference options, and permission helpers.
-/**
- * Shifts a YYYY-MM-DD string back by `days`, returning the same format.
- * Done entirely in UTC: parsing as local time and formatting back through
- * toISOString() lands on the previous day for anyone east of UTC.
- */
-export function daysBefore(iso: string, days: number) {
-  const date = new Date(`${iso}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() - days);
-  return date.toISOString().slice(0, 10);
-}
-
 export type MembershipStatus = "active" | "inactive" | "honorary";
 export type MemberRole = "member" | "admin";
 
