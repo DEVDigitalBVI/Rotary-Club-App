@@ -1,5 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
+import { AttendanceHistory } from "./attendance-history";
 import { CalendarDays, Clock3, Users, ShieldCheck, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,7 +68,7 @@ export function ProjectSlots({ project, member, members, committees, workflow, s
       </section>;
     })}</div>
     {workflow.slots.length===0 && <p className="rounded-2xl border border-dashed border-border p-8 text-center text-muted-foreground">No time slots yet. {workflow.canManage ? "Add the first slot above." : "The project team will publish the schedule here."}</p>}
-    {workflow.canManage && workflow.audit.length>0 && <details className="rounded-2xl border border-border p-5"><summary className="cursor-pointer font-semibold">Attendance history · latest 30 changes</summary><ul className="mt-4 divide-y divide-border">{workflow.audit.map((item) => <li key={item.id} className="py-3 text-sm"><strong>{members.find((m)=>m.id===item.member_id)?.name ?? "Member"}</strong> · {item.previous_state?.attendance ?? "Unrecorded"} → {item.next_state.attendance} · {item.next_state.credited_hours} hrs<p className="mt-1 text-xs text-muted-foreground">Recorded by {members.find((m)=>m.id===item.actor_id)?.name ?? "Former member"} · {formatDate(toClubDateString(item.changed_at))} {formatTime(item.changed_at)}</p></li>)}</ul></details>}
+    {workflow.canManage && <AttendanceHistory projectId={project.id} members={members} />}
   </div>;
 }
 function clubTimeInput(value: string) { return new Intl.DateTimeFormat("en-GB", { timeZone: "America/Tortola", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(value)); }

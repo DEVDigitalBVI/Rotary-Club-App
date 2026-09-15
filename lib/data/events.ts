@@ -135,11 +135,12 @@ export async function getEventById(id: string): Promise<EventItem | null> {
 }
 
 /** Summary rows keep guest dietary notes and attendee lists out of list payloads. */
-export async function getEventPage(period: "upcoming" | "past" = "upcoming", page = 1, size = 12) {
+export async function getEventPage(period: "upcoming" | "past" = "upcoming", page = 1, size = 12, liveOnly = false) {
   const db = await createClient();
   const boundary = `${todayDateString()}T00:00:00-04:00`;
   let query = db.from("events").select("*", { count: "exact" });
-  query = period === "past" ? query.lt("starts_at", boundary) : query.gte("starts_at", boundary);
+  if (liveOnly) query = query.or(`ends_at.gte.${new Date().toISOString()},and(ends_at.is.null,starts_at.gte.${new Date().toISOString()})`);
+  else query = period === "past" ? query.lt("starts_at", boundary) : query.gte("starts_at", boundary);
   const result = await query.order("starts_at", { ascending: period === "upcoming" }).order("id").range((page - 1) * size, page * size - 1).returns<EventRow[]>();
   throwOnSupabaseError(result.error, "Unable to load events");
   const rows = result.data ?? [];
@@ -151,4 +152,14 @@ export async function getEventPage(period: "upcoming" | "past" = "upcoming", pag
     const summary = byId.get(row.id);
     return { ...toEventItem(row, [], null), myRsvp: summary?.own_status ?? "none", rsvps: { yes: Number(summary?.yes_count ?? 0), no: Number(summary?.no_count ?? 0), maybe: Number(summary?.maybe_count ?? 0), guests: Number(summary?.guest_count ?? 0), waitlisted: Number(summary?.waitlisted_count ?? 0) } };
   }) };
+}
+
+export async function getPersonalEventPreview(memberId: string) {
+  const db = await createClient();
+  const { data, error } = await db.from("event_rsvps").select("event_id,member_id,status,guest_count,dietary_notes,registration_status,events!inner(*)")
+    .eq("member_id", memberId).in("status", ["yes", "maybe"]).gte("events.starts_at", new Date().toISOString())
+    .order("starts_at", { referencedTable: "events", ascending: true }).limit(4)
+    .returns<(RsvpRow & { events: EventRow })[]>();
+  throwOnSupabaseError(error, "Unable to load your upcoming events");
+  return (data ?? []).map(row => toEventItem(row.events, [row], memberId));
 }

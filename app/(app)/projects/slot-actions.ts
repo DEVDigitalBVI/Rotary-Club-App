@@ -29,3 +29,12 @@ export async function cancelProjectSlot(slotId: string) { return run("cancel_pro
 export async function recordProjectAttendance(slotId: string, revision: number, records: { member_id: string; attendance: string; hours: number | null }[]) {
   return run("record_project_attendance", { p_slot: slotId, p_revision: revision, p_records: records });
 }
+
+export async function loadProjectAttendanceHistory(projectId: string) {
+  const db = await createClient();
+  const permission = await db.rpc("project_permissions", { p_project: projectId });
+  if (permission.error || !permission.data?.canManage) throw new Error("You cannot view this attendance history.");
+  const { data, error } = await db.from("project_attendance_audit").select("id,member_id,actor_id,changed_at,previous_state,next_state,project_slots!inner(project_id)").eq("project_slots.project_id", projectId).order("changed_at", { ascending: false }).order("id", { ascending: false }).limit(30);
+  if (error) throw new Error("Unable to load attendance history.");
+  return data as unknown as import("@/lib/data/project-slots").AttendanceAudit[];
+}

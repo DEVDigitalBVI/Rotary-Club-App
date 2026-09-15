@@ -119,6 +119,12 @@ export async function getNoticeAcknowledgementSummary(
 }
 
 export async function getExternalNewsPosts() {
-  const posts = await getVisibleNewsPosts();
-  return posts.filter(post => post.source !== "club");
+  const db = await createClient();
+  const [stored, rotary, district] = await Promise.all([
+    db.from("news_posts").select("*").in("source", ["ri", "district"]).or(`expires_at.is.null,expires_at.gte.${todayDateString()}`).order("published_at", { ascending: false }).limit(20).returns<NewsPostRow[]>(),
+    getLatestRotaryNews(), getLatestDistrictNews(),
+  ]);
+  throwOnSupabaseError(stored.error, "Unable to load external news");
+  const live = [...rotary, ...district]; const urls = new Set(live.map(post => post.sourceUrl));
+  return visibleNewsPosts([...live, ...(stored.data ?? []).filter(row => !urls.has(row.source_url ?? undefined)).map(row => toNewsPost(row))]);
 }

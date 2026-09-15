@@ -42,8 +42,7 @@ export default async function NewsPage() {
 }
 
 async function ExternalNews() {
-  try {
-    const posts = await getExternalNewsPosts();
-    return <section className="mt-8"><h2 className="mb-5 text-xl">Around Rotary</h2><NewsFeed posts={posts} canEdit={false} acknowledgementSummary={{}} /></section>;
-  } catch { return <p className="mt-6 text-sm text-muted-foreground">External news is temporarily unavailable. Club notices are still available above.</p>; }
+  const posts = await getExternalNewsPosts().catch(() => null);
+  if (!posts) return <p className="mt-6 text-sm text-muted-foreground">External news is temporarily unavailable. Club notices are still available above.</p>;
+  return <section className="mt-8"><h2 className="mb-5 text-xl">Around Rotary</h2><NewsFeed posts={posts} canEdit={false} acknowledgementSummary={{}} /></section>;
 }

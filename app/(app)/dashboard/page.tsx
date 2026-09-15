@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { MyRotary } from "@/components/dashboard/my-rotary";
 import { getMyRotaryActivity } from "@/lib/data/my-rotary";
 import { getCommittees } from "@/lib/data/committees";
@@ -5,12 +6,11 @@ import { rotaryYear, upcomingEvents } from "@/lib/my-rotary";
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, Clock3, MapPin, MessageCircle, Newspaper } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MemberAvatar } from "@/components/member-avatar";
 import { BirthdayBanner } from "@/components/dashboard/birthday-banner";
 import { formatDate, todayDateString } from "@/lib/format";
 import { getCurrentMember, getTodaysBirthdays } from "@/lib/data/members";
 import { getVisibleNewsPosts } from "@/lib/data/news";
-import { getEventPage } from "@/lib/data/events";
+import { getEventPage, getPersonalEventPreview } from "@/lib/data/events";
 import { getCompletedOnboarding, getOnboardingTaskHref, onboardingTasks, type OnboardingKey } from "@/lib/data/onboarding";
 import { OnboardingCard } from "@/components/dashboard/onboarding-card";
 import { EventFlyerPreview } from "@/components/dashboard/event-flyer-preview";
@@ -41,10 +41,8 @@ function eventDateParts(date: string) {
 
 export default async function DashboardPage() {
   const viewerPromise = getCurrentMember();
-  const [viewer, members, newsPosts, events, serviceProjects, committees, latestMessages, personalActivity, onboarding] = await Promise.all([
-    viewerPromise, getTodaysBirthdays(), getVisibleNewsPosts({ clubOnly: true, limit: 3 }), getEventPage("upcoming", 1, 3).then(result => result.events), getServiceProjects({ status: "open", limit: 2, summary: true }), getCommittees(),
-    getLatestChatPreview(),
-    viewerPromise.then(member => member ? getMyRotaryActivity(member.id) : null),
+  const [viewer, members, newsPosts, events, serviceProjects, onboarding] = await Promise.all([
+    viewerPromise, getTodaysBirthdays(), getVisibleNewsPosts({ clubOnly: true, limit: 3 }), getEventPage("upcoming", 1, 3, true).then(result => result.events), getServiceProjects({ status: "open", limit: 2, summary: true }),
     viewerPromise.then(member => member ? getCompletedOnboarding(member.id) : [] as OnboardingKey[]),
   ]);
   const birthdaysToday = members;
@@ -127,21 +125,27 @@ export default async function DashboardPage() {
         <div className="space-y-4">
           <section className="rounded-2xl border border-border bg-card p-5">
             <div className="flex items-center justify-between gap-3"><h2 className="font-heading flex items-center gap-2 text-2xl font-semibold"><Newspaper className="size-4 text-primary" />Club notices</h2><Link href="/news" className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline">View all</Link></div>
-            {personalActivity && personalActivity.unreadNoticeCount > 0 && <Link href="/notifications" className="mb-2 inline-flex min-h-11 items-center text-sm font-semibold text-primary">{personalActivity.unreadNoticeCount} unread in your inbox <ArrowUpRight className="ml-1 size-4" /></Link>}
-            <div className="divide-y divide-border">{latestNotices.slice(0, 2).map(notice => <article key={notice.id} className="py-3"><p className="text-sm text-muted-foreground">{notice.priority === "urgent" ? "Urgent · " : ""}{formatDate(notice.date)}</p><Link href="/news" className="mt-1 block text-base font-semibold hover:underline">{notice.title}</Link><p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">{notice.body}</p>{notice.requiresAcknowledgement && notice.source === "club" && <div className="mt-3"><NoticeAcknowledgement postId={notice.id} acknowledgedAt={notice.acknowledgedAt} compact /></div>}</article>)}</div>
+            <div className="divide-y divide-border">{latestNotices.slice(0, 3).map(notice => <article key={notice.id} className="py-3"><p className="text-sm text-muted-foreground">{notice.priority === "urgent" ? "Urgent · " : ""}{formatDate(notice.date)}</p><Link href="/news" className="mt-1 block text-base font-semibold hover:underline">{notice.title}</Link><p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">{notice.body}</p>{notice.requiresAcknowledgement && notice.source === "club" && <div className="mt-3"><NoticeAcknowledgement postId={notice.id} acknowledgedAt={notice.acknowledgedAt} compact /></div>}</article>)}</div>
             {latestNotices.length === 0 && <p className="text-sm leading-6 text-muted-foreground">You’re caught up. New club updates will appear here.</p>}
           </section>
         </div>
       </div>
-      {viewer && personalActivity && <MyRotary member={viewer} committees={committees} events={events.filter(event => event.id !== nextEvent?.id)} projects={serviceProjects} activity={personalActivity} />}
+      {viewer && <Suspense fallback={<p className="px-8 py-4 text-sm text-muted-foreground">Loading your diary and service totals…</p>}><PersonalOverview member={viewer} nextEventId={nextEvent?.id} /></Suspense>}
       <BirthdayBanner viewerId={viewer?.id} birthdays={birthdaysToday} />
       <OnboardingCard completed={onboarding} />
-      <div className="mx-4 mt-5 rounded-2xl border border-border bg-card p-5 sm:mx-8 lg:mx-10">
-        <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-heading text-xl font-semibold">Stay connected</h2><Link href="/directory" className="inline-flex min-h-11 items-center text-sm font-semibold text-primary">Meet the {members.length === 1 ? "club member" : `${members.length} members`} <ArrowUpRight className="ml-1 size-4" /></Link></div>
-        {latestMessages.slice(0, 1).map(message => <div key={message.id} className="my-3 flex items-start gap-3"><MemberAvatar member={members.find(member => member.id === message.senderId)} className="size-9" /><div><p className="text-sm font-semibold">{message.channel}</p><p className="line-clamp-2 text-sm text-muted-foreground">{message.body}</p></div></div>)}
-        <div className="flex flex-wrap gap-x-6 gap-y-2"><Link href="/chat" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"><MessageCircle className="size-4" />Open conversations</Link><Link href="/feedback" className="inline-flex min-h-11 items-center text-sm font-semibold text-primary">Share an idea <ArrowUpRight className="ml-1 size-4" /></Link></div>
-      </div>
+      <Suspense fallback={<p className="px-8 py-4 text-sm text-muted-foreground">Loading conversations…</p>}><StayConnected /></Suspense>
       <p className="px-4 pt-5 text-sm text-muted-foreground sm:px-8 lg:px-10">Rotary year {rotaryYear(today).label} · Road Town, British Virgin Islands</p>
     </div>
   );
+}
+
+async function PersonalOverview({ member, nextEventId }: { member: NonNullable<Awaited<ReturnType<typeof getCurrentMember>>>; nextEventId?: string }) {
+  const result = await Promise.all([getMyRotaryActivity(member.id), getCommittees(), getPersonalEventPreview(member.id)]).catch(() => null);
+  if (!result) return <p className="mx-8 mt-5 rounded-xl border p-4 text-sm">Your personal overview is temporarily unavailable. <Link href="/service-record" className="text-primary underline">Open your service record</Link></p>;
+  const [activity, committees, events] = result;
+  return <MyRotary member={member} committees={committees} events={events.filter(event => event.id !== nextEventId)} activity={activity} />;
+}
+async function StayConnected() {
+  const messages = await getLatestChatPreview().catch(() => null);
+  return <section className="mx-4 mt-5 rounded-2xl border border-border bg-card p-5 sm:mx-8 lg:mx-10"><div className="flex justify-between gap-3"><h2 className="text-xl">Stay connected</h2><Link href="/directory" className="text-sm font-semibold text-primary">Meet your club members →</Link></div>{messages === null ? <p className="mt-3 text-sm text-muted-foreground">Conversation preview is temporarily unavailable.</p> : messages.slice(0,1).map(message => <div key={message.id} className="my-3"><p className="text-sm font-semibold">{message.channel}</p><p className="line-clamp-2 text-sm text-muted-foreground">{message.body}</p></div>)}<div className="mt-3 flex gap-5"><Link href="/chat" className="text-sm font-semibold text-primary"><MessageCircle className="mr-1 inline size-4"/>Open conversations</Link><Link href="/feedback" className="text-sm font-semibold text-primary">Share an idea →</Link></div></section>;
 }

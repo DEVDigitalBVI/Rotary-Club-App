@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, HandHeart } from "lucide-react";
 import type { Member, Committee, EventItem } from "@/lib/club";
-import type { ServiceProject } from "@/lib/data/projects";
 import type { getMyRotaryActivity } from "@/lib/data/my-rotary";
 import { upcomingPersonalRsvps } from "@/lib/my-rotary";
 import { formatDate, formatTime, toClubDateString } from "@/lib/format";
@@ -9,12 +8,12 @@ import { formatDate, formatTime, toClubDateString } from "@/lib/format";
 type Activity = Awaited<ReturnType<typeof getMyRotaryActivity>>;
 const number = (value: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
 
-export function MyRotary({ member, committees, events, projects, activity }: {
-  member: Member; committees: Committee[]; events: EventItem[]; projects: ServiceProject[]; activity: Activity;
+export function MyRotary({ member, committees, events, activity }: {
+  member: Member; committees: Committee[]; events: EventItem[]; activity: Activity;
 }) {
   const rsvps = upcomingPersonalRsvps(events);
   const memberships = committees.filter((committee) => committee.memberIds.includes(member.id) || committee.directorId === member.id);
-  const myProjects = projects.filter((project) => project.status === "open" && (project.volunteerIds.includes(member.id) || activity.serviceSlots.some((s) => s.project_slots.project_id === project.id)));
+  const myProjects = [...new Map(activity.serviceSlots.map(row => [row.project_slots.project_id, { id: row.project_slots.project_id, title: row.project_slots.service_projects.title }])).values()];
 
   return (
     <section aria-label="My Rotary overview" className="mx-4 mt-5 grid gap-4 sm:mx-8 lg:mx-10 lg:grid-cols-2">
@@ -50,7 +49,7 @@ export function MyRotary({ member, committees, events, projects, activity }: {
         <div className="mt-4 border-t border-border pt-3">
           {myProjects.length > 0 && <p className="text-sm font-semibold">{myProjects.length} active service {myProjects.length === 1 ? "commitment" : "commitments"}</p>}
           {myProjects.length > 0 ? <ul className="mt-2 space-y-1">{myProjects.slice(0, 2).map((project) => <li key={project.id} className="text-sm text-muted-foreground">{project.title}</li>)}</ul> : <p className="mt-2 text-sm leading-6 text-muted-foreground">Find a project where your time can make a difference.</p>}
-          <Link href="/projects" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">{myProjects.length ? "View your service slots" : "Find a service project"} <ArrowUpRight className="size-4" /></Link>
+          <Link href={myProjects.length ? "/projects/my-slots" : "/projects"} className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">{myProjects.length ? "View your service slots" : "Find a service project"} <ArrowUpRight className="size-4" /></Link>
         </div>
       </section>
 

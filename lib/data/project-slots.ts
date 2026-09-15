@@ -18,14 +18,10 @@ export async function getProjectSlots(projectId: string) {
   for (const result of [slots, leaders, permissions, counts, project]) throwOnSupabaseError(result.error, "Unable to load project slots");
   const slotIds = (slots.data ?? []).map((s) => s.id);
   const access = permissions.data as { canManage: boolean; canAssign: boolean };
-  const [signups, audit] = slotIds.length ? await Promise.all([
-    db.from("project_slot_signups").select("*").in("slot_id", slotIds).returns<SlotSignup[]>(),
-    access.canManage ? db.from("project_attendance_audit").select("*").in("slot_id", slotIds).order("changed_at", { ascending: false }).limit(30).returns<AttendanceAudit[]>() : { data: [], error: null },
-  ]) : [{ data: [], error: null }, { data: [], error: null }];
+  const signups = slotIds.length ? await db.from("project_slot_signups").select("*").in("slot_id", slotIds).returns<SlotSignup[]>() : { data: [], error: null };
   throwOnSupabaseError(signups.error, "Unable to load the slot roster");
-  throwOnSupabaseError(audit.error, "Unable to load attendance history");
   const totals = (counts.data ?? []) as { slot_id: string; registered: number; waitlisted: number }[];
-  return { slots: (slots.data ?? []).map((s) => ({ ...s, registered: Number(totals.find((c) => c.slot_id === s.id)?.registered ?? 0), waitlisted: Number(totals.find((c) => c.slot_id === s.id)?.waitlisted ?? 0) })), leaders: leaders.data ?? [], signups: signups.data ?? [], audit: audit.data ?? [], committeeId: project.data!.committee_id, ...access };
+  return { slots: (slots.data ?? []).map((s) => ({ ...s, registered: Number(totals.find((c) => c.slot_id === s.id)?.registered ?? 0), waitlisted: Number(totals.find((c) => c.slot_id === s.id)?.waitlisted ?? 0) })), leaders: leaders.data ?? [], signups: signups.data ?? [], committeeId: project.data!.committee_id, ...access };
 }
 
 export async function getMyProjectSlots(memberId: string) {
