@@ -147,9 +147,11 @@ export const getMembers = cache(async function getMembers(): Promise<Member[]> {
 /** Small display records for pickers and conversations; no contact or profile fields. */
 export const getMemberSummaries = cache(async function getMemberSummaries() {
   const db = await createClient();
-  const { data, error } = await db.from("members").select("id,name,classification,status,avatar_color,avatar_url").order("name").returns<Pick<MemberRow, "id" | "name" | "classification" | "status" | "avatar_color" | "avatar_url">[]>();
+  const [{ data, error }, guard] = await Promise.all([
+    db.from("members").select("id,name,classification,status,avatar_color,avatar_url").order("name").returns<Pick<MemberRow, "id" | "name" | "classification" | "status" | "avatar_color" | "avatar_url">[]>(),
+    db.rpc("is_superuser"),
+  ]);
   throwOnSupabaseError(error, "Unable to load member names");
-  const guard = await db.rpc("is_superuser");
   throwOnSupabaseError(guard.error, "Unable to apply member visibility");
   const hiddenId = guard.data ? (await getCurrentMember())?.id : undefined;
   return (data ?? []).filter(row => row.id !== hiddenId).map(row => toMember({ ...row, email: "", phone: null, join_date: null, bio: null, position: null, paul_harris_count: 0, polio_plus_society: false, action_groups: [] }));

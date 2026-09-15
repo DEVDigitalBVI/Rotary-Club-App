@@ -8,7 +8,7 @@ import { canPostNews } from "@/lib/club";
 import { getCurrentMember } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
 import { getNoticeAcknowledgementSummary, getVisibleNewsPosts, getExternalNewsPosts } from "@/lib/data/news";
-import { getEvents } from "@/lib/data/events";
+import { getEventOptions } from "@/lib/data/events";
 import { PageContainer } from "@/components/page-container";
 
 export default async function NewsPage({ searchParams }: { searchParams: Promise<{ source?: string }> }) {
@@ -21,14 +21,13 @@ export default async function NewsPage({ searchParams }: { searchParams: Promise
   ]);
 
   const canEdit = currentMember ? canPostNews(currentMember, committees) : false;
-  const eventsPromise = canEdit ? getEvents() : Promise.resolve([]);
-  const acknowledgementSummary = canEdit
-    ? await getNoticeAcknowledgementSummary(
+  const [events, acknowledgementSummary] = await Promise.all([
+    canEdit ? getEventOptions() : Promise.resolve([]),
+    canEdit ? getNoticeAcknowledgementSummary(
         posts.filter((post) => post.requiresAcknowledgement).map((post) => post.id)
       )
-    : {};
-
-  const events = await eventsPromise;
+    : Promise.resolve({}),
+  ]);
 
   return (
     <div>

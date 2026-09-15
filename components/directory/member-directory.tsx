@@ -1,5 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -22,11 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge } from "@/components/status-badge";
-import { AddMemberDialog } from "@/components/directory/add-member-dialog";
 import { CommitteeCard } from "@/components/directory/committee-card";
-import { ManageCommitteeDialog } from "@/components/directory/manage-committee-dialog";
-import { AssignDirectorDialog } from "@/components/directory/assign-director-dialog";
-import { StartNewRotaryYearDialog } from "@/components/directory/start-new-rotary-year-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLinkItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { formatDate } from "@/lib/format";
 import {
@@ -41,6 +38,16 @@ import {
   type Committee,
   type Member,
 } from "@/lib/club";
+
+function LoadingEditor() {
+  return <p role="status" className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-border bg-card px-4 py-3 shadow-lg">Opening editor…</p>;
+}
+
+// Only download officer forms when a member opens the relevant editor.
+const AddMemberDialog = dynamic(() => import("./add-member-dialog").then(module => module.AddMemberDialog), { loading: LoadingEditor });
+const ManageCommitteeDialog = dynamic(() => import("./manage-committee-dialog").then(module => module.ManageCommitteeDialog), { loading: LoadingEditor });
+const AssignDirectorDialog = dynamic(() => import("./assign-director-dialog").then(module => module.AssignDirectorDialog), { loading: LoadingEditor });
+const StartNewRotaryYearDialog = dynamic(() => import("./start-new-rotary-year-dialog").then(module => module.StartNewRotaryYearDialog), { loading: LoadingEditor });
 
 /**
  * `all`, `phf`, `polioplus`, or `ag:<group name>`. Encoded in one string so
@@ -352,9 +359,9 @@ export function MemberDirectory({
         </TabsContent>
       </Tabs>
 
-      <AddMemberDialog open={addOpen} onOpenChange={setAddOpen} />
+      {addOpen && <AddMemberDialog open={addOpen} onOpenChange={setAddOpen} />}
 
-      <ManageCommitteeDialog
+      {managing && <ManageCommitteeDialog
         committee={managing}
         members={members}
         manageRight={
@@ -364,22 +371,22 @@ export function MemberDirectory({
         onOpenChange={(next) => {
           if (!next) setManaging(null);
         }}
-      />
+      />}
 
-      <AssignDirectorDialog
+      {assigningDirectorFor && <AssignDirectorDialog
         committee={assigningDirectorFor}
         members={members}
         open={assigningDirectorFor !== null}
         onOpenChange={(next) => {
           if (!next) setAssigningDirectorFor(null);
         }}
-      />
+      />}
 
-      <StartNewRotaryYearDialog
+      {startingNewYear && <StartNewRotaryYearDialog
         members={members}
         open={startingNewYear}
         onOpenChange={setStartingNewYear}
-      />
+      />}
     </div>
   );
 }

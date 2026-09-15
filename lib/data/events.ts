@@ -32,6 +32,26 @@ type EventRow = {
 
 type RsvpRow = { event_id: string; member_id: string; status: "yes" | "no" | "maybe"; guest_count: number; dietary_notes: string | null; registration_status: "registered" | "waitlisted" };
 
+/** Audience pickers need names, not registration rosters or event materials. */
+export async function getEventOptions(): Promise<{ id: string; title: string }[]> {
+  const db = await createClient();
+  const { data, error } = await db.from("events").select("id,title")
+    .order("starts_at").returns<{ id: string; title: string }[]>();
+  throwOnSupabaseError(error, "Unable to load event names");
+  return data ?? [];
+}
+
+/** Calendar downloads have no need for RSVP data or member profile lookups. */
+export async function getCalendarEvents() {
+  const db = await createClient();
+  const { data, error } = await db.from("events")
+    .select("id,title,starts_at,ends_at,location,description")
+    .order("starts_at")
+    .returns<Pick<EventRow, "id" | "title" | "starts_at" | "ends_at" | "location" | "description">[]>();
+  throwOnSupabaseError(error, "Unable to load calendar events");
+  return (data ?? []).map(row => ({ ...row, startsAt: row.starts_at, endsAt: row.ends_at }));
+}
+
 function toEventItem(
   row: EventRow,
   rsvps: RsvpRow[],

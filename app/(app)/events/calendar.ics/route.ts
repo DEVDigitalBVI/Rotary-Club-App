@@ -1,4 +1,4 @@
-import { getEvents } from "@/lib/data/events";
+import { getCalendarEvents } from "@/lib/data/events";
 import { getCurrentMember } from "@/lib/data/members";
 
 function escapeIcs(value: string) {
@@ -13,7 +13,7 @@ export async function GET() {
   const member = await getCurrentMember();
   if (!member || member.status === "inactive") return new Response("Unauthorized", { status: 401 });
 
-  const events = await getEvents();
+  const events = await getCalendarEvents();
   const now = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
   const lines = [
     "BEGIN:VCALENDAR",
