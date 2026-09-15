@@ -6,13 +6,14 @@ import { NotificationBell } from "./notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getCurrentMember } from "@/lib/data/members";
 import { loadNotificationInbox } from "@/app/(app)/notifications/actions";
+import { DraftScope } from "@/components/forms/draft-scope";
 import { NotificationProvider } from "@/components/notifications/notification-provider";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const [currentMember, inbox] = await Promise.all([getCurrentMember(), loadNotificationInbox()]);
 
   return (
-    <NotificationProvider key={currentMember?.id} initial={inbox}><div className="flex min-h-full min-w-0 flex-1">
+    <DraftScope memberId={currentMember?.id ?? ""}><NotificationProvider key={currentMember?.id} initial={inbox}><div className="flex min-h-full min-w-0 flex-1">
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex print:hidden">
         <div className="flex h-28 items-center px-6">
           <BrandLockup className="-ml-3" logoClassName="h-[5.5rem]" />
@@ -63,6 +64,6 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
         <MobileBottomNav />
       </div>
-    </div></NotificationProvider>
+    </div></NotificationProvider></DraftScope>
   );
 }

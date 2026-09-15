@@ -1,5 +1,6 @@
 "use client";
 
+import { useFormDraft } from "@/components/forms/draft-scope";
 import { useState, useTransition } from "react";
 import { Plus } from "lucide-react";
 import {
@@ -17,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { postNewsAction } from "@/app/(app)/news/actions";
 
 export function PostAnnouncementDialog({ committees, events }: { committees: { id: string; name: string }[]; events: { id: string; title: string }[] }) {
+  const draft = useFormDraft("announcement");
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -41,21 +43,24 @@ export function PostAnnouncementDialog({ committees, events }: { committees: { i
           </DialogDescription>
         </DialogHeader>
 
-        <form
+        <form ref={draft.ref} onInput={draft.onInput}
           className="flex flex-col gap-3"
           onSubmit={(e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
             startTransition(async () => {
+              try {
               const result = await postNewsAction(undefined, formData);
               if (result?.error) {
                 setError(result.error);
               } else {
-                setOpen(false);
+                draft.clear(); setOpen(false);
               }
+              } catch { setError("Couldn’t confirm the announcement was saved. Your draft is kept in this tab. Check News before retrying."); }
             });
           }}
         >
+          <p className="text-xs text-muted-foreground">Text is kept in this tab until posted. Reattach files after reopening.</p>
           {error && (
             <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
               {error}

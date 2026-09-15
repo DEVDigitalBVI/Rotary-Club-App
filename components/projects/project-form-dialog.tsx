@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useFormDraft } from "@/components/forms/draft-scope";
+import { useCallback, useRef, useState, useTransition } from "react";
 import { Check, ChevronLeft, ChevronRight, Pencil, Plus } from "lucide-react";
 import { createProjectAction, updateProjectAction } from "@/app/(app)/projects/actions";
 import type { ServiceProject } from "@/lib/data/projects";
@@ -52,6 +53,9 @@ export function ProjectFormDialog({ project }: { project?: ServiceProject }) {
   const [step, setStep] = useState(0);
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const draft = useFormDraft(`project:${project?.id ?? "new"}`);
+  const draftRef = draft.ref;
+  const attachForm = useCallback((form: HTMLFormElement | null) => { formRef.current = form; draftRef(form); }, [draftRef]);
 
   function goToStep(next: number) {
     setError(null);
@@ -90,12 +94,14 @@ export function ProjectFormDialog({ project }: { project?: ServiceProject }) {
         </button>)}
       </div>
       </div>
-      <form ref={formRef} noValidate className="flex min-h-0 flex-1 flex-col" onSubmit={(event) => {
+      <form ref={attachForm} onInput={draft.onInput} noValidate className="flex min-h-0 flex-1 flex-col" onSubmit={(event) => {
         event.preventDefault(); setError(null); const formData = new FormData(event.currentTarget);
         if (!String(formData.get("title") ?? "").trim() || !String(formData.get("summary") ?? "").trim()) { setStep(0); setError("Title and short summary are required."); return; }
         startTransition(async () => {
+          try {
           const result = project ? await updateProjectAction(project.id, undefined, formData) : await createProjectAction(undefined, formData);
-          if (result?.error) setError(result.error); else setOpen(false);
+          if (result?.error) setError(result.error); else { draft.clear(); setOpen(false); }
+          } catch { setError("Couldn’t confirm the project was saved. Your draft is kept in this tab. Check the project list before retrying."); }
         });
       }}>
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-5 sm:px-7">

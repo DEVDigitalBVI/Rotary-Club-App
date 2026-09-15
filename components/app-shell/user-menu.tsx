@@ -1,5 +1,6 @@
 "use client";
 
+import { clearSessionDrafts } from "@/components/forms/draft-scope";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronsUpDown, LogOut, User, MessageSquare, Download } from "lucide-react";
@@ -29,7 +30,9 @@ export function UserMenu({
 
   async function handleSignOut() {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+    if (error) return;
+    clearSessionDrafts();
     router.push("/login");
     router.refresh();
   }

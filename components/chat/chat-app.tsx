@@ -32,6 +32,12 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
   const [selectedId, setSelectedId] = useState(channels.some((item) => item.id === initialChannelId) ? initialChannelId! : channels[0]?.id ?? "");
   const [mobileShowThread, setMobileShowThread] = useState(Boolean(initialChannelId));
   const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [draftsReady, setDraftsReady] = useState(false);
+  useEffect(() => {
+    try { const saved = JSON.parse(sessionStorage.getItem(`rotary-draft:${currentMemberId}:chat`) ?? "{}"); if (saved && typeof saved === "object") setDrafts(Object.fromEntries(Object.entries(saved).filter((entry): entry is [string, string] => typeof entry[1] === "string"))); } catch {}
+    setDraftsReady(true);
+  }, [currentMemberId]);
+  useEffect(() => { if (draftsReady) { try { sessionStorage.setItem(`rotary-draft:${currentMemberId}:chat`, JSON.stringify(drafts)); } catch {} } }, [drafts, draftsReady, currentMemberId]);
   const [replies, setReplies] = useState<Record<string, string | undefined>>({});
   const [failures, setFailures] = useState<Record<string, { id: string; body: string; replyToId?: string; error: string }>>({});
   const [sending, setSending] = useState<string>();
@@ -181,6 +187,7 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
       setData((previous) => previous.map((channel) => channel.id === channelId && !channel.messages.some((item) => item.id === message.id) ? { ...channel, messages: [...channel.messages, message] } : channel));
       setFailures((previous) => { const next = { ...previous }; delete next[channelId]; return next; });
     } catch (cause) {
+      setDrafts(previous => ({ ...previous, [channelId]: previous[channelId] || body }));
       setFailures((previous) => ({ ...previous, [channelId]: { id: messageId, body, replyToId: replyId, error: cause instanceof Error ? cause.message : "Unable to send that message." } }));
     } finally { sendingRef.current = false; setSending(undefined); }
   }
