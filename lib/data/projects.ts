@@ -62,13 +62,18 @@ type ProjectRow = {
   ri_project_id: string | null; ri_project_url: string | null; ri_uploaded_at: string | null;
 };
 
-export async function getServiceProjects(): Promise<ServiceProject[]> {
+export async function getServiceProjects(options: { id?: string; limit?: number; status?: ServiceProject["status"]; summary?: boolean } = {}): Promise<ServiceProject[]> {
   const supabase = await createClient();
-  const [projectsResult, volunteersResult, hoursResult] = await Promise.all([
-    supabase.from("service_projects").select("*").order("starts_at", { nullsFirst: false }).returns<ProjectRow[]>(),
-    supabase.rpc("project_participants"),
-    supabase.rpc("get_project_approved_hours"),
-  ]);
+  let query = supabase.from("service_projects").select(options.summary ? "id,title,summary,status,starts_at,ends_at,location,city,volunteer_goal,hours_goal,area_of_focus,cover_image_url" : "*").order("starts_at", { nullsFirst: false }).order("id");
+  if (options.id) query = query.eq("id", options.id);
+  if (options.status) query = query.eq("status", options.status);
+  if (options.limit) query = query.limit(options.limit);
+  const projectsResult = await query.returns<ProjectRow[]>();
+  const ids = (projectsResult.data ?? []).map(project => project.id);
+  const [volunteersResult, hoursResult] = ids.length ? await Promise.all([
+    supabase.rpc("project_participants").in("project_id", ids),
+    supabase.rpc("get_project_approved_hours").in("project_id", ids),
+  ]) : [{ data: [], error: null }, { data: [], error: null }];
   throwOnSupabaseError(projectsResult.error, "Unable to load service projects");
   // Keep the existing app usable until the scheduling migration is activated.
   const participants = volunteersResult.error && ["PGRST202", "42883"].includes(volunteersResult.error.code)
@@ -126,4 +131,8 @@ export async function getServiceProjects(): Promise<ServiceProject[]> {
     riProjectUrl: project.ri_project_url,
     riUploadedAt: project.ri_uploaded_at,
   }));
+}
+
+export async function getServiceProjectById(id: string) {
+  return (await getServiceProjects({ id }))[0] ?? null;
 }

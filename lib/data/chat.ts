@@ -34,6 +34,7 @@ export type ChatChannel = {
   archivedAt?: string;
   rotaryYear?: string;
   hasEarlierMessages: boolean;
+  loaded?: boolean;
 };
 
 type ChannelRow = {
@@ -45,12 +46,12 @@ type ChannelRow = {
   archived_at: string | null;
   rotary_year: string | null;
 };
-export async function getChatChannels(memberId: string): Promise<ChatChannel[]> {
+export async function getChatChannels(memberId: string, selectedId?: string | null): Promise<ChatChannel[]> {
   const supabase = await createClient();
   const [channelsResult, messagesResult, membersResult, readsResult] =
     await Promise.all([
       supabase.from("chat_channels").select("id, name, kind, context_id, created_by, archived_at, rotary_year"),
-      supabase.rpc("get_recent_chat_messages", { per_channel_limit: 50 }),
+      supabase.rpc("get_recent_chat_messages", { per_channel_limit: 1 }),
       supabase.from("chat_channel_members").select("channel_id, member_id"),
       supabase.from("chat_channel_reads").select("channel_id, last_read_at").eq("member_id", memberId),
     ]);
@@ -75,7 +76,7 @@ export async function getChatChannels(memberId: string): Promise<ChatChannel[]> 
     ])
   );
 
-  return ((channelsResult.data ?? []) as ChannelRow[])
+  const channels: ChatChannel[] = ((channelsResult.data ?? []) as ChannelRow[])
     .map((channel) => ({
       id: channel.id,
       name: channel.name,
@@ -91,7 +92,7 @@ export async function getChatChannels(memberId: string): Promise<ChatChannel[]> 
       messages: messages
         .filter((message) => message.channel_id === channel.id)
         .map((message) => toMessage(message, reactions)),
-      hasEarlierMessages: messages.some((message) => message.channel_id === channel.id && Number(message.total_count) > 50),
+      hasEarlierMessages: messages.some((message) => message.channel_id === channel.id && Number(message.total_count) > 1),
     }))
     .sort((a, b) => {
       if (a.kind === "club") return -1;
@@ -100,6 +101,13 @@ export async function getChatChannels(memberId: string): Promise<ChatChannel[]> 
       const bLast = b.messages.at(-1)?.createdAt ?? "";
       return bLast.localeCompare(aLast) || a.name.localeCompare(b.name);
     });
+  if (selectedId !== null && channels.length) {
+    const selected = channels.find(channel => channel.id === selectedId) ?? channels[0];
+    const thread = await getChatThread(selected.id);
+    Object.assign(selected, thread, { loaded: true });
+  }
+  return channels;
+
 }
 
 /** Dashboard preview: two visible messages, without loading every conversation. */
@@ -111,4 +119,15 @@ export async function getLatestChatPreview() {
     .returns<{id:string;sender_id:string;body:string;created_at:string;chat_channels:{name:string}}[]>();
   throwOnSupabaseError(error,"Unable to load recent conversations");
   return (data??[]).map(row=>({id:row.id,senderId:row.sender_id,body:row.body,createdAt:row.created_at,channel:row.chat_channels.name}));
+}
+
+export async function getChatThread(channelId: string) {
+  const db = await createClient();
+  const { data, error } = await db.from("chat_messages").select("id,channel_id,sender_id,body,reply_to_id,edited_at,deleted_at,created_at")
+    .eq("channel_id", channelId).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(51).returns<MessageRow[]>();
+  throwOnSupabaseError(error, "Unable to load this conversation");
+  const rows = (data ?? []).slice(0, 50).reverse();
+  const reactions = rows.length ? await db.from("chat_reactions").select("message_id,member_id,emoji").in("message_id", rows.map(row => row.id)).returns<ReactionRow[]>() : { data: [], error: null };
+  throwOnSupabaseError(reactions.error, "Unable to load reactions");
+  return { messages: rows.map(row => toMessage(row, reactions.data ?? [])), hasEarlierMessages: (data?.length ?? 0) > 50 };
 }

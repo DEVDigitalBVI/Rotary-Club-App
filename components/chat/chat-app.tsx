@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { formatDateTime, toClubDateString } from "@/lib/format";
 import type { ChatChannel, ChatMessage, ChatReaction } from "@/lib/data/chat";
 import type { Member } from "@/lib/club";
-import { deleteChatMessageAction, deleteDirectChatAction, loadEarlierChatMessagesAction, refreshChatChannelsAction, markChatReadAction, sendChatMessageAction, startDirectChatAction, toggleChatReactionAction } from "@/app/(app)/chat/actions";
+import { loadChatThreadAction, deleteChatMessageAction, deleteDirectChatAction, loadEarlierChatMessagesAction, refreshChatChannelsAction, markChatReadAction, sendChatMessageAction, startDirectChatAction, toggleChatReactionAction } from "@/app/(app)/chat/actions";
 
 const REACTIONS = [
   "👍", "❤️", "👏", "🎉", "🙏",
@@ -58,6 +58,21 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
   const lastMessageTime = lastMessage?.createdAt;
   const lastReadAt = selected?.lastReadAt;
 
+  const threadLoaded = selected?.loaded;
+  useEffect(() => {
+    if (!selectedId || threadLoaded) return;
+    let disposed = false;
+    void loadChatThreadAction(selectedId).then(thread => {
+      if (!disposed) setData(previous => previous.map(channel => {
+        if (channel.id !== selectedId) return channel;
+        const messages = new Map(thread.messages.map(message => [message.id, message]));
+        channel.messages.forEach(message => { if (!messages.has(message.id)) messages.set(message.id, message); });
+        return { ...channel, ...thread, messages: [...messages.values()].sort((a,b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id)), loaded: true };
+      }));
+    }).catch(() => { if (!disposed) setError("Unable to load this conversation. Select another conversation and try again."); });
+    return () => { disposed = true; };
+  }, [selectedId, threadLoaded]);
+
   function displayName(channel: ChatChannel) {
     if (channel.kind !== "dm") return channel.name;
     const other = channel.memberIds.find((id) => id !== currentMemberId);
@@ -84,6 +99,7 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
     const knownChannels = new Set(channels.map((channel) => channel.id));
     let disposed = false;
     let refreshing = false;
+    let subscribed = false;
     const refresh = async () => {
       if (refreshing || disposed) return;
       refreshing = true;
@@ -95,7 +111,7 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
           if (!cached) return channel;
           const messages = new Map(cached.messages.map((message) => [message.id, message]));
           channel.messages.forEach((message) => messages.set(message.id, message));
-          return { ...channel, messages: [...messages.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt)), hasEarlierMessages: cached.hasEarlierMessages, lastReadAt: (cached.lastReadAt ?? "") > (channel.lastReadAt ?? "") ? cached.lastReadAt : channel.lastReadAt };
+          return { ...channel, loaded: cached.loaded, messages: [...messages.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt)), hasEarlierMessages: cached.hasEarlierMessages, lastReadAt: (cached.lastReadAt ?? "") > (channel.lastReadAt ?? "") ? cached.lastReadAt : channel.lastReadAt };
         }));
       } catch { /* Existing conversations remain usable during reconnects. */ }
       finally { refreshing = false; }
@@ -120,21 +136,21 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
           return { ...message, reactions: payload.eventType === "DELETE" ? without : [...without, reaction] };
         }) })));
       })
-      .subscribe((status) => { if (status === "SUBSCRIBED") void refresh(); });
+      .subscribe((status) => { if (status === "SUBSCRIBED") { if (subscribed) void refresh(); subscribed = true; } });
     const onFocus = () => { void refresh(); };
     window.addEventListener("focus", onFocus);
     return () => { disposed = true; window.removeEventListener("focus", onFocus); void supabase.removeChannel(subscription); };
   }, [currentMemberId, channels]);
 
   useEffect(() => {
-    if (!selectedId || !lastMessageTime || (lastReadAt && lastReadAt >= lastMessageTime) || !visible || !atBottom || searchOpen) return;
+    if (!threadLoaded || !selectedId || !lastMessageTime || (lastReadAt && lastReadAt >= lastMessageTime) || !visible || !atBottom || searchOpen) return;
     const timer = setTimeout(() => {
       void markChatReadAction(selectedId, lastMessageTime).then(() => {
         setData((previous) => previous.map((channel) => channel.id === selectedId ? { ...channel, lastReadAt: channel.lastReadAt && channel.lastReadAt > lastMessageTime ? channel.lastReadAt : lastMessageTime } : channel));
       }).catch(() => { /* A read receipt should not block the conversation. */ });
     }, 500);
     return () => clearTimeout(timer);
-  }, [selectedId, lastMessageTime, lastReadAt, visible, atBottom, searchOpen]);
+  }, [threadLoaded, selectedId, lastMessageTime, lastReadAt, visible, atBottom, searchOpen]);
 
   useEffect(() => {
     const thread = threadRef.current;
@@ -207,7 +223,7 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
               {message.id === firstUnread?.id && <div className="my-3 border-t border-primary/30 pt-2 text-center text-xs font-semibold text-primary">New messages</div>}
               <MessageRow message={message} previous={selected.messages[index - 1]} messages={selected.messages} memberById={memberById} currentMemberId={currentMemberId} canModerate={canModerate && !selected.archivedAt} onReply={(id) => { setReplies((previous) => ({ ...previous, [selectedId]: id })); textareaRef.current?.focus(); }} onError={setError} readOnly={Boolean(selected.archivedAt)} />
             </Fragment>)}
-            {!selected.messages.length && <EmptyConversation searching={false} name={displayName(selected)} />}
+            {!selected.loaded && <p role="status" className="p-4 text-sm text-muted-foreground">Loading conversation…</p>}{selected.loaded && !selected.messages.length && <EmptyConversation searching={false} name={displayName(selected)} />}
           </div>
           {!atBottom && <div className="absolute bottom-36 inset-x-0 flex justify-center pointer-events-none"><Button size="sm" className="pointer-events-auto shadow-lg" onClick={scrollToLatest}><ChevronDown />{lastMessage && isUnread(lastMessage, currentMemberId, lastReadAt) ? "New messages" : "Back to latest"}</Button></div>}
         </>}

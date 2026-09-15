@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useNotifications } from "@/components/notifications/notification-provider";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { navItems } from "./nav-items";
 
-export function SidebarNav({ unreadChatCount = 0 }: { unreadChatCount?: number }) {
+export function SidebarNav() {
+  const { unreadChatCount } = useNotifications();
   const pathname = usePathname();
 
   return (

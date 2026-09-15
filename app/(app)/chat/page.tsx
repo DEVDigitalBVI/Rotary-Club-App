@@ -1,6 +1,6 @@
 import { ChatApp } from "@/components/chat/chat-app";
 import { getChatChannels } from "@/lib/data/chat";
-import { getCurrentMember, getMembers } from "@/lib/data/members";
+import { getCurrentMember, getMemberSummaries } from "@/lib/data/members";
 import { getCommittees } from "@/lib/data/committees";
 import { canPostNews } from "@/lib/club";
 import { redirect } from "next/navigation";
@@ -11,8 +11,8 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
   if (!currentMember) redirect("/login");
   const { channel } = await searchParams;
   const [channels, members, committees] = await Promise.all([
-    getChatChannels(currentMember.id),
-    getMembers(),
+    getChatChannels(currentMember.id, channel),
+    getMemberSummaries(),
     getCommittees(),
   ]);
   return (

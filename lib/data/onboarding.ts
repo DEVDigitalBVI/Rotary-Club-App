@@ -24,8 +24,8 @@ export async function getCompletedOnboarding(memberId: string): Promise<Onboardi
     supabase.from("member_onboarding").select("task_key").eq("member_id", memberId).returns<{ task_key: OnboardingKey }[]>(),
     supabase.from("members").select("phone, classification, bio").eq("id", memberId).maybeSingle<{ phone: string | null; classification: string | null; bio: string | null }>(),
     supabase.from("committee_members").select("committee_id").eq("member_id", memberId).limit(1),
-    supabase.from("event_rsvps").select("event_id").eq("member_id", memberId).limit(1),
-    supabase.from("project_volunteers").select("project_id").eq("member_id", memberId).limit(1),
+    supabase.from("event_rsvps").select("event_id").eq("member_id", memberId).eq("status", "yes").limit(1),
+    supabase.from("project_slot_signups").select("slot_id").eq("member_id", memberId).eq("status", "registered").limit(1),
   ]);
   [recorded.error, member.error, committees.error, rsvps.error, projects.error].forEach((error) => throwOnSupabaseError(error, "Unable to load onboarding progress"));
 

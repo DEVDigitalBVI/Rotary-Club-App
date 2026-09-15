@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useNotifications } from "@/components/notifications/notification-provider";
 import { usePathname } from "next/navigation";
 import { MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { mobileMoreItems, mobilePrimaryItems } from "./nav-items";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
-export function MobileBottomNav({ unreadChatCount = 0 }: { unreadChatCount?: number }) {
+export function MobileBottomNav() {
+  const { unreadChatCount } = useNotifications();
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const primaryItems = mobilePrimaryItems;

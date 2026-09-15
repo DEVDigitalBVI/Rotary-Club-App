@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
 import { getCurrentMember } from "@/lib/data/members";
-import { formatTime, toClubDateString } from "@/lib/format";
+import { formatTime, toClubDateString, todayDateString } from "@/lib/format";
 import type { EventItem } from "@/lib/club";
 
 type EventRow = {
@@ -132,4 +132,23 @@ export async function getEventById(id: string): Promise<EventItem | null> {
 
   if (!eventResult.data) return null;
   return toEventItem(eventResult.data, (rsvpsResult.data ?? []) as unknown as RsvpRow[], currentMember?.id ?? null);
+}
+
+/** Summary rows keep guest dietary notes and attendee lists out of list payloads. */
+export async function getEventPage(period: "upcoming" | "past" = "upcoming", page = 1, size = 12) {
+  const db = await createClient();
+  const boundary = `${todayDateString()}T00:00:00-04:00`;
+  let query = db.from("events").select("*", { count: "exact" });
+  query = period === "past" ? query.lt("starts_at", boundary) : query.gte("starts_at", boundary);
+  const result = await query.order("starts_at", { ascending: period === "upcoming" }).order("id").range((page - 1) * size, page * size - 1).returns<EventRow[]>();
+  throwOnSupabaseError(result.error, "Unable to load events");
+  const rows = result.data ?? [];
+  const summaries = rows.length ? await db.rpc("event_card_summaries", { p_ids: rows.map(row => row.id) }) : { data: [], error: null };
+  throwOnSupabaseError(summaries.error, "Unable to load event registrations");
+  type Summary = { event_id: string; yes_count: number; no_count: number; maybe_count: number; guest_count: number; waitlisted_count: number; own_status: EventItem["myRsvp"] | null };
+  const byId = new Map(((summaries.data ?? []) as Summary[]).map(row => [row.event_id, row]));
+  return { total: result.count ?? 0, events: rows.map(row => {
+    const summary = byId.get(row.id);
+    return { ...toEventItem(row, [], null), myRsvp: summary?.own_status ?? "none", rsvps: { yes: Number(summary?.yes_count ?? 0), no: Number(summary?.no_count ?? 0), maybe: Number(summary?.maybe_count ?? 0), guests: Number(summary?.guest_count ?? 0), waitlisted: Number(summary?.waitlisted_count ?? 0) } };
+  }) };
 }

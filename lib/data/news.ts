@@ -1,3 +1,4 @@
+import { todayDateString } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
 import { visibleNewsPosts, type NewsPost, type NewsSource } from "@/lib/club";
@@ -42,27 +43,30 @@ function toNewsPost(row: NewsPostRow, acknowledgedAt?: string): NewsPost {
 }
 
 /** Same capping rules as the mock version (visibleNewsPosts), applied to real rows. */
-export async function getVisibleNewsPosts(): Promise<NewsPost[]> {
+export async function getVisibleNewsPosts(options: { clubOnly?: boolean; limit?: number } = {}): Promise<NewsPost[]> {
   const supabase = await createClient();
   const [{ data, error }, memberResult, latestRotaryNews, latestDistrictNews] = await Promise.all([
-    supabase
+    options.limit ? supabase.rpc("club_notice_page", { p_limit: options.limit, p_offset: 0 }).returns<NewsPostRow[]>() : supabase
     .from("news_posts")
     .select("id, source, title, body, author, published_at, image_url, image_alt, source_url, audience_type, audience_id, priority, is_pinned, expires_at, requires_acknowledgement")
+    .or(`expires_at.is.null,expires_at.gte.${todayDateString()}`)
+    .in("source", options.clubOnly ? ["club"] : ["club", "ri", "district"])
     .order("published_at", { ascending: false })
     .returns<NewsPostRow[]>(),
     supabase.rpc("current_member_id"),
-    getLatestRotaryNews(),
-    getLatestDistrictNews(),
+    options.clubOnly ? Promise.resolve([]) : getLatestRotaryNews(),
+    options.clubOnly ? Promise.resolve([]) : getLatestDistrictNews(),
   ]);
   throwOnSupabaseError(error, "Unable to load news posts");
 
   throwOnSupabaseError(memberResult.error, "Unable to resolve the current member");
   const memberId = memberResult.data;
-  const acknowledgementResult = memberId
+  const acknowledgementResult = memberId && data?.length
     ? await supabase
         .from("news_acknowledgements")
         .select("post_id, acknowledged_at")
         .eq("member_id", memberId)
+        .in("post_id", (data ?? []).map(row => row.id))
         .returns<{ post_id: string; acknowledged_at: string }[]>()
     : { data: [], error: null };
   throwOnSupabaseError(acknowledgementResult.error, "Unable to load notice acknowledgements");
@@ -70,20 +74,15 @@ export async function getVisibleNewsPosts(): Promise<NewsPost[]> {
   const acknowledged = new Map(
     (acknowledgementResult.data ?? []).map((row) => [row.post_id, row.acknowledged_at])
   );
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayDateString();
   const priorityRank = { urgent: 0, important: 1, normal: 2 } as const;
 
   const storedRows = (data ?? [])
       .filter((row) => !row.expires_at || row.expires_at >= today)
       .map((row) => toNewsPost(row, acknowledged.get(row.id)));
-  const posts = [
-    ...storedRows.filter((post) =>
-      (post.source !== "ri" || latestRotaryNews.length !== 2) &&
-      (post.source !== "district" || latestDistrictNews.length !== 2)
-    ),
-    ...(latestRotaryNews.length === 2 ? latestRotaryNews : []),
-    ...(latestDistrictNews.length === 2 ? latestDistrictNews : []),
-  ];
+  const live = [...latestRotaryNews, ...latestDistrictNews];
+  const liveUrls = new Set(live.map(post => post.sourceUrl).filter(Boolean));
+  const posts = [...storedRows.filter(post => !post.sourceUrl || !liveUrls.has(post.sourceUrl)), ...live];
 
   return visibleNewsPosts(posts).sort((a, b) => {
     if (Boolean(a.isPinned) !== Boolean(b.isPinned)) return a.isPinned ? -1 : 1;
@@ -117,4 +116,9 @@ export async function getNoticeAcknowledgementSummary(
     summary[acknowledgement.post_id] = [...(summary[acknowledgement.post_id] ?? []), name];
   }
   return summary;
+}
+
+export async function getExternalNewsPosts() {
+  const posts = await getVisibleNewsPosts();
+  return posts.filter(post => post.source !== "club");
 }

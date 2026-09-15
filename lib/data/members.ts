@@ -2,7 +2,7 @@ import { cache } from "react";
 // Request-scoped deduplication only: never share member data across requests.
 import { createClient } from "@/lib/supabase/server";
 import { throwOnSupabaseError } from "@/lib/supabase/errors";
-import { initialsFromName } from "@/lib/format";
+import { initialsFromName, todayMonthDay } from "@/lib/format";
 import type { Member } from "@/lib/club";
 
 type MemberRow = {
@@ -143,3 +143,23 @@ export const getMembers = cache(async function getMembers(): Promise<Member[]> {
     date_of_birth: birthdays.get(row.id) ?? null,
   }));
 });
+
+/** Small display records for pickers and conversations; no contact or profile fields. */
+export const getMemberSummaries = cache(async function getMemberSummaries() {
+  const db = await createClient();
+  const { data, error } = await db.from("members").select("id,name,classification,status,avatar_color,avatar_url").order("name").returns<Pick<MemberRow, "id" | "name" | "classification" | "status" | "avatar_color" | "avatar_url">[]>();
+  throwOnSupabaseError(error, "Unable to load member names");
+  return (data ?? []).map(row => toMember({ ...row, email: "", phone: null, join_date: null, bio: null, position: null, paul_harris_count: 0, polio_plus_society: false, action_groups: [] }));
+});
+
+export async function getTodaysBirthdays() {
+  const db = await createClient();
+  const { data, error } = await db.rpc("get_member_birthdays");
+  throwOnSupabaseError(error, "Unable to load birthdays");
+  const monthDay = todayMonthDay();
+  const ids = ((data ?? []) as { member_id: string; birthday: string }[]).filter(row => row.birthday.slice(5) === monthDay).map(row => row.member_id);
+  if (!ids.length) return [];
+  const result = await db.from("members").select(MEMBER_DIRECTORY_COLUMNS).in("id", ids).returns<MemberRow[]>();
+  throwOnSupabaseError(result.error, "Unable to load birthday members");
+  return (result.data ?? []).map(toMember);
+}

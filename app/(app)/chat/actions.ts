@@ -6,7 +6,7 @@ import { toMessage } from "@/lib/chat-message";
 import { revalidatePath } from "next/cache";
 import { getCurrentMember } from "@/lib/data/members";
 import { createClient } from "@/lib/supabase/server";
-import { getChatChannels, type ChatMessage, type ChatReaction } from "@/lib/data/chat";
+import { getChatThread, getChatChannels, type ChatMessage, type ChatReaction } from "@/lib/data/chat";
 
 async function requireMember() {
   const member = await getCurrentMember();
@@ -157,5 +157,10 @@ export async function loadChatContextAction(channelId: string, messageId: string
 
 export async function refreshChatChannelsAction() {
   const member = await requireMember();
-  return getChatChannels(member.id);
+  return getChatChannels(member.id, null);
+}
+
+export async function loadChatThreadAction(channelId: string) {
+  await requireMember();
+  return getChatThread(channelId);
 }

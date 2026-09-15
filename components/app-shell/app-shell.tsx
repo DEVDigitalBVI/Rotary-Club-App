@@ -5,24 +5,20 @@ import { UserMenu } from "./user-menu";
 import { NotificationBell } from "./notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { getCurrentMember } from "@/lib/data/members";
-import { getNotifications, getUnreadNotificationCount } from "@/lib/data/notifications";
+import { loadNotificationInbox } from "@/app/(app)/notifications/actions";
+import { NotificationProvider } from "@/components/notifications/notification-provider";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
-  const [currentMember, notifications, unreadCount] = await Promise.all([
-    getCurrentMember(),
-    getNotifications(),
-    getUnreadNotificationCount(),
-  ]);
-  const unreadChatCount = notifications.filter((item) => item.type === "chat" && !item.read).length;
+  const [currentMember, inbox] = await Promise.all([getCurrentMember(), loadNotificationInbox()]);
 
   return (
-    <div className="flex min-h-full min-w-0 flex-1">
+    <NotificationProvider key={currentMember?.id} initial={inbox}><div className="flex min-h-full min-w-0 flex-1">
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex print:hidden">
         <div className="flex h-28 items-center px-6">
           <BrandLockup className="-ml-3" logoClassName="h-[5.5rem]" />
         </div>
         <p className="font-label px-6 pb-5 text-sm text-sidebar-foreground/75">Member house · Road Town</p>
-        <SidebarNav unreadChatCount={unreadChatCount} />
+        <SidebarNav />
         <div className="space-y-3 border-t border-sidebar-border p-4">
           <div className="min-w-0 flex-1">
             {currentMember ? (
@@ -38,8 +34,6 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-2">
           {currentMember && (
             <NotificationBell
-              notifications={notifications}
-              unreadCount={unreadCount}
               className="shrink-0 text-sidebar-foreground hover:bg-sidebar-accent"
             />
           )}
@@ -57,8 +51,6 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-1">
             {currentMember && (
               <NotificationBell
-                notifications={notifications}
-                unreadCount={unreadCount}
                 className="text-white hover:bg-white/15"
               />
             )}
@@ -69,8 +61,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
         <main className="min-w-0 flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0 print:pb-0">{children}</main>
 
-        <MobileBottomNav unreadChatCount={unreadChatCount} />
+        <MobileBottomNav />
       </div>
-    </div>
+    </div></NotificationProvider>
   );
 }

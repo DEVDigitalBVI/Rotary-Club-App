@@ -7,10 +7,10 @@ import { ArrowUpRight, CalendarDays, Clock3, MapPin, MessageCircle, Newspaper } 
 import { Button } from "@/components/ui/button";
 import { MemberAvatar } from "@/components/member-avatar";
 import { BirthdayBanner } from "@/components/dashboard/birthday-banner";
-import { formatDate, todayDateString, todayMonthDay } from "@/lib/format";
-import { getCurrentMember, getMembers } from "@/lib/data/members";
+import { formatDate, todayDateString } from "@/lib/format";
+import { getCurrentMember, getTodaysBirthdays } from "@/lib/data/members";
 import { getVisibleNewsPosts } from "@/lib/data/news";
-import { getEvents } from "@/lib/data/events";
+import { getEventPage } from "@/lib/data/events";
 import { getCompletedOnboarding, getOnboardingTaskHref, onboardingTasks, type OnboardingKey } from "@/lib/data/onboarding";
 import { OnboardingCard } from "@/components/dashboard/onboarding-card";
 import { EventFlyerPreview } from "@/components/dashboard/event-flyer-preview";
@@ -42,14 +42,12 @@ function eventDateParts(date: string) {
 export default async function DashboardPage() {
   const viewerPromise = getCurrentMember();
   const [viewer, members, newsPosts, events, serviceProjects, committees, latestMessages, personalActivity, onboarding] = await Promise.all([
-    viewerPromise, getMembers(), getVisibleNewsPosts(), getEvents(), getServiceProjects(), getCommittees(),
+    viewerPromise, getTodaysBirthdays(), getVisibleNewsPosts({ clubOnly: true, limit: 3 }), getEventPage("upcoming", 1, 3).then(result => result.events), getServiceProjects({ status: "open", limit: 2, summary: true }), getCommittees(),
     getLatestChatPreview(),
     viewerPromise.then(member => member ? getMyRotaryActivity(member.id) : null),
     viewerPromise.then(member => member ? getCompletedOnboarding(member.id) : [] as OnboardingKey[]),
   ]);
-  const birthdaysToday = members.filter(
-    (member) => member.dateOfBirth?.slice(5) === todayMonthDay()
-  );
+  const birthdaysToday = members;
   const today = todayDateString();
   const upcoming = upcomingEvents(events);
   const nextEvent = upcoming[0];
