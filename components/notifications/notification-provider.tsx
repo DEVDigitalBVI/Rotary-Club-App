@@ -25,7 +25,7 @@ export function NotificationProvider({ initial, children }: { initial: Inbox; ch
     const next = await loadNotificationInbox();
     const history = [];
     for (let offset=0; offset<ids.length; offset+=200) history.push(...await refreshNotificationRows(ids.slice(offset,offset+200)));
-    if (request === generation.current) { setInbox({ ...next, notifications: mergeNotifications(history, next.notifications), hasMore: ids.length ? current.hasMore : next.hasMore }); setError(""); }
+    if (request === generation.current) { const updated = { ...next, notifications: mergeNotifications(history, next.notifications), hasMore: ids.length ? current.hasMore : next.hasMore }; inboxRef.current = updated; setInbox(updated); setError(""); }
   }, []);
   useEffect(() => {
     let disposed = false;
@@ -60,7 +60,9 @@ export function NotificationProvider({ initial, children }: { initial: Inbox; ch
     const last = inboxRef.current.notifications.at(-1); if (!last) return;
     const page = await loadOlderNotifications({ createdAt: last.createdAt, id: last.id });
     generation.current++;
-    setInbox(current => ({ ...current, notifications: mergeNotifications(current.notifications, page.notifications), hasMore: page.hasMore }));
+    const updated = { ...inboxRef.current, notifications: mergeNotifications(inboxRef.current.notifications, page.notifications), hasMore: page.hasMore };
+    inboxRef.current = updated; setInbox(updated);
+    await refresh();
   }); }
   return <Context.Provider value={{ ...inbox, pending, error, markRead, loadMore }}>{children}</Context.Provider>;
 }

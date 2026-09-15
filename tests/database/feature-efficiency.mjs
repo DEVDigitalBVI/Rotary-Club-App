@@ -33,7 +33,6 @@ for (const role of ['secretary','lead','member','waiting','outsider']) {
  await db.query('insert into public.members(id,user_id,name,email,join_date,position) values($1,$1,$2,$3,current_date,$4)',[ids[role],role,`${role}@example.test`,role==='secretary'?'secretary':null]);
 }
 const as = authenticatedQuery(db, ids);
-async function rejects(who,sql,args,pattern) { await assert.rejects(()=>as(who,sql,args),pattern); }
 
 await db.exec("set timezone='America/Tortola'");
 const project='10000000-0000-4000-8000-000000000001';
