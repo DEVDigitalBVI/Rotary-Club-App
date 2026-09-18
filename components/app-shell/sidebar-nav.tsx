@@ -21,9 +21,9 @@ export function SidebarNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold outline-none transition-[background-color,color,transform,box-shadow] focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+              "relative flex min-h-11 items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold outline-none transition-[background-color,color,transform] focus-visible:ring-2 focus-visible:ring-sidebar-ring",
               active
-                ? "bg-white text-[var(--nav-surface)] shadow-sm"
+                ? "bg-sidebar-accent text-white before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-[var(--rotary-gold)]"
                 : "text-sidebar-foreground/68 hover:translate-x-0.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             )}
             aria-current={active ? "page" : undefined}

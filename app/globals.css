@@ -74,6 +74,7 @@
   --notice-important: #b66b00;
   --notice-urgent: var(--rotary-cardinal);
   --notice-success: #087a37;
+  --ambient-glow: rgb(247 168 27 / 0.09);
 
   /* The two committed variable fonts are the app-wide type system. Keep all
      font utilities pointed at these tokens so a component cannot silently
@@ -141,40 +142,46 @@
 .dark {
   color-scheme: dark;
 
-  --background: oklch(0.16 0.014 262);
-  --foreground: oklch(0.94 0.006 262);
-  --card: oklch(0.208 0.017 262);
-  --card-foreground: oklch(0.94 0.006 262);
-  --popover: oklch(0.208 0.017 262);
-  --popover-foreground: oklch(0.94 0.006 262);
+  /* HIG-style dark hierarchy: a dim base, a brighter content surface, and
+     a brighter-again elevated surface for menus and modal sheets. */
+  --background: #111318;
+  --foreground: #f2f2f7;
+  --card: #1c2026;
+  --card-foreground: #f2f2f7;
+  --popover: #252a31;
+  --popover-foreground: #f2f2f7;
   --primary: #8eb8ff;
-  --primary-foreground: oklch(0.15 0.02 262);
+  --primary-foreground: #111820;
   --secondary: var(--rotary-gold);
-  --secondary-foreground: oklch(0.2 0.03 70);
-  --muted: oklch(0.245 0.015 262);
-  --muted-foreground: oklch(0.68 0.012 262);
-  --accent: color-mix(in oklch, var(--rotary-sky) 20%, black);
-  --accent-foreground: oklch(0.94 0.006 262);
+  --secondary-foreground: #1a2029;
+  --muted: #292e36;
+  --muted-foreground: #b8bbc2;
+  --accent: #263a50;
+  --accent-foreground: #f2f2f7;
   --destructive: var(--rotary-cardinal);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: var(--rotary-sky);
+  --destructive-foreground: #ffffff;
+  --border: rgb(255 255 255 / 12%);
+  --input: rgb(255 255 255 / 16%);
+  --ring: #69a9ff;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --shadow-card: 0 2px 6px oklch(0 0 0 / 0.3), 0 22px 44px -18px oklch(0 0 0 / 0.6);
-  --shadow-card-hover: 0 4px 10px oklch(0 0 0 / 0.35), 0 28px 56px -16px oklch(0 0 0 / 0.7);
-  --sidebar: oklch(0.19 0.017 262);
-  --sidebar-foreground: oklch(0.94 0.006 262);
-  --sidebar-primary: color-mix(in oklch, var(--rotary-blue) 75%, white);
-  --sidebar-primary-foreground: oklch(0.15 0.02 262);
-  --sidebar-accent: color-mix(in oklch, var(--rotary-sky) 20%, black);
-  --sidebar-accent-foreground: oklch(0.94 0.006 262);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: var(--rotary-sky);
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.035), 0 18px 44px -26px rgb(0 0 0 / 0.9);
+  --shadow-card-hover: 0 1px 0 rgb(255 255 255 / 0.05), 0 22px 52px -24px rgb(0 0 0 / 0.95);
+  --nav-surface: #111820;
+  --feature-surface: #14283f;
+  --feature-foreground: #f2f2f7;
+  --sidebar: #111820;
+  --sidebar-foreground: #f2f2f7;
+  --sidebar-primary: #8eb8ff;
+  --sidebar-primary-foreground: #111820;
+  --sidebar-accent: rgb(255 255 255 / 10%);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 12%);
+  --sidebar-ring: #69a9ff;
+  --ambient-glow: rgb(247 168 27 / 0.035);
   --notice-important: #ffc45b;
   --notice-urgent: #ff7775;
   --notice-success: #6edb94;
@@ -205,12 +212,21 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    background-image: radial-gradient(circle at 85% 5%, rgb(247 168 27 / 0.09), transparent 26rem);
+    background-image: radial-gradient(circle at 85% 5%, var(--ambient-glow), transparent 26rem);
     background-attachment: fixed;
     -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
   }
   html {
     font-family: var(--font-sans);
+    scroll-padding-top: calc(5rem + env(safe-area-inset-top));
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 22%, transparent);
+  }
+  :where(a, button, input, textarea, select, summary):focus-visible {
+    outline: 3px solid color-mix(in oklch, var(--ring) 48%, transparent);
+    outline-offset: 3px;
   }
   h1,
   h2,
@@ -221,6 +237,12 @@
     font-family: var(--font-heading);
     font-weight: 600;
     letter-spacing: -0.025em;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :where(a, button):not(:disabled) {
+    cursor: pointer;
   }
 }
 
@@ -259,8 +281,9 @@
     --border: #b8b0a2;
   }
   .dark {
-    --muted-foreground: oklch(0.8 0.012 262);
-    --border: oklch(1 0 0 / 28%);
+    --muted-foreground: #d1d1d6;
+    --border: rgb(255 255 255 / 30%);
+    --input: rgb(255 255 255 / 34%);
   }
 }
 

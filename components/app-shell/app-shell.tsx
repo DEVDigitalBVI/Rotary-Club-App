@@ -46,7 +46,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-h-full min-w-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-30 flex h-[calc(5rem+env(safe-area-inset-top))] items-center justify-between pt-[env(safe-area-inset-top)] border-b border-white/10 bg-sidebar px-4 md:hidden print:hidden"
+          className="sticky top-0 z-30 flex h-[calc(4.5rem+env(safe-area-inset-top))] items-center justify-between border-b border-white/10 bg-sidebar/96 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl md:hidden print:hidden"
         >
           <BrandLockup className="-ml-2" logoClassName="h-16" />
           <div className="flex items-center gap-1">
@@ -60,7 +60,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0 print:pb-0">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0 print:pb-0">{children}</main>
 
         <MobileBottomNav />
       </div>

@@ -19,7 +19,7 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav aria-label="Primary navigation" className="fixed inset-x-3 bottom-[max(.75rem,env(safe-area-inset-bottom))] z-40 flex min-h-[4.5rem] overflow-hidden rounded-[1.35rem] border border-white/15 bg-[var(--nav-surface)]/92 px-1 shadow-[0_18px_50px_-18px_rgba(6,28,52,.8)] backdrop-blur-xl md:hidden print:hidden">
+      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-40 flex min-h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-white/12 bg-[var(--nav-surface)]/94 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_-22px_rgba(6,28,52,.75)] backdrop-blur-xl md:hidden print:hidden">
       {primaryItems.map((item) => {
         const active =
           pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -29,15 +29,15 @@ export function MobileBottomNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "relative flex min-h-16 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-2 text-[0.75rem] font-semibold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white/80",
-              active ? "text-white" : "text-white/65 hover:text-white"
+              "relative flex min-h-16 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1.5 text-[0.75rem] font-semibold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80",
+              active ? "text-white" : "text-white/68 hover:text-white"
             )}
             aria-current={active ? "page" : undefined}
           >
             <span
               className={cn(
                 "flex min-h-7 min-w-12 items-center justify-center rounded-full px-3 py-1 transition-colors",
-                active && "bg-white/16"
+                active && "bg-[var(--rotary-gold)]/18 text-[var(--rotary-gold)]"
               )}
             >
               <Icon
@@ -46,7 +46,7 @@ export function MobileBottomNav() {
                 fill={active ? "color-mix(in oklch, var(--primary) 15%, transparent)" : "none"}
               />
             </span>
-            {item.href === "/chat" && unreadChatCount > 0 && <span className="absolute right-[8%] top-2 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--rotary-gold)] px-1 text-[0.65rem] font-bold text-[var(--action-gold-foreground)]">{Math.min(unreadChatCount, 99)}</span>}
+            {item.href === "/chat" && unreadChatCount > 0 && <span className="absolute right-[8%] top-1.5 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-[var(--rotary-gold)] px-1 text-[0.65rem] font-bold text-[var(--action-gold-foreground)]">{Math.min(unreadChatCount, 99)}</span>}
             {item.mobileLabel ?? item.label}
           </Link>
         );
@@ -55,11 +55,11 @@ export function MobileBottomNav() {
           type="button"
           onClick={() => setMoreOpen(true)}
           className={cn(
-            "flex min-h-16 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-2 text-[0.7rem] font-semibold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white/80",
-            moreActive ? "text-white" : "text-white/65 hover:text-white"
+            "flex min-h-16 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-0.5 py-1.5 text-[0.75rem] font-semibold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80",
+            moreActive ? "text-white" : "text-white/68 hover:text-white"
           )}
         >
-          <span className={cn("flex min-h-7 min-w-12 items-center justify-center rounded-full px-3 py-1", moreActive && "bg-white/16")}><MoreHorizontal className="size-5" strokeWidth={moreActive ? 2.5 : 2} /></span>
+          <span className={cn("flex min-h-7 min-w-12 items-center justify-center rounded-full px-3 py-1", moreActive && "bg-[var(--rotary-gold)]/18 text-[var(--rotary-gold)]")}><MoreHorizontal className="size-5" strokeWidth={moreActive ? 2.5 : 2} /></span>
           More
         </button>
       </nav>

@@ -8,7 +8,7 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="border-b border-border/70 bg-card/35">
+    <div className="border-b border-border/60 bg-card/20">
     <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 px-4 pb-5 pt-8 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:pb-7 sm:pt-10">
       <div>
         <p className="font-label mb-2 text-xs text-primary">Rotary Club of Road Town</p>
