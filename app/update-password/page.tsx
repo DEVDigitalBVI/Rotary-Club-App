@@ -66,11 +66,11 @@ export default function UpdatePasswordPage() {
               id="update-password-title"
               className="font-heading mt-3 text-4xl font-semibold leading-[1.02] text-foreground sm:text-5xl"
             >
-              Create your password
+              Set your password
             </h1>
             <p className="mt-5 max-w-sm text-sm leading-6 text-muted-foreground">
-              Your email has been verified. Choose a password to finish setting
-              up your member portal account.
+              Your email has been verified. Choose a secure password for your
+              member portal account.
             </p>
 
             <UpdatePasswordForm />

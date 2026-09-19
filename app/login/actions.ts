@@ -3,6 +3,10 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import {
+  getPasswordUpdateErrorMessage,
+  meetsPasswordRequirements,
+} from "@/lib/password-policy";
 
 export type AuthFormState =
   | { error?: string; success?: string }
@@ -120,16 +124,27 @@ export async function updatePassword(
   formData: FormData
 ): Promise<AuthFormState> {
   const password = String(formData.get("password") ?? "");
+  const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
-  if (password.length < 8) {
-    return { error: "Password must be at least 8 characters." };
+  if (password !== confirmPassword) {
+    return { error: "The passwords do not match. Enter the same password in both fields." };
+  }
+
+  if (!meetsPasswordRequirements(password)) {
+    return {
+      error:
+        "Password must have at least 8 characters, including an uppercase letter, lowercase letter, number, and symbol.",
+    };
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password });
 
   if (error) {
-    return { error: "Couldn't update your password — try the reset link again." };
+    const reasons = "reasons" in error && Array.isArray(error.reasons)
+      ? error.reasons.filter((reason): reason is string => typeof reason === "string")
+      : [];
+    return { error: getPasswordUpdateErrorMessage(error.code, reasons) };
   }
 
   redirect("/dashboard");
