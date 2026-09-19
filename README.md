@@ -19,6 +19,15 @@ cookie-backed session before password setup:
 </a>
 ```
 
+The hosted **Reset password** template must likewise send recovery tokens to
+the password form explicitly:
+
+```html
+<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/update-password">
+  Reset password
+</a>
+```
+
 ## Checks
 
 - `npm run lint`

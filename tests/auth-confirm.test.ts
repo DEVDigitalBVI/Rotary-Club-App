@@ -37,6 +37,16 @@ describe("auth confirmation callback", () => {
     );
   });
 
+  it("opens the password form when Supabase drops next from a recovery code", async () => {
+    const response = await GET(new NextRequest(
+      "https://www.rotaryclubroadtown.com/auth/confirm?code=recovery-code"
+    ));
+
+    expect(response.headers.get("location")).toBe(
+      "https://www.rotaryclubroadtown.com/update-password"
+    );
+  });
+
   it("continues to support token-hash email templates", async () => {
     const response = await GET(new NextRequest(
       "https://www.rotaryclubroadtown.com/auth/confirm?token_hash=hash&type=recovery&next=/update-password"
@@ -46,6 +56,16 @@ describe("auth confirmation callback", () => {
       token_hash: "hash",
       type: "recovery",
     });
+    expect(response.headers.get("location")).toBe(
+      "https://www.rotaryclubroadtown.com/update-password"
+    );
+  });
+
+  it("opens the password form for recovery token hashes without next", async () => {
+    const response = await GET(new NextRequest(
+      "https://www.rotaryclubroadtown.com/auth/confirm?token_hash=hash&type=recovery"
+    ));
+
     expect(response.headers.get("location")).toBe(
       "https://www.rotaryclubroadtown.com/update-password"
     );

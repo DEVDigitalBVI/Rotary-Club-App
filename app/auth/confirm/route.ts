@@ -23,7 +23,14 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const requestedNext = searchParams.get("next") ?? "/dashboard";
+  // Recovery links establish a signed-in session before this callback runs.
+  // If Supabase's hosted verification step drops the nested `next` query
+  // parameter, default to the password form instead of treating recovery as a
+  // normal login and sending the member to the dashboard.
+  const recoveryFallback = code || type === "recovery"
+    ? "/update-password"
+    : "/dashboard";
+  const requestedNext = searchParams.get("next") ?? recoveryFallback;
   const next = isSafeRedirectPath(requestedNext) ? requestedNext : "/dashboard";
 
   const supabase = await createClient();
