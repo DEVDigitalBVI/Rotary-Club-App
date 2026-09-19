@@ -13,25 +13,29 @@ export function ForgotPasswordForm() {
   );
 
   return (
-    <form action={action} className="mt-6 flex flex-col gap-4">
+    <form action={action} className="mt-6 flex flex-col gap-5">
       {state?.error && (
-        <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
+        <p role="alert" className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm leading-5 text-destructive">
           {state.error}
         </p>
       )}
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">Email</Label>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="email" className="font-label text-[0.75rem] text-foreground/75">Email address</Label>
         <Input
           id="email"
           name="email"
           type="email"
           placeholder="you@example.com"
           autoComplete="email"
+          inputMode="email"
+          autoCapitalize="none"
+          spellCheck={false}
           required
+          className="h-12 px-4"
         />
       </div>
 
-      <Button size="lg" type="submit" disabled={pending} className="mt-2 font-heading w-full">
+      <Button size="lg" type="submit" disabled={pending} className="h-12 w-full rounded-xl text-base">
         {pending ? "Sending…" : "Send reset link"}
       </Button>
     </form>
