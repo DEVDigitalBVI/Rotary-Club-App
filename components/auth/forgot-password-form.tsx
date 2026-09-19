@@ -19,6 +19,11 @@ export function ForgotPasswordForm() {
           {state.error}
         </p>
       )}
+      {state?.success && (
+        <p role="status" className="rounded-xl border border-border bg-muted p-4 text-sm leading-5 text-foreground">
+          {state.success}
+        </p>
+      )}
       <div className="flex flex-col gap-2">
         <Label htmlFor="email" className="font-label text-[0.75rem] text-foreground/75">Email address</Label>
         <Input

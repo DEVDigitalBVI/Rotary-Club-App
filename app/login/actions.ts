@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
-export type AuthFormState = { error: string } | undefined;
+export type AuthFormState =
+  | { error?: string; success?: string }
+  | undefined;
 
 /**
  * The Origin header is present on same-site form/fetch requests (which is
@@ -109,11 +111,29 @@ export async function requestPasswordReset(
   }
 
   const supabase = await createClient();
-  await supabase.auth.resetPasswordForEmail(email, {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${origin}/auth/confirm?next=/update-password`,
   });
 
-  redirect("/login?check-email=reset");
+  if (error) {
+    if (error.status === 429 || error.code === "over_email_send_rate_limit") {
+      return {
+        error:
+          "Too many reset emails have been requested. Please wait about an hour before trying again.",
+      };
+    }
+
+    return {
+      error: "We couldn't send a reset email right now. Please try again later.",
+    };
+  }
+
+  // Keep the response identical for registered and unknown addresses so this
+  // form cannot be used to discover which emails have accounts.
+  return {
+    success:
+      "If that email has an account, a password-reset link is on its way. Check your inbox and spam folder.",
+  };
 }
 
 /**
