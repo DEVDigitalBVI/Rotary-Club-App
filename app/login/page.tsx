@@ -71,6 +71,7 @@ export default async function LoginPage({
                   ? "reset"
                   : undefined
             }
+            linkExpired={params.error === "link-expired"}
           />
 
           <div className="mt-10 flex items-center justify-between border-t border-border pt-5 text-[0.68rem] text-muted-foreground">

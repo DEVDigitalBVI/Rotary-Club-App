@@ -21,7 +21,17 @@ async function getOrigin() {
   if (!origin) {
     throw new Error("Missing Origin header");
   }
-  return origin;
+
+  const url = new URL(origin);
+  // Supabase only accepts password-reset redirects that exactly match its
+  // allow list. Production traffic is served on www, while the canonical
+  // Auth callback is registered on the apex domain. Use that registered
+  // origin so Supabase does not silently fall back to the Site URL (/login).
+  if (url.hostname === "www.rotaryclubroadtown.com") {
+    url.hostname = "rotaryclubroadtown.com";
+  }
+
+  return url.origin;
 }
 
 export async function signIn(

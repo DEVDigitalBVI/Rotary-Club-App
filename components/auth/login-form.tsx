@@ -9,8 +9,10 @@ import { signIn, type AuthFormState } from "@/app/login/actions";
 
 export function LoginForm({
   checkEmail,
+  linkExpired = false,
 }: {
   checkEmail?: "signup" | "reset";
+  linkExpired?: boolean;
 }) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(
     signIn,
@@ -29,6 +31,12 @@ export function LoginForm({
         <p className="rounded-xl border border-border bg-card p-4 text-sm leading-5 text-foreground">
           If that email is on our roster, we&apos;ve sent a link to reset your
           password.
+        </p>
+      )}
+      {linkExpired && (
+        <p className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-sm leading-5 text-destructive">
+          That password-reset link is invalid or has expired. Request a new
+          link and use the most recent email.
         </p>
       )}
       {state?.error && (
