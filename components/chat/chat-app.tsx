@@ -94,7 +94,7 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
   }
   // Read state follows the visible thread, including tab visibility and mobile navigation.
   useEffect(() => {
-    const media = window.matchMedia("(min-width: 768px)");
+    const media = window.matchMedia("(min-width: 1024px)");
     const update = () => setVisible(document.visibilityState === "visible" && (media.matches || mobileShowThread));
     update();
     media.addEventListener("change", update);
@@ -202,8 +202,8 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
   const filteredChannels = sortConversations(data).filter((channel) => displayName(channel).toLocaleLowerCase().includes(conversationQuery.toLocaleLowerCase()) && (!unreadOnly || channel.messages.some((message) => isUnread(message, currentMemberId, channel.lastReadAt))));
   const firstUnread = selected?.messages.find((message) => isUnread(message, currentMemberId, unreadBoundaries[selectedId]));
 
-  return <div className="fixed inset-x-0 top-[calc(5rem+env(safe-area-inset-top))] bottom-[calc(6rem+env(safe-area-inset-bottom))] z-20 grid min-h-0 overflow-hidden border-y border-border/70 bg-card md:relative md:inset-auto md:z-auto md:h-[calc(100dvh-5.5rem)] md:rounded-2xl md:border md:shadow-[var(--shadow-card)] md:grid-cols-[19rem_minmax(0,1fr)]">
-    <aside className={cn("min-h-0 min-w-0 flex-col border-r border-border bg-muted/25", mobileShowThread ? "hidden md:flex" : "flex")}>
+  return <div className="fixed inset-x-0 top-[calc(5rem+env(safe-area-inset-top))] bottom-[calc(6rem+env(safe-area-inset-bottom))] z-20 grid min-h-0 overflow-hidden border-y border-border/70 bg-card lg:relative lg:inset-auto lg:z-auto lg:h-[calc(100dvh-5.5rem)] lg:rounded-2xl lg:border lg:shadow-[var(--shadow-card)] lg:grid-cols-[19rem_minmax(0,1fr)]">
+    <aside className={cn("min-h-0 min-w-0 flex-col border-r border-border bg-muted/25", mobileShowThread ? "hidden lg:flex" : "flex")}>
       <div className="space-y-3 border-b border-border p-4">
         <div className="flex items-center justify-between gap-2"><h2 className="text-lg font-semibold">Conversations</h2><NewDirectMessage members={members} currentMemberId={currentMemberId} onCreated={(id) => { if (data.some((channel) => channel.id === id)) selectChannel(id); else { router.push(`/chat?channel=${id}`); router.refresh(); } }} /></div>
         <SearchField value={conversationQuery} onValueChange={setConversationQuery} aria-label="Find a conversation" placeholder="Find a conversation" inputClassName="h-9" />
@@ -217,10 +217,10 @@ export function ChatApp({ channels, members, currentMemberId, canModerate, initi
         {!filteredChannels.length && <p className="px-4 py-8 text-center text-sm text-muted-foreground">{unreadOnly ? "You’re all caught up." : "No conversations found."}</p>}
       </div>
     </aside>
-    <section className={cn("relative min-h-0 min-w-0 flex-col", mobileShowThread ? "flex" : "hidden md:flex")}>
+    <section className={cn("relative min-h-0 min-w-0 flex-col", mobileShowThread ? "flex" : "hidden lg:flex")}>
       {selected ? <>
         <header className="flex min-h-16 shrink-0 items-center gap-3 border-b border-border px-3 sm:px-5">
-          <Button variant="ghost" size="icon-sm" className="md:hidden" onClick={() => setMobileShowThread(false)} aria-label="Back to conversations"><ArrowLeft /></Button>
+          <Button variant="ghost" size="icon-sm" className="lg:hidden" onClick={() => setMobileShowThread(false)} aria-label="Back to conversations"><ArrowLeft /></Button>
           <ChannelIcon kind={selected.kind} /><div className="min-w-0 flex-1"><h2 className="truncate text-base font-semibold">{displayName(selected)}</h2><p className="truncate text-xs text-muted-foreground">{selected.rotaryYear ? `${selected.rotaryYear} · ` : ""}{channelDescription(selected)}</p></div>
           <Button variant={searchOpen ? "secondary" : "ghost"} size="icon-sm" aria-label={searchOpen ? "Close message search" : "Search this conversation"} aria-expanded={searchOpen} onClick={() => { setSearchOpen(!searchOpen); setQuery(""); }}><Search /></Button>
           {selected.kind === "dm" && selected.createdBy === currentMemberId && <DeleteDirectChat channelId={selected.id} name={displayName(selected)} onDeleted={() => { const remaining = data.filter((channel) => channel.id !== selected.id); setData(remaining); setSelectedId(remaining[0]?.id ?? ""); setMobileShowThread(false); router.replace("/chat"); }} />}

@@ -19,7 +19,7 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-40 flex min-h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-white/12 bg-[var(--nav-surface)]/94 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_-22px_rgba(6,28,52,.75)] backdrop-blur-xl md:hidden print:hidden">
+      <nav aria-label="Primary navigation" className="fixed inset-x-0 bottom-0 z-40 flex min-h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-white/12 bg-[var(--nav-surface)]/94 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_-22px_rgba(6,28,52,.75)] backdrop-blur-xl lg:hidden print:hidden">
       {primaryItems.map((item) => {
         const active =
           pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -65,7 +65,7 @@ export function MobileBottomNav() {
       </nav>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="rounded-t-[1.75rem] border-border pb-[calc(1rem+env(safe-area-inset-bottom))] md:hidden">
+        <SheetContent side="bottom" className="rounded-t-[1.75rem] border-border pb-[calc(1rem+env(safe-area-inset-bottom))] lg:hidden">
           <SheetHeader className="border-b border-border px-5 pb-4 pt-5">
             <SheetTitle className="font-heading text-2xl font-semibold">More from your club</SheetTitle>
             <SheetDescription>Notices, conversations, and more from the club.</SheetDescription>

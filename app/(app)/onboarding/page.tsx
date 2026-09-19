@@ -49,7 +49,7 @@ export default async function OnboardingPage() {
                   <span className="mt-1 block text-sm leading-6 text-muted-foreground">{task.detail}</span>
                 </span>
                 <span className="mt-2 flex shrink-0 items-center gap-1 text-sm font-semibold text-primary">
-                  {isComplete ? "Review" : "Open"}
+                  <span className="hidden sm:inline">{isComplete ? "Review" : "Open"}</span>
                   <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                 </span>
               </Link>

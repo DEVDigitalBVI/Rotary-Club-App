@@ -27,8 +27,10 @@ export default async function ProjectsPage() {
     <div>
       <PageHeader title="Service projects" description="Plan measurable service, mobilize members, and keep every project ready for Rotary International." actions={canManage && visibleProjects.length > 0 ? <ProjectFormDialog /> : undefined} />
       <PageContainer className="max-w-6xl space-y-6">
-        <Link href="/projects/my-slots" className="inline-block text-sm font-semibold text-primary">My upcoming service slots →</Link>
-        {member && canAssignRoles(member) && <Link href="/projects/makeups" className="inline-block text-sm font-semibold text-primary hover:underline">Meeting makeups · ClubRunner entry →</Link>}
+        <nav aria-label="Service project tools" className="flex flex-wrap gap-x-6 gap-y-2">
+          <Link href="/projects/my-slots" className="text-sm font-semibold text-primary hover:underline">My upcoming service slots →</Link>
+          {member && canAssignRoles(member) && <Link href="/projects/makeups" className="text-sm font-semibold text-primary hover:underline">Meeting makeups · ClubRunner entry →</Link>}
+        </nav>
         {visibleProjects.length === 0 ? (
           <EmptyState icon={HandHeart} title="The next act of service starts here" description={canManage ? "Create a project when the club is ready to mobilize volunteers and measure its impact." : "No service projects are open right now. Check back for the club’s next opportunity to help."} action={canManage ? <ProjectFormDialog /> : undefined} />
         ) : (

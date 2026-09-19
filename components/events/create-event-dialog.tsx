@@ -110,7 +110,7 @@ export function CreateEventDialog() {
             <Label htmlFor="event-title">Title</Label>
             <Input id="event-title" name="title" placeholder="Weekly Club Meeting" required />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="event-date">Date</Label>
               <Input id="event-date" name="date" type="date" required />

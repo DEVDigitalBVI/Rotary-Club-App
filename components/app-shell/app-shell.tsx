@@ -14,7 +14,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <DraftScope memberId={currentMember?.id ?? ""}><NotificationProvider key={currentMember?.id} initial={inbox}><div className="flex min-h-full min-w-0 flex-1">
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex print:hidden">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex print:hidden">
         <div className="flex h-28 items-center px-6">
           <BrandLockup className="-ml-3" logoClassName="h-[5.5rem]" />
         </div>
@@ -46,9 +46,9 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-h-full min-w-0 flex-1 flex-col">
         <header
-          className="sticky top-0 z-30 flex h-[calc(4.5rem+env(safe-area-inset-top))] items-center justify-between border-b border-white/10 bg-sidebar/96 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl md:hidden print:hidden"
+          className="sticky top-0 z-30 flex h-[calc(4.5rem+env(safe-area-inset-top))] items-center justify-between border-b border-white/10 bg-sidebar/96 px-3 pt-[env(safe-area-inset-top)] backdrop-blur-xl min-[380px]:px-4 lg:hidden print:hidden"
         >
-          <BrandLockup className="-ml-2" logoClassName="h-16" />
+          <BrandLockup className="-ml-1 min-[380px]:-ml-2" logoClassName="h-12 min-[380px]:h-14" />
           <div className="flex items-center gap-1">
             {currentMember && (
               <NotificationBell
@@ -60,7 +60,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0 print:pb-0">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0 print:pb-0">{children}</main>
 
         <MobileBottomNav />
       </div>

@@ -17,8 +17,8 @@ export default async function ChatPage({ searchParams }: { searchParams: Promise
   ]);
   return (
     <div>
-      <header className="mx-auto hidden max-w-[1400px] items-baseline gap-4 px-8 pt-5 pb-3 md:flex"><h1 className="text-2xl font-semibold">Chat</h1><p className="text-sm text-muted-foreground">Your club, in conversation.</p></header>
-      <PageContainer className="md:px-8 md:pt-0 md:pb-5">
+      <header className="mx-auto hidden max-w-[1400px] items-baseline gap-4 px-8 pt-5 pb-3 lg:flex"><h1 className="text-2xl font-semibold">Chat</h1><p className="text-sm text-muted-foreground">Your club, in conversation.</p></header>
+      <PageContainer className="lg:px-8 lg:pt-0 lg:pb-5">
         <ChatApp
           key={channel ?? "default"}
           channels={channels}
