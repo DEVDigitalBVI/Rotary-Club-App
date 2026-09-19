@@ -31,6 +31,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLinkIt
 import { formatDate } from "@/lib/format";
 import {
   canAddMembers,
+  canInviteMembers,
   canAssignRoles,
   committeeManageRight,
   committeesForMember,
@@ -91,7 +92,8 @@ export function MemberDirectory({
   );
   const [startingNewYear, setStartingNewYear] = useState(false);
 
-  const mayAddMembers = canAddMembers(currentMember, committees);
+  const mayInviteMembers = canInviteMembers(currentMember, committees);
+  const mayAdminRoster = canAddMembers(currentMember, committees);
   const mayAssignRoles = canAssignRoles(currentMember);
 
   const filtered = useMemo(() => {
@@ -211,15 +213,15 @@ export function MemberDirectory({
               </div>
             </div>
 
-            {(mayAddMembers || mayAssignRoles) && (
+            {(mayInviteMembers || mayAdminRoster || mayAssignRoles) && (
               <DropdownMenu>
                 <DropdownMenuTrigger render={<Button variant="outline" className="font-heading" />}>
                   <Settings2 />Admin tools
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-60">
-                  {mayAddMembers && <DropdownMenuItem onClick={() => setAddOpen(true)}><UserPlus />Add one member</DropdownMenuItem>}
-                  {mayAddMembers && <DropdownMenuLinkItem render={<Link href="/admin/clubrunner" />}><DatabaseZap />ClubRunner import</DropdownMenuLinkItem>}
-                  {mayAddMembers && mayAssignRoles && <DropdownMenuSeparator />}
+                  {mayInviteMembers && <DropdownMenuItem onClick={() => setAddOpen(true)}><UserPlus />Register a member</DropdownMenuItem>}
+                  {mayAdminRoster && <DropdownMenuLinkItem render={<Link href="/admin/clubrunner" />}><DatabaseZap />ClubRunner import</DropdownMenuLinkItem>}
+                  {(mayInviteMembers || mayAdminRoster) && mayAssignRoles && <DropdownMenuSeparator />}
                   {mayAssignRoles && <DropdownMenuItem onClick={() => setStartingNewYear(true)}><CalendarClock />Start new Rotary year</DropdownMenuItem>}
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -4,7 +4,20 @@ Member portal built with Next.js, React, and Supabase.
 
 ## Development
 
-Install dependencies with `npm ci`. Configure `.env.local` with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, then run `npm run dev`.
+Install dependencies with `npm ci`. Configure `.env.local` with
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and the
+server-only `SUPABASE_SECRET_KEY`, then run `npm run dev`.
+
+Member registration is invitation-only. In Supabase Auth settings, disable
+public user signups and allow `/auth/confirm` as a redirect URL. The hosted
+**Invite user** email template must link to the app callback so it can create a
+cookie-backed session before password setup:
+
+```html
+<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/update-password">
+  Accept invitation
+</a>
+```
 
 ## Checks
 

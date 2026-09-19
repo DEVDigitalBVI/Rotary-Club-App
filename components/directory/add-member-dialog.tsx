@@ -34,10 +34,10 @@ export function AddMemberDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a member</DialogTitle>
+          <DialogTitle>Register a member</DialogTitle>
           <DialogDescription>
-            They can sign up at /signup with this email once they&apos;re on
-            the roster.
+            Add the member to the roster and email them a secure invitation to
+            verify their address and create a password.
           </DialogDescription>
         </DialogHeader>
 
@@ -85,7 +85,7 @@ export function AddMemberDialog({
           </div>
           <DialogFooter className="mt-2">
             <Button type="submit" disabled={pending} className="font-heading">
-              {pending ? "Adding…" : "Add member"}
+              {pending ? "Sending invitation…" : "Add member and send invite"}
             </Button>
           </DialogFooter>
         </form>

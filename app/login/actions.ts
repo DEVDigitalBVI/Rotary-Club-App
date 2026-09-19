@@ -62,32 +62,6 @@ export async function signIn(
   redirect("/dashboard");
 }
 
-export async function signUp(
-  _prevState: AuthFormState,
-  formData: FormData
-): Promise<AuthFormState> {
-  const email = String(formData.get("email") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
-
-  if (!email || !password) {
-    return { error: "Enter your email and password." };
-  }
-  if (password.length < 8) {
-    return { error: "Password must be at least 8 characters." };
-  }
-
-  const supabase = await createClient();
-
-  // Account creation deliberately does not reveal whether this address is an
-  // active, unclaimed roster record. Membership remains enforced separately:
-  // claim_member() can link only the matching roster row, and every club-data
-  // policy requires that active link. Keep the response uniform for existing,
-  // unlisted, and eligible addresses.
-  await supabase.auth.signUp({ email, password });
-
-  redirect("/login?check-email=1");
-}
-
 /**
  * Always redirects to the same "check your email" state whether or not the
  * address is on file — confirming or denying an account here would let

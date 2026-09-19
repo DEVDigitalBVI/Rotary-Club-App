@@ -159,6 +159,18 @@ export function canAddMembers(member: Member, roster: Committee[]) {
   return runsTheClub(member, roster);
 }
 
+/** Portal invitations are limited to the officers responsible for membership
+ * and the director of the Membership committee. */
+export function canInviteMembers(member: Member, roster: Committee[]) {
+  if (member.position === "president" || member.position === "secretary") {
+    return true;
+  }
+  return roster.some(
+    (committee) =>
+      committee.id === "membership" && committee.directorId === member.id
+  );
+}
+
 /**
  * Any board member may post a club announcement. Deliberately wider than
  * runsTheClub(): the Board includes every committee director, and a director

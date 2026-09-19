@@ -2,8 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { FoundationRecognition } from "@/lib/club";
+import { canInviteMembers } from "@/lib/club";
 import { getCurrentMember } from "@/lib/data/members";
+import { getCommittees } from "@/lib/data/committees";
 import {
   PROFILE_PHOTOS_BUCKET,
   profilePhotoExtension,
@@ -14,36 +17,90 @@ import {
 export type DirectoryFormState = { error?: string; success?: boolean } | undefined;
 
 /**
- * Adding a member is just a roster row — RLS (members_insert) requires
- * runs_the_club(). They join the app itself at /signup once they have this
- * email on file; there's no invite email to send here.
+ * Adds an unclaimed roster row and sends the only supported account-creation
+ * path. Authorization is checked here and again by members_insert RLS.
  */
 export async function addMemberAction(
   _prevState: DirectoryFormState,
   formData: FormData
 ): Promise<DirectoryFormState> {
   const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const classification = String(formData.get("classification") ?? "").trim();
 
   if (!name || !email) {
     return { error: "Name and email are required." };
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "Enter a valid email address." };
+  }
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("members").insert({
-    name,
-    email,
-    classification: classification || null,
-  });
-
-  if (error) {
+  const [currentMember, committees] = await Promise.all([
+    getCurrentMember(),
+    getCommittees(),
+  ]);
+  if (!currentMember || !canInviteMembers(currentMember, committees)) {
     return {
       error:
-        error.code === "23505"
-          ? "That email is already on the roster."
-          : "Couldn't add member — you may not have permission.",
+        "Only the President, Secretary, or Membership Director can invite members.",
     };
+  }
+
+  const supabase = await createClient();
+  const { data: existing, error: lookupError } = await supabase
+    .from("members")
+    .select("id, user_id")
+    .ilike("email", email)
+    .maybeSingle<{ id: string; user_id: string | null }>();
+
+  if (lookupError) return { error: "Couldn't check the member roster." };
+  if (existing?.user_id) {
+    return { error: "That member already has a portal account." };
+  }
+
+  if (!existing) {
+    const { error } = await supabase.from("members").insert({
+      name,
+      email,
+      classification: classification || null,
+    });
+
+    if (error) {
+      return { error: "Couldn't add the member — you may not have permission." };
+    }
+  }
+
+  let origin: string;
+  try {
+    const { headers } = await import("next/headers");
+    const requestOrigin = (await headers()).get("origin");
+    if (!requestOrigin) throw new Error("Missing origin");
+    const url = new URL(requestOrigin);
+    if (url.hostname === "www.rotaryclubroadtown.com") {
+      url.hostname = "rotaryclubroadtown.com";
+    }
+    origin = url.origin;
+  } catch {
+    return {
+      error:
+        "The member was added, but the invitation couldn't be sent. Try again.",
+    };
+  }
+
+  try {
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+      data: { name },
+      redirectTo: `${origin}/auth/confirm?next=/update-password`,
+    });
+    if (error) {
+      return {
+        error:
+          "The member is on the roster, but the invitation couldn't be sent. Check the email or try again.",
+      };
+    }
+  } catch {
+    return { error: "The member is on the roster, but invitations are not configured yet." };
   }
 
   revalidatePath("/directory");

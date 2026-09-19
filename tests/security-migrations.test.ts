@@ -29,6 +29,24 @@ describe("active-member access migration", () => {
   });
 });
 
+describe("invite-only member registration migration", () => {
+  const sql = migration("20260919010000_invite_only_member_registration.sql");
+
+  it("limits invitations to the President, Secretary, and Membership Director", () => {
+    expect(sql).toContain("m.position in ('president', 'secretary')");
+    expect(sql).toContain("c.id = 'membership' and c.director_id = m.id");
+    expect(sql).toContain("with check (can_invite_members())");
+  });
+
+  it("removes the anonymous signup probe and preserves case-insensitive claiming", () => {
+    expect(sql).toContain(
+      "revoke all on function email_is_signup_eligible(text) from public, anon, authenticated"
+    );
+    expect(sql).toContain("lower(email) = lower(auth.jwt() ->> 'email')");
+    expect(sql).toContain("revoke all on function claim_member() from public, anon");
+  });
+});
+
 describe("attendance finalization migration", () => {
   const sql = migration("20260823093000_finalize_attendance_and_atomic_rosters.sql");
 

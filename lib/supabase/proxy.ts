@@ -47,7 +47,7 @@ export async function updateSession(request: NextRequest) {
   // Password updates remain protected until the confirmation establishes one.
   const pathname = request.nextUrl.pathname;
   const isAuthConfirmation = pathname === "/auth/confirm";
-  const isGuestPage = ["/login", "/signup", "/forgot-password"].includes(pathname);
+  const isGuestPage = ["/login", "/forgot-password"].includes(pathname);
   const isPublicRoute = isGuestPage || isAuthConfirmation;
 
   function redirectWithSession(path: string) {

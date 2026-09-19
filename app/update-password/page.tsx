@@ -10,10 +10,11 @@ export default function UpdatePasswordPage() {
         <div className="w-full max-w-sm">
           <div className="rounded-xl bg-card p-6 shadow-[var(--shadow-card)] sm:p-8">
             <h2 className="font-heading text-lg font-semibold text-foreground">
-              Set a new password
+              Create your password
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Choose a new password for your account.
+              Your email has been verified. Choose a password to finish setting
+              up your member portal account.
             </p>
 
             <UpdatePasswordForm />

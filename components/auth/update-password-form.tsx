@@ -61,7 +61,7 @@ export function UpdatePasswordForm() {
         disabled={pending || mismatch || password.length < 8}
         className="mt-2 font-heading w-full"
       >
-        {pending ? "Saving…" : "Save new password"}
+        {pending ? "Creating account…" : "Create password and continue"}
       </Button>
     </form>
   );

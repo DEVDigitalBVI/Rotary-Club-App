@@ -11,7 +11,7 @@ export function LoginForm({
   checkEmail,
   linkExpired = false,
 }: {
-  checkEmail?: "signup" | "reset";
+  checkEmail?: "reset";
   linkExpired?: boolean;
 }) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(
@@ -21,12 +21,6 @@ export function LoginForm({
 
   return (
     <form action={action} className="mt-8 flex flex-col gap-5">
-      {checkEmail === "signup" && (
-        <p className="rounded-xl border border-border bg-card p-4 text-sm leading-5 text-foreground">
-          If that address can be registered, check your email to confirm it,
-          then sign in below.
-        </p>
-      )}
       {checkEmail === "reset" && (
         <p className="rounded-xl border border-border bg-card p-4 text-sm leading-5 text-foreground">
           If that email is on our roster, we&apos;ve sent a link to reset your
@@ -82,10 +76,8 @@ export function LoginForm({
       </Button>
 
       <p className="text-center text-xs leading-5 text-muted-foreground">
-        Joining the portal for the first time?{" "}
-        <Link href="/signup" className="font-semibold text-primary underline-offset-4 hover:underline">
-          Create an account
-        </Link>
+        First time using the portal? Ask the President, Secretary, or
+        Membership Director for an email invitation.
       </p>
     </form>
   );

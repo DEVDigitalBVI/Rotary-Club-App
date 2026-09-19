@@ -65,11 +65,9 @@ export default async function LoginPage({
 
           <LoginForm
             checkEmail={
-              params["check-email"] === "1"
-                ? "signup"
-                : params["check-email"] === "reset"
-                  ? "reset"
-                  : undefined
+              params["check-email"] === "reset"
+                ? "reset"
+                : undefined
             }
             linkExpired={params.error === "link-expired"}
           />

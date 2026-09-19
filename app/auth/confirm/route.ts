@@ -3,8 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Where every emailed auth link (password reset today; signup confirmation
- * could route through here too) lands. Supabase can return either a PKCE
+ * Where every emailed auth link (password reset or member invitation) lands.
+ * Supabase can return either a PKCE
  * authorization code from its default ConfirmationURL or a token hash from a
  * customized server-side email template. Both paths must exchange the link
  * for a cookie-backed session before `next` loads.
