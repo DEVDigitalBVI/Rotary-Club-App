@@ -25,8 +25,8 @@ export function UpdatePasswordForm() {
   const passwordStarted = password.length > 0;
   const passwordValid = meetsPasswordRequirements(password);
   const confirmStarted = confirm.length > 0;
-  const mismatch = confirm.length > 0 && password !== confirm;
-  const confirmationValid = confirmStarted && password === confirm;
+  const confirmationMatches = confirmStarted && password === confirm;
+  const confirmationValid = confirmationMatches && passwordValid;
 
   const validFieldClass =
     "border-emerald-600 bg-emerald-50/60 focus-visible:border-emerald-600 focus-visible:ring-emerald-600/20 dark:border-emerald-500 dark:bg-emerald-950/20";
@@ -101,7 +101,7 @@ export function UpdatePasswordForm() {
           placeholder="••••••••"
           autoComplete="new-password"
           required
-          aria-invalid={mismatch}
+          aria-invalid={confirmStarted && !confirmationValid}
           aria-describedby={confirmStarted ? "confirm-password-status" : undefined}
           className={cn(confirmationValid && validFieldClass)}
           value={confirm}
@@ -123,8 +123,10 @@ export function UpdatePasswordForm() {
               <XCircle className="size-3.5" aria-hidden="true" />
             )}
             {confirmationValid
-              ? "Passwords match."
-              : "Passwords do not match. Enter the same password in both fields."}
+              ? "Passwords match and meet all requirements."
+              : confirmationMatches
+                ? "Passwords match, but the password requirements are not met."
+                : "Passwords do not match. Enter the same password in both fields."}
           </p>
         )}
       </div>
